@@ -7,12 +7,15 @@ var BRANCH = (function()
 		CIRCLE: 'circle',
 		TRIANGLE: 'triangle',
 		CUBE: 'cube',
+		CYLINDER: 'cylinder',
+		CONE: 'cone',
 		
 		COLOR: 'color',
 		VECTOR2: 'vector2',
 		VECTOR3: 'vector3',
 		VECTOR4: 'vector4',
 
+		STOP: 'stop',
 		CAMERA: 'camera',
 		SCENE: 'scene',
 		RENDERER: 'renderer',
@@ -124,6 +127,7 @@ var BRANCH = (function()
 			renderer: {
 				antialias: true,
 			},
+			stop: false,
 		}
 
 		//
@@ -166,7 +170,9 @@ var BRANCH = (function()
 		//
 		this.render = function()
 		{
+			__engine.config.stop = false;
 			for (var index in __engine.scene) {
+				__engine.scene[index].stop();
 				__engine.scene[index].render();
 			}
 			return __engine.this;
@@ -175,6 +181,7 @@ var BRANCH = (function()
 		//
 		this.stop = function()
 		{
+			__engine.config.stop = true;
 			return __engine.this;
 		}
 
@@ -209,9 +216,15 @@ var BRANCH = (function()
 				scene: null,
 				camera: null,
 				mesh: [],
+				config: {},
 				materialConfig: {},
 				cameraConfig: {},
 			};
+
+			//
+			var ___defaultConfig = {
+				stop: false,
+			}
 
 			//
 			var ___defaultMaterialConfig = {
@@ -235,6 +248,7 @@ var BRANCH = (function()
 			this.init = function()
 			{
 				___engine.scene = new THREE.Scene();
+				$extend(___engine.config, ___defaultConfig);
 				$extend(___engine.materialConfig, ___defaultMaterialConfig);
 				$extend(___engine.cameraConfig, ___defaultCameraConfig);
 
@@ -295,17 +309,50 @@ var BRANCH = (function()
 				let mesh = new THREE.Mesh(geometry, material);
 
 				let build = new $mesh;
-				build.init(_enum.CUBE, mesh);
+				build.init(_enum.CONE, mesh);
 				___engine.mesh.push({
 					id: id,
-					type: _enum.CUBE,	
+					type: _enum.CONE,	
 					mesh: build,
 					inScene: false,
 				});
 				return build;
 			}
 
-						//
+			//
+			this.cylinder = function(height, id, force)
+			{
+				id = $getId(__engine.scene, id);
+				let find = $findKey(__engine.scene, id);
+
+				if (find != -1)
+				{
+					if (typeof(forced) != 'boolean' || forced == false) {
+						return null;
+					}
+					// Supprimer l'objet de la scene et supprimer dans __engine.scene
+					return ___engine.this;
+				}
+
+				let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
+				let geometry = new THREE.CylinderGeometry(50, 50, height);
+				
+				// THREE.CylinderGeometry(radiusTop, radiusBottom, height, radiusSegments, heightSegments, openEnded)
+				
+				let mesh = new THREE.Mesh(geometry, material);
+
+				let build = new $mesh;
+				build.init(_enum.CYLINDER, mesh);
+				___engine.mesh.push({
+					id: id,
+					type: _enum.CYLINDER,	
+					mesh: build,
+					inScene: false,
+				});
+				return build;
+			}
+
+			//
 			this.cube = function(size, vector, id, force)
 			{
 				/*
@@ -412,11 +459,18 @@ var BRANCH = (function()
 					this: this,
 					type: _enum.NONE,
 					mesh: null,
+					config: {},
+				}
+
+				//
+				var ____defaultConfig = {
+					stop: false,
 				}
 
 				//
 				this.init = function(type, mesh)
 				{
+					$extend(___engine.config, ____defaultConfig);
 					____engine.type = type;
 					____engine.mesh = mesh;
 					delete ____engine.this.init;
@@ -475,6 +529,18 @@ var BRANCH = (function()
 				}
 
 				//
+				this.stop = function()
+				{
+					/*
+
+							Pour l'instant ça ne fait rien car ce n'est pas très claire
+
+					*/
+					____engine.config.stop = true;
+					return $copy(___engine.this, ____engine.this);
+				}
+
+				//
 				this.get = function(id, type)
 				{
 					type = (typeof(type) != 'undefined' ? type : _enum.NONE);
@@ -482,6 +548,9 @@ var BRANCH = (function()
 					{
 						case _enum.MESH:
 							return ____engine.mesh;
+						break;
+						case _enum.STOP:
+							return __engine.config.stop;
 						break;
 						default:
 							return null;
@@ -492,14 +561,18 @@ var BRANCH = (function()
 			}
 
 			//
-			this.remove = function()
+			this.remove = function(id)
 			{
+				/*
+					À faire
+				*/
 				return ___engine.this;
 			}
 
 			//
 			this.render = function()
 			{
+				___engine.config.stop = false;
 				for (var index in ___engine.mesh) {
 					if (___engine.mesh[index].inScene == false) {
 						___engine.scene.add(___engine.mesh[index].mesh.get(null, _enum.MESH));
@@ -512,6 +585,7 @@ var BRANCH = (function()
 			//
 			this.stop = function()
 			{
+				__engine.config.stop = true;
 				return ___engine.this;
 			}
 
@@ -530,6 +604,9 @@ var BRANCH = (function()
 							return null;
 						}
 						return ___engine.mesh[find].mesh;
+					break;
+					case _enum.STOP:
+						return __engine.config.stop;
 					break;
 					case _enum.CAMERA:
 						return ___engine.camera;
@@ -560,6 +637,9 @@ var BRANCH = (function()
 						return null;
 					}
 					return __engine.scene[find].scene;
+				break;
+				case _enum.STOP:
+					return __engine.config.stop;
 				break;
 				case _enum.RENDERER:
 					return __engine.renderer;
@@ -728,13 +808,17 @@ var BRANCH = (function()
 
 		for (var index in _engine.branch) {
 			let branch = _engine.branch[index].branch;
-			let scenes = branch.get();
-			for (var index2 in scenes) {
-				let scene = scenes[index2].scene;
-				let _renderer = branch.get(null, _enum.RENDERER);
-				let _scene = scene.get(null, _enum.SCENE);
-				let _camera = scene.get(null, _enum.CAMERA);
-				_renderer.render(_scene, _camera);
+			if (branch.get(null, _enum.STOP) == false) {
+				let scenes = branch.get();
+				for (var index2 in scenes) {
+					let scene = scenes[index2].scene;
+					if (scene.get(null, _enum.STOP) == false) {
+						let _renderer = branch.get(null, _enum.RENDERER);
+						let _scene = scene.get(null, _enum.SCENE);
+						let _camera = scene.get(null, _enum.CAMERA);
+						_renderer.render(_scene, _camera);
+					}
+				}
 			}
 		}
 		requestAnimationFrame($draw);
