@@ -38,6 +38,7 @@ Triangle with Branch.js
 ```
 app = BRANCH.init();
 scene = app.scene();
-scene.triangle(BRANCH.vector(0, 0, 0).vector(0, 0, 0).vector(0, 0, 0));
+obj = scene.triangle(BRANCH.vector(0, 0, 0).vector(0, 0, 0).vector(0, 0, 0));
+obj.color(0xff0000).writeframe(true);
 scene.render();
 ```
