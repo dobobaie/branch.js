@@ -11,6 +11,7 @@ var BRANCH = (function()
 		SCENE: 'scene',
 		RENDERER: 'renderer',
 		BRANCH: 'branch',
+		MESH: 'mesh',
 	}
 
 	//
@@ -23,10 +24,23 @@ var BRANCH = (function()
 	}
 
 	//
+	var $copy = function(obj, obj2)
+	{
+		let copy = [];
+		for (var index in obj) {
+			copy[index] = obj[index];
+		}
+		for (var index in obj2) {
+			copy[index] = obj2[index];
+		}
+		return copy;
+	}
+
+	//
 	var $extend = function(obj, obj2)
 	{
-		for (var i in obj2) {
-			obj[i] = obj2[i];
+		for (var index in obj2) {
+			obj[index] = obj2[index];
 		}
 		return obj;
 	}
@@ -56,7 +70,7 @@ var BRANCH = (function()
 		let find = $findKey(_engine._branch, id);
 		if (find == -1) {
 			let build = new $branch;
-			build.init(params, id);
+			build.init(params);
 			_engine._branch.push({
 				id: id,
 				branch: build,
@@ -65,7 +79,7 @@ var BRANCH = (function()
 		}
 		if (typeof(forced) == 'boolean' && forced == true) {
 			let build = new $branch;
-			build.init(params, id);
+			build.init(params);
 			_engine._branch[find].branch = build;
 			return build;
 		}
@@ -78,7 +92,6 @@ var BRANCH = (function()
 		//
 		var __engine = {
 			__this: this,
-			__id: '',
 			__renderer: null,
 			__scene: [],
 			__update: [],
@@ -95,15 +108,14 @@ var BRANCH = (function()
 		}
 
 		//
-		this.init = function(params, id)
+		this.init = function(params)
 		{
 			if (typeof(params) == 'function') {
 				params = new params();
 			}
 			$extend(__engine.__config, __defaultConfig);
 			$extend(__engine.__config, params);
-			__engine.__id = id;
-
+			
 			let canvas = document.createElement('canvas');
 			__engine.__renderer = (
 				__engine.__config.webGL == true && window.WebGLRenderingContext && (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')) ? 
@@ -158,7 +170,7 @@ var BRANCH = (function()
 			}
 			if (typeof(forced) == 'boolean' && forced == true) {
 				let build = new $scene;
-				build.init(id);
+				build.init();
 				__engine.__scene[find].scene = build;
 				return build;
 			}
@@ -170,7 +182,6 @@ var BRANCH = (function()
 		{
 			var ___engine = {
 				___this: this,
-				___id: '',
 				___scene: null,
 				___camera: null,
 				___mesh: [],
@@ -198,10 +209,9 @@ var BRANCH = (function()
 			}
 
 			//
-			this.init = function(id)
+			this.init = function()
 			{
 				___engine.___scene = new THREE.Scene();
-				___engine.___id = id;
 				$extend(___engine.___materialConfig, ___defaultMaterialConfig);
 				$extend(___engine.___cameraConfig, ___defaultCameraConfig);
 
@@ -214,6 +224,12 @@ var BRANCH = (function()
 			}
 
 			//
+			this.mesh = function()
+			{
+				return ___engine.___this;
+			}
+
+			//
 			this.triangle = function(vector, id, forced)
 			{
 				/*
@@ -222,37 +238,70 @@ var BRANCH = (function()
 
 				*/
 				let find = $findKey(__engine.__scene, id);
+
+				if (find != -1)
+				{
+					if (typeof(forced) != 'boolean' || forced == false) {
+						return null;
+					}
+					// Supprimer l'objet de la scene et supprimer dans __engine.__scene
+					return ___engine.___this;
+				}
+
 				let material = new THREE.MeshBasicMaterial(___engine.___materialConfig);
 				let geometry = new THREE.Geometry();
 				geometry.vertices.push(vector.get(0), vector.get(1), vector.get(2));
 				geometry.faces.push(new THREE.Face3(0, 1, 2));
 
-				if (find == -1) {
-					___engine.___mesh.push({
-						id: id,
-						type: _enum.TRIANGLE,	
-						mesh: new THREE.Mesh(geometry, material),
-						inScene: false,
-					});
-					return ___engine.___this;
-				}
-				if (typeof(forced) == 'boolean' && forced == true) {
-					// Supprimer l'objet de la scene et modifier le tableau
-					return ___engine.___this;
-				}
-				return null;
-			}
-
-			//
-			this.mesh = function()
-			{
-				return ___engine.___this;
+				let build = new $mesh;
+				build.init(new THREE.Mesh(geometry, material));
+				___engine.___mesh.push({
+					id: id,
+					type: _enum.TRIANGLE,	
+					mesh: build,
+					inScene: false,
+				});
+				return build;
 			}
 
 			//
 			var $mesh = function()
 			{
-				return ___engine.___this;
+				var ____engine = {
+					____this: this,
+					____mesh: null,
+				}
+
+				//
+				this.init = function(mesh)
+				{
+					____engine.____mesh = mesh;
+					delete ____engine.____this.init;
+					return ____engine.____this;
+				}
+
+				//
+				this.color = function(value)
+				{
+					____engine.____mesh.material.color.setHex(value);
+					return $copy(___engine.___this, ____engine.____this);
+				}
+
+				//
+				this.get = function(id, type)
+				{
+					type = (typeof(type) != 'undefined' ? type : _enum.NONE);
+					switch (type)
+					{
+						case _enum.MESH:
+							return ____engine.____mesh;
+						break;
+						default:
+							return null;
+					}
+				}
+
+				return $copy(___engine.___this, ____engine.____this);
 			}
 
 			//
@@ -278,8 +327,7 @@ var BRANCH = (function()
 			{
 				for (var index in ___engine.___mesh) {
 					if (___engine.___mesh[index].inScene == false) {
-						console.log(___engine.___mesh[index]);
-						___engine.___scene.add(___engine.___mesh[index].mesh);
+						___engine.___scene.add(___engine.___mesh[index].mesh.get(null, _enum.MESH));
 						___engine.___mesh[index].inScene = true;
 					}
 				}
@@ -348,7 +396,7 @@ var BRANCH = (function()
 	}
 
 	//
-	var $vector = function(values)
+	var $vector = function()
 	{
 		var __engine = {
 			__this: this,
