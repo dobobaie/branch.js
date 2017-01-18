@@ -22,7 +22,7 @@
         .wireframe(true)
         .render()
       ;
-    
+     
       // Example 2
       var app = BRANCH.init(function() {
         this.height = 400;
@@ -30,7 +30,13 @@
       });
 
       var scene = app.scene();
-      var obj = scene.triangle(BRANCH.vector(0, 0, 0).vector(0, 300, 0).vector(300, 0, 0)).wireframe(true);
+
+      var vec = BRANCH.vector(0, 0, 0).vector(0, 300, 0).vector(300, 0, 0);
+      var t = scene.triangle(vec).wireframe(true);  
+      var c1 = scene.circle(16, vec.slice(0));
+      var c2 = scene.circle(16, vec.slice(1));
+      var c3 = scene.circle(16, vec.slice(2));
+
       scene.render();
 
       app.update(function()
@@ -40,14 +46,17 @@
             .random(BRANCH.VECTOR3)
             .random(BRANCH.VECTOR3, BRANCH.vector(-200, -200), BRANCH.vector(200, 200))
           ;
-          obj.position(vector);
+          t.position(vector);
+          c1.position(vector.slice(0));
+          c2.position(vector.slice(1));
+          c3.position(vector.slice(2));
       });
 
       // Example 3
       BRANCH
         .init(function() {
           this.height = 400;
-          this.width = 900;
+          this.width = 400;
         }, 'myBranch')
         .scene('myScene')
         .circle(60, BRANCH.vector(0, 0, 0), 'myCirle')
