@@ -8,6 +8,7 @@ var BRANCH = (function()
 		TRIANGLE: 'triangle',
 		CUBE: 'cube',
 		
+		COLOR: 'color',
 		VECTOR2: 'vector2',
 		VECTOR3: 'vector3',
 		VECTOR4: 'vector4',
@@ -272,6 +273,38 @@ var BRANCH = (function()
 			}
 
 			//
+			this.cube = function(size, vector, id, force)
+			{
+				id = $getId(__engine.scene, id);
+				let find = $findKey(__engine.scene, id);
+
+				if (find != -1)
+				{
+					if (typeof(forced) != 'boolean' || forced == false) {
+						return null;
+					}
+					// Supprimer l'objet de la scene et supprimer dans __engine.scene
+					return ___engine.this;
+				}
+
+				let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
+				let getSize = size.get(0);
+				let geometry = new THREE.BoxGeometry(getSize.x, getSize.y, getSize.z);
+				let mesh = new THREE.Mesh(geometry, material);
+				$extend(mesh.position, vector.get(0));
+				
+				let build = new $mesh;
+				build.init(_enum.CUBE, mesh);
+				___engine.mesh.push({
+					id: id,
+					type: _enum.CUBE,	
+					mesh: build,
+					inScene: false,
+				});
+				return build;
+			}
+
+			//
 			this.circle = function(radius, vector, id, forced)
 			{
 				id = $getId(__engine.scene, id);
@@ -369,6 +402,11 @@ var BRANCH = (function()
 				//
 				this.position = function(vector)
 				{
+					/*
+						Créer un système pour éditer directement :
+						position.x += 20;
+						ect...
+					*/
 					switch (____engine.type)
 					{
 						case _enum.TRIANGLE:
@@ -493,6 +531,9 @@ var BRANCH = (function()
 	//
 	this.random = function(type, vecMin, vecMax)
 	{
+		if (type == _enum.COLOR) {
+			return parseInt(Math.floor(Math.random()*16777215).toString(16), 16);
+		}
 		let build = new $vector;
 		build.random(type, vecMin, vecMax);
 		return build;
@@ -568,6 +609,15 @@ var BRANCH = (function()
 			let build = new $vector;
 			build.init([__engine.vector[id].x, __engine.vector[id].y, __engine.vector[id].z, __engine.vector[id].w]);
 			return build;
+		}
+
+		this.position = function()
+		{
+			/*
+				Créer un système pour éditer directement :
+				position.x += 20;
+				ect...
+			*/
 		}
 
 		this.get = function(id)
