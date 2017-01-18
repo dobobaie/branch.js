@@ -289,7 +289,7 @@ var BRANCH = (function()
 				let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
 				let geometry = new THREE.CircleGeometry(radius, 100);
 				let mesh = new THREE.Mesh(geometry, material);
-				vector = vector.get(0);
+				$extend(mesh.position, vector.get(0));
 				
 				let build = new $mesh;
 				build.init(_enum.CIRCLE, mesh);
@@ -561,6 +561,13 @@ var BRANCH = (function()
 			vector.y = rand(vecMin.get(0).y, vecMax.get(0).y);
 			__engine.vector.push(vector);
 			return __engine.this;
+		}
+
+		this.slice = function(id)
+		{
+			let build = new $vector;
+			build.init([__engine.vector[id].x, __engine.vector[id].y, __engine.vector[id].z, __engine.vector[id].w]);
+			return build;
 		}
 
 		this.get = function(id)
