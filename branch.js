@@ -273,8 +273,46 @@ var BRANCH = (function()
 			}
 
 			//
+			this.cone = function(height, id, force)
+			{
+				id = $getId(__engine.scene, id);
+				let find = $findKey(__engine.scene, id);
+
+				if (find != -1)
+				{
+					if (typeof(forced) != 'boolean' || forced == false) {
+						return null;
+					}
+					// Supprimer l'objet de la scene et supprimer dans __engine.scene
+					return ___engine.this;
+				}
+
+				let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
+				let geometry = new THREE.CylinderGeometry(0, 50, height, 4, 1);
+				
+				// THREE.CylinderGeometry(radiusTop, radiusBottom, height, radiusSegments, heightSegments, openEnded)
+				
+				let mesh = new THREE.Mesh(geometry, material);
+
+				let build = new $mesh;
+				build.init(_enum.CUBE, mesh);
+				___engine.mesh.push({
+					id: id,
+					type: _enum.CUBE,	
+					mesh: build,
+					inScene: false,
+				});
+				return build;
+			}
+
+						//
 			this.cube = function(size, vector, id, force)
 			{
+				/*
+
+					Mettre une taille et un vector par défaut
+
+				*/
 				id = $getId(__engine.scene, id);
 				let find = $findKey(__engine.scene, id);
 
@@ -421,6 +459,18 @@ var BRANCH = (function()
 						default :
 							$extend(____engine.mesh.position, vector.get(0));
 					}
+					return $copy(___engine.this, ____engine.this);
+				}
+
+				//
+				this.rotation = function(vector)
+				{
+					/*
+						Créer un système pour éditer directement :
+						rotation.x += 20;
+						ect...
+					*/
+					$extend(____engine.mesh.rotation, vector.get(0));
 					return $copy(___engine.this, ____engine.this);
 				}
 

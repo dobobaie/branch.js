@@ -74,6 +74,19 @@
       scene = app.scene();
       scene.cube(BRANCH.vector(200, 200, 200), BRANCH.vector(0, 0, 0));
       scene.render();
+
+      // Example 5
+      app = BRANCH.init(function() {
+        this.height = 400;
+        this.width = 400;
+      });
+      scene = app.scene();
+      scene
+        .cone(180)
+        .color(0x0000ff)
+        .rotation(BRANCH.vector(5, 5, 5))
+      ;
+      scene.render();
     </script>
   </body>
 </html>
