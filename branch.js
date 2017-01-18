@@ -4,14 +4,20 @@ var BRANCH = (function()
 	var _enum = {
 		NONE: 'none',
 
+		CIRCLE: 'circle',
 		TRIANGLE: 'triangle',
 		CUBE: 'cube',
 		
+		VECTOR2: 'vector2',
+		VECTOR3: 'vector3',
+		VECTOR4: 'vector4',
+
 		CAMERA: 'camera',
 		SCENE: 'scene',
 		RENDERER: 'renderer',
 		BRANCH: 'branch',
 		MESH: 'mesh',
+		UPDATE: 'update',
 	}
 
 	//
@@ -192,7 +198,6 @@ var BRANCH = (function()
 			//
 			var ___defaultMaterialConfig = {
 				color: 0xffffff,
-				wireframe: true,
 			}
 
 			//
@@ -224,9 +229,59 @@ var BRANCH = (function()
 			}
 
 			//
+			this.add = function(type, params, id, forced)
+			{
+				switch (type)
+				{
+					case _enum.TRIANGLE:
+						return ___engine.___this.triangle(params, id, forced);
+					break;
+					case _enum.CIRCLE:
+						return ___engine.___this.circle(params, id, forced);
+					break;
+				}
+				return ___engine.___this;
+			}
+
+			//
 			this.mesh = function()
 			{
 				return ___engine.___this;
+			}
+
+			//
+			this.circle = function(radius, vector, id, forced)
+			{
+				/*
+
+						if id == undefined
+
+				*/
+				let find = $findKey(__engine.__scene, id);
+
+				if (find != -1)
+				{
+					if (typeof(forced) != 'boolean' || forced == false) {
+						return null;
+					}
+					// Supprimer l'objet de la scene et supprimer dans __engine.__scene
+					return ___engine.___this;
+				}
+
+				let material = new THREE.MeshBasicMaterial(___engine.___materialConfig);
+				let geometry = new THREE.CircleGeometry(radius);
+				let mesh = new THREE.Mesh(geometry, material);
+				vector = vector.get(0);
+				
+				let build = new $mesh;
+				build.init(_enum.CIRCLE, mesh);
+				___engine.___mesh.push({
+					id: id,
+					type: _enum.TRIANGLE,	
+					mesh: build,
+					inScene: false,
+				});
+				return build;
 			}
 
 			//
@@ -252,9 +307,10 @@ var BRANCH = (function()
 				let geometry = new THREE.Geometry();
 				geometry.vertices.push(vector.get(0), vector.get(1), vector.get(2));
 				geometry.faces.push(new THREE.Face3(0, 1, 2));
-
+				let mesh = new THREE.Mesh(geometry, material);
+				
 				let build = new $mesh;
-				build.init(new THREE.Mesh(geometry, material));
+				build.init(_enum.TRIANGLE, mesh);
 				___engine.___mesh.push({
 					id: id,
 					type: _enum.TRIANGLE,	
@@ -269,12 +325,14 @@ var BRANCH = (function()
 			{
 				var ____engine = {
 					____this: this,
+					____type: _enum.NONE,
 					____mesh: null,
 				}
 
 				//
-				this.init = function(mesh)
+				this.init = function(type, mesh)
 				{
+					____engine.____type = type;
 					____engine.____mesh = mesh;
 					delete ____engine.____this.init;
 					return ____engine.____this;
@@ -284,6 +342,33 @@ var BRANCH = (function()
 				this.color = function(value)
 				{
 					____engine.____mesh.material.color.setHex(value);
+					return $copy(___engine.___this, ____engine.____this);
+				}
+
+				//
+				this.wireframe = function(bool)
+				{
+					____engine.____mesh.material.wireframe = bool;
+					return $copy(___engine.___this, ____engine.____this);
+				}
+
+				//
+				this.position = function(vector)
+				{
+					switch (____engine.____type)
+					{
+						case _enum.TRIANGLE:
+							let vec1 = vector.get(0);
+							let vec2 = vector.get(1);
+							let vec3 = vector.get(2);
+							____engine.____mesh.geometry.vertices[0].set(vec1.x, vec1.y, vec1.z);
+							____engine.____mesh.geometry.vertices[1].set(vec2.x, vec2.y, vec2.z);
+							____engine.____mesh.geometry.vertices[2].set(vec3.x, vec3.y, vec3.z);
+							____engine.____mesh.geometry.verticesNeedUpdate = true;
+						break;
+						default :
+							$extend(____engine.____mesh.position, vector.get(0));
+					}
 					return $copy(___engine.___this, ____engine.____this);
 				}
 
@@ -302,18 +387,6 @@ var BRANCH = (function()
 				}
 
 				return $copy(___engine.___this, ____engine.____this);
-			}
-
-			//
-			this.add = function(type, params, id, forced)
-			{
-				switch (type)
-				{
-					case TRIANGLE:
-						return ___engine.___this.triangle(params, id, forced);
-					break;
-				}
-				return ___engine.___this;
 			}
 
 			//
@@ -343,9 +416,19 @@ var BRANCH = (function()
 			//
 			this.get = function(id, type)
 			{
-				type = (typeof(type) != 'undefined' ? type : _enum.NONE);
+				type = (typeof(type) != 'undefined' ? type : _enum.MESH);
 				switch (type)
 				{
+					case _enum.MESH:
+						if (typeof(id) == 'undefined') {
+							return ___engine.___mesh;
+						}
+						let find = $findKey(___engine.___mesh, id);
+						if (find == -1) {
+							return null;
+						}
+						return ___engine.___mesh[find].mesh;
+					break;
 					case _enum.CAMERA:
 						return ___engine.___camera;
 					break;
@@ -379,12 +462,24 @@ var BRANCH = (function()
 				case _enum.RENDERER:
 					return __engine.__renderer;
 				break;
+				case _enum.UPDATE:
+					let update = __engine.__update;
+					return update;
+				break;
 				default:
 					return null;
 			}
 		}
 
 		return __engine.__this;
+	}
+
+	//
+	this.random = function(type, vecMin, vecMax)
+	{
+		let build = new $vector;
+		build.random(type, vecMin, vecMax);
+		return build;
 	}
 
 	//
@@ -417,6 +512,39 @@ var BRANCH = (function()
 		this.vector = function()
 		{
 			return __engine.__this.init(arguments);
+		}
+
+		this.random = function(type, vecMin, vecMax)
+		{
+			let vector = {
+				x: 0,
+				y: 0,
+				z: 0,
+				w: 0,
+			};
+			
+			vecMin = (typeof(vecMin) == 'undefined' ? (new $vector).init([(window.innerWidth / 2) * -1, (window.innerHeight / 2) * -1, 0, 0]) : vecMin);
+			vecMax = (typeof(vecMax) == 'undefined' ? (new $vector).init([window.innerWidth / 2, window.innerHeight / 2, 0, 0]) : vecMax);
+
+			var rand = function(min, max)
+			{
+				let valMax = Math.floor(Math.random() * max);
+				let valMin = Math.floor(Math.random() * min);
+				valMax = (valMax > max ? max : valMax);
+				valMin = (valMin > max ? max : valMin);
+				return ((valMax + valMin) / 2);
+			}
+			
+			if (type == _enum.VECTOR4) {
+				vector.w = rand(vecMin.get(0).w, vecMax.get(0).w);
+			}
+			if (type == _enum.VECTOR3) {
+				vector.z = rand(vecMin.get(0).z, vecMax.get(0).z);
+			}
+			vector.x = rand(vecMin.get(0).x, vecMax.get(0).x);
+			vector.y = rand(vecMin.get(0).y, vecMax.get(0).y);
+			__engine.__vector.push(vector);
+			return __engine.__this;
 		}
 
 		this.get = function(id)
@@ -457,25 +585,26 @@ var BRANCH = (function()
 	//
 	var $update = setInterval(function()
 	{
-		//
+		for (var index in _engine._branch) {
+			let update = _engine._branch[index].branch.get(null, _enum.UPDATE);
+			for (var index2 in update) {
+				update[index2]();
+			}
+		}
 	}, _engine._config.timeUpdate);
 
 	//
 	var $draw = function()
 	{
 		for (var index in _engine._branch) {
-			if (typeof(_engine._branch[index]) == 'object') {
-				let branch = _engine._branch[index].branch;
-				let scenes = branch.get();
-				for (var index2 in scenes) {
-					if (typeof(scenes[index2]) == 'object') {
-						let scene = scenes[index2].scene;
-						let _renderer = branch.get(null, _enum.RENDERER);
-						let _scene = scene.get(null, _enum.SCENE);
-						let _camera = scene.get(null, _enum.CAMERA);
-						_renderer.render(_scene, _camera);
-					}
-				}
+			let branch = _engine._branch[index].branch;
+			let scenes = branch.get();
+			for (var index2 in scenes) {
+				let scene = scenes[index2].scene;
+				let _renderer = branch.get(null, _enum.RENDERER);
+				let _scene = scene.get(null, _enum.SCENE);
+				let _camera = scene.get(null, _enum.CAMERA);
+				_renderer.render(_scene, _camera);
 			}
 		}
 		requestAnimationFrame($draw);
