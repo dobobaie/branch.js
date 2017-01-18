@@ -1,0 +1,21 @@
+<html>
+  <head>
+    <title>My first branch.js app</title>
+    <style>
+      body { margin: 0; }
+      canvas { width: 100% !important; height: 100% !important; }
+    </style>
+  </head>
+  <body>
+    <script src="https://cdn.rawgit.com/mrdoob/three.js/dev/build/three.min.js"></script>
+    <script src="branch.js"></script>
+    <script>
+      BRANCH
+        .init()
+        .scene()
+        .triangle(BRANCH.vector(0, 0, 0).vector(0, 400, 0).vector(400, 0, 0))
+        .render()
+      ;
+    </script>
+  </body>
+</html>
