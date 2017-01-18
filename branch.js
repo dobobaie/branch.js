@@ -18,6 +18,7 @@ var BRANCH = (function()
 		BRANCH: 'branch',
 		MESH: 'mesh',
 		UPDATE: 'update',
+		DRAW: 'draw',
 	}
 
 	//
@@ -463,8 +464,10 @@ var BRANCH = (function()
 					return __engine.__renderer;
 				break;
 				case _enum.UPDATE:
-					let update = __engine.__update;
-					return update;
+					return __engine.__update;
+				break;
+				case _enum.DRAW:
+					return __engine.__draw;
 				break;
 				default:
 					return null;
@@ -596,6 +599,13 @@ var BRANCH = (function()
 	//
 	var $draw = function()
 	{
+		for (var index in _engine._branch) {
+			let draw = _engine._branch[index].branch.get(null, _enum.DRAW);
+			for (var index2 in draw) {
+				draw[index2]();
+			}
+		}
+
 		for (var index in _engine._branch) {
 			let branch = _engine._branch[index].branch;
 			let scenes = branch.get();
