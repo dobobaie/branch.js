@@ -3,19 +3,20 @@
     <title>My first branch.js app</title>
     <style>
       body { margin: 0; }
+      canvas { border: 1px solid #FFFFFF; }
     </style>
   </head>
   <body>
     <script src="https://cdn.rawgit.com/mrdoob/three.js/dev/build/three.min.js"></script>
     <script src="https://cdn.rawgit.com/dobobaie/branch.js/master/branch.js"></script>
     <script>
-      var app, scene;
+      var app, scene, areaSize = (window.innerWidth / 2) - 14;
 
       // Example 1
       BRANCH
         .init(function() {
-          this.height = 400;
-          this.width = 400;
+          this.height = areaSize;
+          this.width = areaSize;
         })
         .scene()
         .triangle(BRANCH.vector(0, 0, 0).vector(0, 300, 0).vector(300, 0, 0))
@@ -26,8 +27,8 @@
      
       // Example 2
       app = BRANCH.init(function() {
-        this.height = 400;
-        this.width = 400;
+        this.height = areaSize;
+        this.width = areaSize;
       });
 
       scene = app.scene();
@@ -56,8 +57,8 @@
       // Example 3
       BRANCH
         .init(function() {
-          this.height = 400;
-          this.width = 400;
+          this.height = areaSize;
+          this.width = areaSize;
         }, 'myBranch')
         .scene('myScene')
         .circle(60, BRANCH.vector(0, 0, 0), 'myCirle')
@@ -69,8 +70,8 @@
 
       // Example 4
       app = BRANCH.init(function() {
-        this.height = 400;
-        this.width = 400;
+        this.height = areaSize;
+        this.width = areaSize;
       });
       scene = app.scene();
       scene
@@ -81,8 +82,8 @@
 
       // Example 5
       app = BRANCH.init(function() {
-        this.height = 400;
-        this.width = 400;
+        this.height = areaSize;
+        this.width = areaSize;
       });
       scene = app.scene();
       scene
@@ -94,8 +95,8 @@
 
       // Example 6
       app = BRANCH.init(function() {
-        this.height = 400;
-        this.width = 400;
+        this.height = areaSize;
+        this.width = areaSize;
       });
       scene = app.scene();
       scene
@@ -104,15 +105,16 @@
         .rotation(BRANCH.vector(-5, -5, -5))
       ;
       scene.render();
-     
+
+
       // Example 6
       app = BRANCH.init(function() {
-        this.height = 400;
-        this.width = 800;
+        this.height = areaSize;
+        this.width = areaSize * 2;
       });
       scene = app.scene();
-      scene.text("BRANCH.JS").render();
-      
+      scene.text("BRANCH.JS").position(BRANCH.vector(-100, 0 ,0)).render();
+     
       /*
           Examples THREE.JS mixed with BRANCH.JS
       */
