@@ -105,6 +105,14 @@
       ;
       scene.render();
      
+      // Example 6
+      app = BRANCH.init(function() {
+        this.height = 400;
+        this.width = 800;
+      });
+      scene = app.scene();
+      scene.text("BRANCH.JS").render();
+      
       /*
           Examples THREE.JS mixed with BRANCH.JS
       */
