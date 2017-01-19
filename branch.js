@@ -291,8 +291,6 @@ var BRANCH = (function()
 				}
 
 				let datas = callback();
-				datas.mesh.name = id;
-
 				let build = new $mesh;
 				build.init(id, datas.type, datas.mesh, datas.callback);
 				___engine.mesh.push({
@@ -450,10 +448,10 @@ var BRANCH = (function()
 					let geometry = new THREE.Geometry();
 					let mesh = new THREE.Mesh(geometry, material);
 
-					let getFont = function(id) {
+					let getFont = function(mesh) {
 						let loader = new THREE.FontLoader();
 						loader.load(___engine.config.font, function(font) {
-							let find = $findKey(___engine.mesh, id);
+							let find = $findKey(___engine.mesh, mesh.name);
 							let geometry = new THREE.TextGeometry(text, {
 								material: 0,
 								extrudeMaterial: 1,
@@ -489,7 +487,6 @@ var BRANCH = (function()
 			{
 				var ____engine = {
 					this: this,
-					id: '',
 					type: _enum.NONE,
 					mesh: null,
 					config: {},
@@ -503,14 +500,14 @@ var BRANCH = (function()
 				//
 				this.init = function(id, type, mesh, callback)
 				{
-					____engine.id = id;
 					____engine.type = type;
 					____engine.mesh = mesh;
+					____engine.mesh.name = id;
 					$extend(___engine.config, ____defaultConfig);
 					$extend(____engine.this.position, mesh.position);
 					$extend(____engine.this.rotation, mesh.rotation);
 					if (typeof(callback) == 'function') {
-						callback(id);
+						callback(mesh);
 					}
 
 					/*** TEST (Black magic) ***/ // I don't know if I keep it or not...
@@ -565,21 +562,13 @@ var BRANCH = (function()
 				}
 
 				//
-				this.transform = function(vec)
+				this.transform = function(vector)
 				{
-					// To do
-					switch (____engine.type)
-					{
-						case _enum.TRIANGLE:
-							let vec1 = vec.get(0);
-							let vec2 = vec.get(1);
-							let vec3 = vec.get(2);
-							____engine.mesh.geometry.vertices[0].set(vec1.x, vec1.y, vec1.z);
-							____engine.mesh.geometry.vertices[1].set(vec2.x, vec2.y, vec2.z);
-							____engine.mesh.geometry.vertices[2].set(vec3.x, vec3.y, vec3.z);
-							____engine.mesh.geometry.verticesNeedUpdate = true;
-						break;
+					let points = vector.get();
+					for (var index in points) {
+						____engine.mesh.geometry.vertices[index].set(points[index].x, points[index].y, points[index].z, points[index].w);
 					}
+					____engine.mesh.geometry.verticesNeedUpdate = true;
 					return ____engine.this;
 				}
 
@@ -668,8 +657,9 @@ var BRANCH = (function()
 			//
 			this.remove = function(id)
 			{
-				// To Do
-				return ___engine.this;
+				let find = $findKey(__engine.scene, ___engine.scene.name);
+				__engine.scene.splice(find, 1);
+				return __engine.this;
 			}
 
 			//
