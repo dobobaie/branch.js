@@ -1,11 +1,3 @@
-/*
-
-	Gérer le multi camera (avec une par defaut) et un système pour switch de camera
-	
-	faire le module forced
-
-*/
-
 var BRANCH = (function()
 {
 	//
@@ -13,11 +5,13 @@ var BRANCH = (function()
 		NONE: 'none',
 
 		TEXT: 'text',
+		LINE: 'line',
 		CIRCLE: 'circle',
 		TRIANGLE: 'triangle',
 		CUBE: 'cube',
 		CYLINDER: 'cylinder',
 		CONE: 'cone',
+		LIGHT: 'light',
 		
 		COLOR: 'color',
 		VECTOR2: 'vector2',
@@ -83,10 +77,11 @@ var BRANCH = (function()
 	}
 
 	//
-	var $getId = function(obj, id)
+	var $getId = function(obj, type, id, len)
 	{
-		if (typeof(id) == 'undefined' && (id = Math.random().toString(36).substring(2, 9)) && $findKey(obj, id) != -1) {
-			return $getId(obj);
+		len = (typeof(len) == 'undefined' ? 0 : len);
+		if ((id == null || typeof(id) == 'undefined') && (id = type+(obj.length + len)) && $findKey(obj, id) != -1) {
+			return $getId(obj, type, null, len + 1);
 		}
 		return id;
 	}
@@ -94,11 +89,11 @@ var BRANCH = (function()
 	//
 	this.init = function(params, id, forced)
 	{
-		id = $getId(_engine.branch, id);
+		id = $getId(_engine.branch, _enum.BRANCH, id);
 		let find = $findKey(_engine.branch, id);
 		if (find == -1) {
 			let build = new $branch;
-			build.init(params);
+			build.init(id, params);
 			_engine.branch.push({
 				id: id,
 				branch: build,
@@ -107,7 +102,7 @@ var BRANCH = (function()
 		}
 		if (typeof(forced) == 'boolean' && forced == true) {
 			let build = new $branch;
-			build.init(params);
+			build.init(id, params);
 			_engine.branch[find].branch = build;
 			return build;
 		}
@@ -140,7 +135,7 @@ var BRANCH = (function()
 		}
 
 		//
-		this.init = function(params)
+		this.init = function(id, params)
 		{
 			if (typeof(params) == 'function') {
 				params = new params();
@@ -156,6 +151,7 @@ var BRANCH = (function()
 			);
 			$extend(__engine.renderer, __engine.config);
 			__engine.renderer.setSize(__engine.config.width, __engine.config.height);
+			__engine.renderer.name = id;
 			__engine.config.el.appendChild(__engine.renderer.domElement);
 
 			delete this.init;
@@ -197,7 +193,7 @@ var BRANCH = (function()
 		//
 		this.scene = function(id, forced)
 		{
-			id = $getId(__engine.scene, id);
+			id = $getId(__engine.scene, _enum.SCENE, id);
 			let find = $findKey(__engine.scene, id);
 			if (find == -1) {
 				let build = new $scene;
@@ -210,7 +206,7 @@ var BRANCH = (function()
 			}
 			if (typeof(forced) == 'boolean' && forced == true) {
 				let build = new $scene;
-				build.init();
+				build.init(id);
 				__engine.scene[find].scene = build;
 				return build;
 			}
@@ -223,7 +219,7 @@ var BRANCH = (function()
 			var ___engine = {
 				this: this,
 				scene: null,
-				camera: null,
+				camera: [],
 				mesh: [],
 				config: {},
 				materialConfig: {},
@@ -255,25 +251,34 @@ var BRANCH = (function()
 			}
 
 			//
-			this.init = function()
+			this.init = function(id)
 			{
 				___engine.scene = new THREE.Scene();
+				___engine.scene.name = id;
 				$extend(___engine.config, ___defaultConfig);
 				$extend(___engine.materialConfig, ___defaultMaterialConfig);
 				$extend(___engine.cameraConfig, ___defaultCameraConfig);
 
-				___engine.camera = new THREE.PerspectiveCamera(___engine.cameraConfig.fov, ___engine.cameraConfig.aspect, ___engine.cameraConfig.near, ___engine.cameraConfig.far);
-				___engine.camera.position.set(___engine.cameraConfig.vector.x, ___engine.cameraConfig.vector.y, ___engine.cameraConfig.vector.z);
-				___engine.scene.add(___engine.camera);
+				// Make a camera manager (with one to default) and make a camera switcher
+				let cameraId = $getId(___engine.camera, _enum.CAMERA);
+				let camera = new THREE.PerspectiveCamera(___engine.cameraConfig.fov, ___engine.cameraConfig.aspect, ___engine.cameraConfig.near, ___engine.cameraConfig.far);
+				camera.position.set(___engine.cameraConfig.vector.x, ___engine.cameraConfig.vector.y, ___engine.cameraConfig.vector.z);
+				camera.name = cameraId;
+				___engine.scene.add(camera);
+				___engine.camera.push({
+					id: cameraId,
+					camera:	camera,
+					enable: true,
+				});
 
 				delete this.init;
 				return  ___engine.this;
 			}
 
 			//
-			this.add = function(mesh, type, id)
+			var $getMesh = function(callback, id, forced)
 			{
-				id = $getId(___engine.mesh, id);
+				id = $getId(___engine.mesh, _enum.MESH, id);
 				let find = $findKey(___engine.mesh, id);
 
 				if (find != -1)
@@ -281,15 +286,18 @@ var BRANCH = (function()
 					if (typeof(forced) != 'boolean' || forced == false) {
 						return null;
 					}
-					// Supprimer l'objet de la scene et supprimer dans __engine.scene
-					return ___engine.this;
+					___engine.scene.remove(___engine.mesh[find].mesh.get(null, _enum.MESH));
+					___engine.mesh.splice(find, 1);
 				}
 
+				let datas = callback();
+				datas.mesh.name = id;
+
 				let build = new $mesh;
-				build.init(type, mesh);
+				build.init(id, datas.type, datas.mesh, datas.callback);
 				___engine.mesh.push({
 					id: id,
-					type: type,	
+					type: datas.type,	
 					mesh: build,
 					inScene: false,
 				});
@@ -297,221 +305,183 @@ var BRANCH = (function()
 			}
 
 			//
-			this.cone = function(height, id, force)
+			this.add = function(mesh, type, id, forced)
 			{
-				id = $getId(___engine.mesh, id);
-				let find = $findKey(___engine.mesh, id);
-
-				if (find != -1)
+				return $getMesh(function()
 				{
-					if (typeof(forced) != 'boolean' || forced == false) {
-						return null;
+					return {
+						type: type,
+						mesh: mesh,
 					}
-					// Supprimer l'objet de la scene et supprimer dans __engine.scene
-					return ___engine.this;
-				}
-
-				let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
-				let geometry = new THREE.CylinderGeometry(0, 50, height, 4, 1);
-				let mesh = new THREE.Mesh(geometry, material);
-
-				let build = new $mesh;
-				build.init(_enum.CONE, mesh);
-				___engine.mesh.push({
-					id: id,
-					type: _enum.CONE,	
-					mesh: build,
-					inScene: false,
-				});
-				return build;
+				}, id, forced);
 			}
 
 			//
-			this.cylinder = function(height, id, force)
+			this.cone = function(height, id, forced)
 			{
-				id = $getId(___engine.mesh, id);
-				let find = $findKey(___engine.mesh, id);
-
-				if (find != -1)
+				return $getMesh(function()
 				{
-					if (typeof(forced) != 'boolean' || forced == false) {
-						return null;
+					let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
+					let geometry = new THREE.CylinderGeometry(0, 50, height, 4, 1);
+					let mesh = new THREE.Mesh(geometry, material);
+
+					return {
+						type: _enum.CONE,
+						mesh: mesh,
 					}
-					// Supprimer l'objet de la scene et supprimer dans __engine.scene
-					return ___engine.this;
-				}
-
-				let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
-				let geometry = new THREE.CylinderGeometry(50, 50, height);
-				
-				// THREE.CylinderGeometry(radiusTop, radiusBottom, height, radiusSegments, heightSegments, openEnded)
-				
-				let mesh = new THREE.Mesh(geometry, material);
-
-				let build = new $mesh;
-				build.init(_enum.CYLINDER, mesh);
-				___engine.mesh.push({
-					id: id,
-					type: _enum.CYLINDER,	
-					mesh: build,
-					inScene: false,
-				});
-				return build;
+				}, id, forced);
 			}
 
 			//
-			this.cube = function(size, vector, id, force)
+			this.cylinder = function(height, id, forced)
 			{
-				/*
-
-					Mettre une taille et un vector par défaut
-
-				*/
-				id = $getId(___engine.mesh, id);
-				let find = $findKey(___engine.mesh, id);
-
-				if (find != -1)
+				return $getMesh(function()
 				{
-					if (typeof(forced) != 'boolean' || forced == false) {
-						return null;
-					}
-					// Supprimer l'objet de la scene et supprimer dans __engine.scene
-					return ___engine.this;
-				}
+					let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
+					let geometry = new THREE.CylinderGeometry(50, 50, height);
+					
+					// THREE.CylinderGeometry(radiusTop, radiusBottom, height, radiusSegments, heightSegments, openEnded)
+					
+					let mesh = new THREE.Mesh(geometry, material);
 
-				let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
-				let getSize = size.get(0);
-				let geometry = new THREE.BoxGeometry(getSize.x, getSize.y, getSize.z);
-				let mesh = new THREE.Mesh(geometry, material);
-				$extend(mesh.position, vector.get(0));
-				
-				let build = new $mesh;
-				build.init(_enum.CUBE, mesh);
-				___engine.mesh.push({
-					id: id,
-					type: _enum.CUBE,	
-					mesh: build,
-					inScene: false,
-				});
-				return build;
+					return {
+						type: _enum.CYLINDER,
+						mesh: mesh,
+					}
+				}, id, forced);
+			}
+
+			//
+			this.cube = function(size, vector, id, forced)
+			{
+				return $getMesh(function()
+				{
+					//let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
+					let material = new THREE.MeshPhongMaterial(___engine.materialConfig);
+
+					let getSize = size.get(0);
+					let geometry = new THREE.BoxGeometry(getSize.x, getSize.y, getSize.z);
+					let mesh = new THREE.Mesh(geometry, material);
+					$extend(mesh.position, vector.get(0));
+
+					return {
+						type: _enum.CUBE,
+						mesh: mesh,
+					}
+				}, id, forced);
+			}
+
+			//
+			this.light = function(vector, id, forced)
+			{
+				return $getMesh(function()
+				{
+					let mesh = new THREE.SpotLight();
+					$extend(mesh.position, vector.get(0));
+
+					return {
+						type: _enum.LIGHT,
+						mesh: mesh,
+					}
+				}, id, forced);
 			}
 
 			//
 			this.circle = function(radius, vector, id, forced)
 			{
-				id = $getId(___engine.mesh, id);
-				let find = $findKey(___engine.mesh, id);
-
-				if (find != -1)
+				return $getMesh(function()
 				{
-					if (typeof(forced) != 'boolean' || forced == false) {
-						return null;
-					}
-					// Supprimer l'objet de la scene et supprimer dans __engine.scene
-					return ___engine.this;
-				}
+					let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
+					let geometry = new THREE.CircleGeometry(radius, 100);
+					let mesh = new THREE.Mesh(geometry, material);
+					$extend(mesh.position, vector.get(0));
 
-				let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
-				let geometry = new THREE.CircleGeometry(radius, 100);
-				let mesh = new THREE.Mesh(geometry, material);
-				$extend(mesh.position, vector.get(0));
-				
-				let build = new $mesh;
-				build.init(_enum.CIRCLE, mesh);
-				___engine.mesh.push({
-					id: id,
-					type: _enum.CIRCLE,	
-					mesh: build,
-					inScene: false,
-				});
-				return build;
+					return {
+						type: _enum.CIRCLE,
+						mesh: mesh,
+					}
+				}, id, forced);
+			}
+
+			//
+			this.line = function(vector, id, forced)
+			{
+				return $getMesh(function()
+				{
+					let material = new THREE.LineBasicMaterial(___engine.materialConfig);
+					let geometry = new THREE.Geometry();
+					let points = vector.get();
+					for (var index in points) {
+						geometry.vertices.push(points[index]);
+					}
+					let mesh = new THREE.Line(geometry, material);
+					
+					return {
+						type: _enum.LINE,
+						mesh: mesh,
+					}
+				}, id, forced);
 			}
 
 			//
 			this.triangle = function(vector, id, forced)
 			{
-				id = $getId(___engine.mesh, id);
-				let find = $findKey(___engine.mesh, id);
-
-				if (find != -1)
+				return $getMesh(function()
 				{
-					if (typeof(forced) != 'boolean' || forced == false) {
-						return null;
-					}
-					// Supprimer l'objet de la scene et supprimer dans __engine.scene
-					return ___engine.this;
-				}
+					let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
+					let geometry = new THREE.Geometry();
+					geometry.vertices.push(vector.get(0), vector.get(1), vector.get(2));
+					geometry.faces.push(new THREE.Face3(0, 1, 2));
+					let mesh = new THREE.Mesh(geometry, material);
 
-				let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
-				let geometry = new THREE.Geometry();
-				geometry.vertices.push(vector.get(0), vector.get(1), vector.get(2));
-				geometry.faces.push(new THREE.Face3(0, 1, 2));
-				let mesh = new THREE.Mesh(geometry, material);
-				
-				let build = new $mesh;
-				build.init(_enum.TRIANGLE, mesh);
-				___engine.mesh.push({
-					id: id,
-					type: _enum.TRIANGLE,	
-					mesh: build,
-					inScene: false,
-				});
-				return build;
+					return {
+						type: _enum.TRIANGLE,
+						mesh: mesh,
+					}
+				}, id, forced);
 			}
 
 			//
-			this.text = function(text, id, force)
+			this.text = function(text, id, forced)
 			{
-				id = $getId(___engine.mesh, id);
-				let find = $findKey(___engine.mesh, id);
-
-				if (find != -1)
+				return $getMesh(function()
 				{
-					if (typeof(forced) != 'boolean' || forced == false) {
-						return null;
-					}
-					// Supprimer l'objet de la scene et supprimer dans __engine.scene
-					return ___engine.this;
-				}
+					let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
+					let geometry = new THREE.Geometry();
+					let mesh = new THREE.Mesh(geometry, material);
 
-				let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
-				let geometry = new THREE.Geometry();
-				let mesh = new THREE.Mesh(geometry, material);
-				
-				let build = new $mesh;
-				build.init(_enum.TEXT, mesh, function() {
-					let loader = new THREE.FontLoader();
-					loader.load(___engine.config.font, function(font) {
-						let find = $findKey(___engine.mesh, id);
-						let geometry = new THREE.TextGeometry(text, {
-							material: 0,
-							extrudeMaterial: 1,
-							bevelEnabled: false,
-							bevelThickness: 8,
-							bevelSize: 4,
-							font: font,
-							weight: "normal",
-							style: "normal",
-							height: 0,
-							size: 30,
-							curveSegments: 4
+					let getFont = function(id) {
+						let loader = new THREE.FontLoader();
+						loader.load(___engine.config.font, function(font) {
+							let find = $findKey(___engine.mesh, id);
+							let geometry = new THREE.TextGeometry(text, {
+								material: 0,
+								extrudeMaterial: 1,
+								bevelEnabled: false,
+								bevelThickness: 8,
+								bevelSize: 4,
+								font: font,
+								weight: "normal",
+								style: "normal",
+								height: 0,
+								size: 30,
+								curveSegments: 4
+							});
+							let oldMesh = ___engine.mesh[find].mesh.get(null, _enum.MESH);
+							oldMesh.geometry = geometry;
+							___engine.mesh[find].mesh = mesh;
+							if (___engine.mesh[find].inScene == true) {
+								___engine.scene.add(mesh);
+							}
 						});
-						let oldMesh = ___engine.mesh[find].mesh.get(null, _enum.MESH);
-						oldMesh.geometry = geometry;
-						___engine.mesh[find].mesh = mesh;
-						if (___engine.mesh[find].inScene == true) {
-							___engine.scene.add(mesh);
-						}
-					});
-				});
-				
-				___engine.mesh.push({
-					id: id,
-					type: _enum.TEXT,	
-					mesh: build,
-					inScene: false,
-				});
-				return build;
+					}
+
+					return {
+						type: _enum.TEXT,
+						mesh: mesh,
+						callback: getFont,
+					}
+				}, id, forced);
 			}
 
 			//
@@ -519,6 +489,7 @@ var BRANCH = (function()
 			{
 				var ____engine = {
 					this: this,
+					id: '',
 					type: _enum.NONE,
 					mesh: null,
 					config: {},
@@ -530,79 +501,148 @@ var BRANCH = (function()
 				}
 
 				//
-				this.init = function(type, mesh, callback)
+				this.init = function(id, type, mesh, callback)
 				{
-					$extend(___engine.config, ____defaultConfig);
+					____engine.id = id;
 					____engine.type = type;
 					____engine.mesh = mesh;
+					$extend(___engine.config, ____defaultConfig);
+					$extend(____engine.this.position, mesh.position);
+					$extend(____engine.this.rotation, mesh.rotation);
 					if (typeof(callback) == 'function') {
-						callback();
+						callback(id);
 					}
+
+					/*** TEST (Black magic) ***/ // I don't know if I keep it or not...
+					for (var index in mesh.material) {
+						if (typeof(mesh.material[index]) != 'function') {
+							this[index] = function (param) {
+								let name = arguments.callee.myname;
+								switch (name+typeof(param))
+								{
+									case 'colorstring':
+									case 'colornumber':
+										____engine.mesh.material[name].setHex(param);
+									break;
+									default :
+										____engine.mesh.material[name] = param;
+								}
+								return ____engine.this;
+							}
+							this[index].myname = index;
+						}
+					}
+					____engine.this = this;
+					/*** END ***/
+
 					delete ____engine.this.init;
 					return ____engine.this;
 				}
 
 				//
-				this.color = function(value)
+				this.material = function(param)
 				{
-					____engine.mesh.material.color.setHex(value);
-					return $copy(___engine.this, ____engine.this);
+					//
+					return ____engine.this;
 				}
 
 				//
-				this.wireframe = function(bool)
+				this.geometry = function(param)
 				{
-					____engine.mesh.material.wireframe = bool;
-					return $copy(___engine.this, ____engine.this);
+					//
+					return ____engine.this;
 				}
 
 				//
-				this.position = function(vector)
+				this.font = function(url)
 				{
-					/*
-						Créer un système pour éditer directement :
-						position.x += 20;
-						ect...
-					*/
+					let loader = new THREE.FontLoader();
+					loader.load(url, function(font) {
+						____engine.mesh.geometry.font = font;
+						____engine.mesh.geometry.verticesNeedUpdate = true;
+					});
+					return ____engine.this;
+				}
+
+				//
+				this.transform = function(vec)
+				{
+					// To do
 					switch (____engine.type)
 					{
 						case _enum.TRIANGLE:
-							let vec1 = vector.get(0);
-							let vec2 = vector.get(1);
-							let vec3 = vector.get(2);
+							let vec1 = vec.get(0);
+							let vec2 = vec.get(1);
+							let vec3 = vec.get(2);
 							____engine.mesh.geometry.vertices[0].set(vec1.x, vec1.y, vec1.z);
 							____engine.mesh.geometry.vertices[1].set(vec2.x, vec2.y, vec2.z);
 							____engine.mesh.geometry.vertices[2].set(vec3.x, vec3.y, vec3.z);
 							____engine.mesh.geometry.verticesNeedUpdate = true;
 						break;
-						default :
-							$extend(____engine.mesh.position, vector.get(0));
 					}
-					return $copy(___engine.this, ____engine.this);
+					return ____engine.this;
 				}
 
 				//
-				this.rotation = function(vector)
+				this.position = function(vec)
 				{
-					/*
-						Créer un système pour éditer directement :
-						rotation.x += 20;
-						ect...
-					*/
-					$extend(____engine.mesh.rotation, vector.get(0));
-					return $copy(___engine.this, ____engine.this);
+					if (typeof(vec) == 'object') {
+						let vector = vec.get(0);
+						____engine.this.position.x = vector.x;
+						____engine.this.position.y = vector.y;
+						____engine.this.position.z = vector.z;
+						____engine.this.position.w = vector.w;
+					} else if (____engine.mesh.position.x == ____engine.this.position.x && ____engine.mesh.position.y == ____engine.this.position.y &&
+							____engine.mesh.position.z == ____engine.this.position.z && ____engine.mesh.position.w == ____engine.this.position.w) {
+						return $copy(___engine.this, ____engine.this);
+					}
+					vec = (typeof(vec) == 'undefined' ? _engine.this.vector(____engine.this.position.x, ____engine.this.position.y, ____engine.this.position.z, ____engine.this.position.w) : vec);
+					$extend(____engine.mesh.position, vec.get(0));
+					____engine.mesh.geometry.verticesNeedUpdate = true;
+					return ____engine.this;
+				}
+
+				//
+				this.rotation = function(vec)
+				{
+					if (typeof(vec) == 'object') {
+						let vector = vec.get(0);
+						____engine.this.rotation.x = vector.x;
+						____engine.this.rotation.y = vector.y;
+						____engine.this.rotation.z = vector.z;
+						____engine.this.rotation.w = vector.w;
+					} else if (____engine.mesh.rotation.x == ____engine.this.rotation.x && ____engine.mesh.rotation.y == ____engine.this.rotation.y &&
+							____engine.mesh.rotation.z == ____engine.this.rotation.z && ____engine.mesh.rotation.w == ____engine.this.rotation.w) {
+						return $copy(___engine.this, ____engine.this);
+					}
+					vec = (typeof(vec) == 'undefined' ? _engine.this.vector(____engine.this.rotation.x, ____engine.this.rotation.y, ____engine.this.rotation.z, ____engine.this.rotation.w) : vec);
+					$extend(____engine.mesh.rotation, vec.get(0));
+					____engine.mesh.geometry.verticesNeedUpdate = true;
+					return ____engine.this;
 				}
 
 				//
 				this.stop = function()
 				{
-					/*
-
-							Pour l'instant ça ne fait rien car ce n'est pas très claire
-
-					*/
+					// It does nothing at this moment
 					____engine.config.stop = true;
-					return $copy(___engine.this, ____engine.this);
+					return ____engine.this;
+				}
+
+				//
+				this.render = function()
+				{
+					___engine.this.render(____engine.id);
+					return ____engine.this;
+				}
+
+				//
+				this.remove = function()
+				{
+					let find = $findKey(___engine.mesh, ____engine.id);
+					___engine.scene.remove(____engine.mesh);
+					___engine.mesh.splice(find, 1);
+					return ___engine.this;
 				}
 
 				//
@@ -622,22 +662,28 @@ var BRANCH = (function()
 					}
 				}
 
-				return $copy(___engine.this, ____engine.this);
+				return ____engine.this;
 			}
 
 			//
 			this.remove = function(id)
 			{
-				/*
-					À faire
-				*/
+				// To Do
 				return ___engine.this;
 			}
 
 			//
-			this.render = function()
+			this.render = function(id)
 			{
 				___engine.config.stop = false;
+				let find = $findKey(___engine.mesh, id);
+				if (find != -1) {
+					if (___engine.mesh[find].inScene == false) {
+						___engine.scene.add(___engine.mesh[find].mesh.get(null, _enum.MESH));
+						___engine.mesh[find].inScene = true;
+					}
+					return ___engine.this;
+				}
 				for (var index in ___engine.mesh) {
 					if (___engine.mesh[index].inScene == false) {
 						___engine.scene.add(___engine.mesh[index].mesh.get(null, _enum.MESH));
@@ -661,7 +707,7 @@ var BRANCH = (function()
 				switch (type)
 				{
 					case _enum.MESH:
-						if (typeof(id) == 'undefined') {
+						if (typeof(id) == 'undefined' || id == null) {
 							return ___engine.mesh;
 						}
 						let find = $findKey(___engine.mesh, id);
@@ -674,7 +720,12 @@ var BRANCH = (function()
 						return __engine.config.stop;
 					break;
 					case _enum.CAMERA:
-						return ___engine.camera;
+						for (var index in ___engine.camera) {
+							if (___engine.camera[index].enable == true) {
+								return ___engine.camera[index].camera;
+							}
+						}
+						return null;
 					break;
 					case _enum.SCENE:
 						return ___engine.scene;
@@ -806,17 +857,15 @@ var BRANCH = (function()
 			return build;
 		}
 
-		this.position = function()
-		{
-			/*
-				Créer un système pour éditer directement :
-				position.x += 20;
-				ect...
-			*/
-		}
-
 		this.get = function(id)
 		{
+			if (typeof(id) == 'undefined') {
+				let vectors = [];
+				for (var index in __engine.vector) {
+					vectors.push(__engine.this.get(index));
+				}
+				return vectors;
+			}
 			if (typeof(__engine.vector[id].z) == 'undefined') {
 				return new THREE.Vector2(__engine.vector[id].x, __engine.vector[id].y);
 			}
@@ -858,6 +907,23 @@ var BRANCH = (function()
 			for (var index2 in update) {
 				update[index2]();
 			}
+		}
+
+		for (var index in _engine.branch) {
+			let branch = _engine.branch[index].branch;
+			let scenes = branch.get();
+			for (var index2 in scenes) {
+				let scene = scenes[index2].scene;
+				let meshs = scene.get(null, _enum.MESH);
+				for (var index3 in meshs) {
+					if (typeof(meshs[index3].mesh.position) == 'function') {
+						meshs[index3].mesh.position();
+					}
+					if (typeof(meshs[index3].mesh.rotation) == 'function') {
+						meshs[index3].mesh.rotation();
+					}
+				}	
+			}	
 		}
 	}, _engine.config.timeUpdate);
 

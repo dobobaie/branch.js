@@ -20,9 +20,12 @@
         })
         .scene()
         .triangle(BRANCH.vector(0, 0, 0).vector(0, 300, 0).vector(300, 0, 0))
+        //.darkness(false)
+        //.phong(true)
         .color(0xff0000)
         .wireframe(true)
         .render()
+        //.remove()
       ;
      
       // Example 2
@@ -48,7 +51,7 @@
             .random(BRANCH.VECTOR3)
             .random(BRANCH.VECTOR3, BRANCH.vector(-200, -200), BRANCH.vector(200, 200))
           ;
-          t.position(vector).color(BRANCH.random(BRANCH.COLOR));
+          t.transform(vector).color(BRANCH.random(BRANCH.COLOR));
           c1.position(vector.slice(0)).color(BRANCH.random(BRANCH.COLOR));
           c2.position(vector.slice(1)).color(BRANCH.random(BRANCH.COLOR));
           c3.position(vector.slice(2)).color(BRANCH.random(BRANCH.COLOR));
@@ -74,12 +77,19 @@
         this.width = areaSize;
       });
       scene = app.scene();
-      scene
+      obj = scene
         .cube(BRANCH.vector(200, 200, 200), BRANCH.vector(0, 0, 0))
-        .rotation(BRANCH.vector(-5, -5, -5))
-      ;
+        .color(0xA4A4A4)
+        .rotation(BRANCH.vector(5, 0, 5))
+       ;
+      scene.light(BRANCH.vector(50, 250, 400));
       scene.render();
 
+      app.update(function() {
+        obj.rotation.x += 0.08;
+        obj.rotation.z += 0.08;
+      });
+      
       // Example 5
       app = BRANCH.init(function() {
         this.height = areaSize;
@@ -106,14 +116,23 @@
       ;
       scene.render();
 
-
-      // Example 6
+      // Example 7
       app = BRANCH.init(function() {
         this.height = areaSize;
         this.width = areaSize * 2;
       });
       scene = app.scene();
-      scene.text("BRANCH.JS").position(BRANCH.vector(-100, 0 ,0)).render();
+      scene.text('BRANCH.JS').font('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/fonts/optimer_bold.typeface.json').position(BRANCH.vector(-100, 0, 0)).render(); // There are already a default font but for the example I add an other one
+     
+      // Example 8
+      app = BRANCH.init(function() {
+        this.height = areaSize;
+        this.width = areaSize;
+      });
+      scene = app.scene();
+      scene.line(BRANCH.vector(300, 0, 0).vector(300, 300, 0));
+      scene.line(BRANCH.vector(0, 300, 0).vector(0, 0, 0).vector(0, -300, 0).vector(-300, -300, 0));
+      scene.render();
      
       /*
           Examples THREE.JS mixed with BRANCH.JS
