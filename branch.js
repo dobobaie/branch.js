@@ -1,9 +1,18 @@
+/*
+
+	Gérer le multi camera (avec une par defaut) et un système pour switch de camera
+	
+	faire le module forced
+
+*/
+
 var BRANCH = (function()
 {
 	//
 	var _enum = {
 		NONE: 'none',
 
+		TEXT: 'text',
 		CIRCLE: 'circle',
 		TRIANGLE: 'triangle',
 		CUBE: 'cube',
@@ -224,6 +233,7 @@ var BRANCH = (function()
 			//
 			var ___defaultConfig = {
 				stop: false,
+				font: 'fonts/helvetiker_regular.typeface.json',
 			}
 
 			//
@@ -263,8 +273,8 @@ var BRANCH = (function()
 			//
 			this.add = function(mesh, type, id)
 			{
-				id = $getId(__engine.scene, id);
-				let find = $findKey(__engine.scene, id);
+				id = $getId(___engine.mesh, id);
+				let find = $findKey(___engine.mesh, id);
 
 				if (find != -1)
 				{
@@ -289,8 +299,8 @@ var BRANCH = (function()
 			//
 			this.cone = function(height, id, force)
 			{
-				id = $getId(__engine.scene, id);
-				let find = $findKey(__engine.scene, id);
+				id = $getId(___engine.mesh, id);
+				let find = $findKey(___engine.mesh, id);
 
 				if (find != -1)
 				{
@@ -303,9 +313,6 @@ var BRANCH = (function()
 
 				let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
 				let geometry = new THREE.CylinderGeometry(0, 50, height, 4, 1);
-				
-				// THREE.CylinderGeometry(radiusTop, radiusBottom, height, radiusSegments, heightSegments, openEnded)
-				
 				let mesh = new THREE.Mesh(geometry, material);
 
 				let build = new $mesh;
@@ -322,8 +329,8 @@ var BRANCH = (function()
 			//
 			this.cylinder = function(height, id, force)
 			{
-				id = $getId(__engine.scene, id);
-				let find = $findKey(__engine.scene, id);
+				id = $getId(___engine.mesh, id);
+				let find = $findKey(___engine.mesh, id);
 
 				if (find != -1)
 				{
@@ -360,8 +367,8 @@ var BRANCH = (function()
 					Mettre une taille et un vector par défaut
 
 				*/
-				id = $getId(__engine.scene, id);
-				let find = $findKey(__engine.scene, id);
+				id = $getId(___engine.mesh, id);
+				let find = $findKey(___engine.mesh, id);
 
 				if (find != -1)
 				{
@@ -392,8 +399,8 @@ var BRANCH = (function()
 			//
 			this.circle = function(radius, vector, id, forced)
 			{
-				id = $getId(__engine.scene, id);
-				let find = $findKey(__engine.scene, id);
+				id = $getId(___engine.mesh, id);
+				let find = $findKey(___engine.mesh, id);
 
 				if (find != -1)
 				{
@@ -423,8 +430,8 @@ var BRANCH = (function()
 			//
 			this.triangle = function(vector, id, forced)
 			{
-				id = $getId(__engine.scene, id);
-				let find = $findKey(__engine.scene, id);
+				id = $getId(___engine.mesh, id);
+				let find = $findKey(___engine.mesh, id);
 
 				if (find != -1)
 				{
@@ -453,6 +460,61 @@ var BRANCH = (function()
 			}
 
 			//
+			this.text = function(text, id, force)
+			{
+				id = $getId(___engine.mesh, id);
+				let find = $findKey(___engine.mesh, id);
+
+				if (find != -1)
+				{
+					if (typeof(forced) != 'boolean' || forced == false) {
+						return null;
+					}
+					// Supprimer l'objet de la scene et supprimer dans __engine.scene
+					return ___engine.this;
+				}
+
+				let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
+				let geometry = new THREE.Geometry();
+				let mesh = new THREE.Mesh(geometry, material);
+				
+				let build = new $mesh;
+				build.init(_enum.TEXT, mesh, function() {
+					let loader = new THREE.FontLoader();
+					loader.load(___engine.config.font, function(font) {
+						let find = $findKey(___engine.mesh, id);
+						let geometry = new THREE.TextGeometry(text, {
+							material: 0,
+							extrudeMaterial: 1,
+							bevelEnabled: false,
+							bevelThickness: 8,
+							bevelSize: 4,
+							font: font,
+							weight: "normal",
+							style: "normal",
+							height: 0,
+							size: 30,
+							curveSegments: 4
+						});
+						let oldMesh = ___engine.mesh[find].mesh.get(null, _enum.MESH);
+						oldMesh.geometry = geometry;
+						___engine.mesh[find].mesh = mesh;
+						if (___engine.mesh[find].inScene == true) {
+							___engine.scene.add(mesh);
+						}
+					});
+				});
+				
+				___engine.mesh.push({
+					id: id,
+					type: _enum.TEXT,	
+					mesh: build,
+					inScene: false,
+				});
+				return build;
+			}
+
+			//
 			var $mesh = function()
 			{
 				var ____engine = {
@@ -468,11 +530,14 @@ var BRANCH = (function()
 				}
 
 				//
-				this.init = function(type, mesh)
+				this.init = function(type, mesh, callback)
 				{
 					$extend(___engine.config, ____defaultConfig);
 					____engine.type = type;
 					____engine.mesh = mesh;
+					if (typeof(callback) == 'function') {
+						callback();
+					}
 					delete ____engine.this.init;
 					return ____engine.this;
 				}
