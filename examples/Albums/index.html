@@ -1,0 +1,33 @@
+<html>
+	<head>
+		<title>Albums</title>
+		<style>
+			body { margin: 0; overflow: hidden;}
+			canvas { border: 1px solid #FFFFFF; }
+		</style>
+	</head>
+	<body>
+		<script src="https://cdn.rawgit.com/mrdoob/three.js/dev/build/three.min.js"></script>
+		<script src="https://cdn.rawgit.com/dobobaie/branch.js/master/branch.js"></script>
+		<script>
+			const MARGE = 10;
+			const WIDTH = window.innerWidth;
+			const HEIGHT = window.innerHeight;
+			
+			const SWIDHT = (WIDTH / 3) - (MARGE + (MARGE / 3));
+			const SHEIGHT = (HEIGHT / 3) - (MARGE + (MARGE / 3));
+			const MINX = ((WIDTH / 2) * -1) + (SWIDHT / 2) + MARGE;
+			const MINY = ((HEIGHT / 2) * -1) + (SHEIGHT / 2) + MARGE;
+
+			let app = BRANCH.init();
+			let scene = app.scene().position(BRANCH.vector(0, 0, HEIGHT + (HEIGHT / MARGE)));
+			scene.square(BRANCH.vector(WIDTH, HEIGHT)).color(0x151515);
+			for (var i = 0; i < 3; i++) {
+				for (var i2 = 0; i2 < 3; i2++) {
+					scene.square(BRANCH.vector(SWIDHT, SHEIGHT)).texture('photos/'+((i * 3) + (i2 + 1))+'.JPEG').position(BRANCH.vector(MINX + ((SWIDHT + MARGE) * i), MINY + ((SHEIGHT + MARGE) * i2)))
+				}
+			}
+			scene.render();
+		</script>
+	</body>
+</html>
