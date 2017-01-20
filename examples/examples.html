@@ -68,7 +68,7 @@
       ;
 
       scene = BRANCH.get('myBranch').get('myScene');
-      scene.get('myCirle').color(0xffff00);
+      scene.get('myCirle').color(0x0000ff);
       scene.render();
 
       // Example 4
@@ -77,7 +77,7 @@
         this.width = areaSize;
       });
       scene = app.scene();
-      obj = scene
+      var obj = scene
         .cube(BRANCH.vector(200, 200, 200), BRANCH.vector(0, 0, 0))
         .color(0xA4A4A4)
         .rotation(BRANCH.vector(5, 0, 5))
@@ -95,13 +95,19 @@
         this.height = areaSize;
         this.width = areaSize;
       });
-      scene = app.scene();
-      scene
-        .cone(180)
-        .color(0x0000ff)
+      var scene2 = app.scene();
+      scene2
+        .cone(180, 'myCone')
+        .color(0xffff00)
         .rotation(BRANCH.vector(5, 5, 5))
       ;
-      scene.render();
+      scene2.light(BRANCH.vector(50, 250, 400));
+      scene2.render();
+
+      app.update(function() {
+        scene2.get('myCone').rotation.y += 0.08;
+        scene2.get('myCone').rotation.z += 0.08;
+      });
 
       // Example 6
       app = BRANCH.init(function() {
@@ -109,12 +115,19 @@
         this.width = areaSize;
       });
       scene = app.scene();
-      scene
+      var obj2 = scene
         .cylinder(180)
         .color(BRANCH.random(BRANCH.COLOR))
-        .rotation(BRANCH.vector(-5, -5, -5))
+        .rotation(BRANCH.vector(5, -1, 1))
       ;
+      scene.light(BRANCH.vector(50, 250, 400))
       scene.render();
+    
+      app.update(function() {
+        obj2.rotation.x += 0.08;
+        obj2.rotation.z += 0.08;
+      });
+
 
       // Example 7
       app = BRANCH.init(function() {
@@ -133,7 +146,7 @@
       scene.line(BRANCH.vector(300, 0, 0).vector(300, 300, 0));
       scene.line(BRANCH.vector(0, 300, 0).vector(0, 0, 0).vector(0, -300, 0).vector(-300, -300, 0));
       scene.render();
-     
+
       // Example 9
       BRANCH
         .init(function() {
@@ -141,7 +154,7 @@
           this.width = areaSize;
         })
         .scene()
-        .plane(BRANCH.vector(300, 300))
+        .square(BRANCH.vector(300, 300))
         .texture('http://sdg.repositoryhosting.com/git_public/sdg/sdg-blog.git/blob_plain/abced5687967687c3e429ddd18a38055d0439550:/Three-js-examples/images/crate.jpg')
         .render()
       ;

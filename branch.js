@@ -321,8 +321,8 @@ var BRANCH = (function()
 			{
 				return $getMesh(function()
 				{
-					let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
-					let geometry = new THREE.CylinderGeometry(0, 50, height, 4, 1);
+					let material = new THREE.MeshPhongMaterial(___engine.materialConfig);
+					let geometry = new THREE.CylinderGeometry(0, 50, height, 32);
 					let mesh = new THREE.Mesh(geometry, material);
 
 					return {
@@ -337,8 +337,8 @@ var BRANCH = (function()
 			{
 				return $getMesh(function()
 				{
-					let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
-					let geometry = new THREE.CylinderGeometry(50, 50, height);
+					let material = new THREE.MeshPhongMaterial(___engine.materialConfig);
+					let geometry = new THREE.CylinderGeometry(50, 50, height, 50);
 					
 					// THREE.CylinderGeometry(radiusTop, radiusBottom, height, radiusSegments, heightSegments, openEnded)
 					
@@ -744,12 +744,9 @@ var BRANCH = (function()
 				switch (type)
 				{
 					case _enum.MESH:
-						if (typeof(id) == 'undefined' || id == null) {
-							return ___engine.mesh;
-						}
 						let find = $findKey(___engine.mesh, id);
 						if (find == -1) {
-							return null;
+							return ___engine.mesh;
 						}
 						return ___engine.mesh[find].mesh;
 					break;
