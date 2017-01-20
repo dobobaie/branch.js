@@ -134,6 +134,18 @@
       scene.line(BRANCH.vector(0, 300, 0).vector(0, 0, 0).vector(0, -300, 0).vector(-300, -300, 0));
       scene.render();
      
+      // Example 9
+      BRANCH
+        .init(function() {
+          this.height = areaSize;
+          this.width = areaSize;
+        })
+        .scene()
+        .plane(BRANCH.vector(300, 300))
+        .texture('http://sdg.repositoryhosting.com/git_public/sdg/sdg-blog.git/blob_plain/abced5687967687c3e429ddd18a38055d0439550:/Three-js-examples/images/crate.jpg')
+        .render()
+      ;
+
       /*
           Examples THREE.JS mixed with BRANCH.JS
       */

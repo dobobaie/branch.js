@@ -422,6 +422,23 @@ var BRANCH = (function()
 			}
 
 			//
+			this.plane = function(vector, id, forced)
+			{
+				return $getMesh(function()
+				{
+					let material = new THREE.MeshBasicMaterial();
+					let size = vector.get(0);
+					let geometry = new THREE.PlaneGeometry(size.x, size.y);
+					let mesh = new THREE.Mesh(geometry, material);
+
+					return {
+						type: _enum.TRIANGLE,
+						mesh: mesh,
+					}
+				}, id, forced);
+			}
+
+			//
 			this.triangle = function(vector, id, forced)
 			{
 				return $getMesh(function()
@@ -449,6 +466,7 @@ var BRANCH = (function()
 					let mesh = new THREE.Mesh(geometry, material);
 
 					let getFont = function(mesh) {
+						mesh = mesh.get(null, _enum.MESH);
 						let loader = new THREE.FontLoader();
 						loader.load(___engine.config.font, function(font) {
 							let find = $findKey(___engine.mesh, mesh.name);
@@ -506,10 +524,6 @@ var BRANCH = (function()
 					$extend(___engine.config, ____defaultConfig);
 					$extend(____engine.this.position, mesh.position);
 					$extend(____engine.this.rotation, mesh.rotation);
-					if (typeof(callback) == 'function') {
-						callback(mesh);
-					}
-
 					/*** TEST (Black magic) ***/ // I don't know if I keep it or not...
 					for (var index in mesh.material) {
 						if (typeof(mesh.material[index]) != 'function') {
@@ -524,14 +538,18 @@ var BRANCH = (function()
 									default :
 										____engine.mesh.material[name] = param;
 								}
+								____engine.mesh.material.needsUpdate = true;
 								return ____engine.this;
 							}
 							this[index].myname = index;
 						}
 					}
-					____engine.this = this;
+					$extend(____engine.this, this);
 					/*** END ***/
 
+					if (typeof(callback) == 'function') {
+						callback(____engine.this);
+					}
 					delete ____engine.this.init;
 					return ____engine.this;
 				}
@@ -558,6 +576,16 @@ var BRANCH = (function()
 						____engine.mesh.geometry.font = font;
 						____engine.mesh.geometry.verticesNeedUpdate = true;
 					});
+					return ____engine.this;
+				}
+
+				//
+				this.texture = function(url)
+				{
+					let loader = new THREE.TextureLoader();
+					loader.load(url, function(texture) {
+						____engine.this.map(texture);
+					});	
 					return ____engine.this;
 				}
 
