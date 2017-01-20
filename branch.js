@@ -12,6 +12,8 @@ var BRANCH = (function()
 		CYLINDER: 'cylinder',
 		CONE: 'cone',
 		LIGHT: 'light',
+		SQUARE: 'square',
+		PLANE: 'plane',
 		
 		COLOR: 'color',
 		VECTOR2: 'vector2',
@@ -422,17 +424,34 @@ var BRANCH = (function()
 			}
 
 			//
-			this.plane = function(vector, id, forced)
+			this.square = function(vector, id, forced)
 			{
 				return $getMesh(function()
 				{
-					let material = new THREE.MeshBasicMaterial();
+					let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
 					let size = vector.get(0);
 					let geometry = new THREE.PlaneGeometry(size.x, size.y);
 					let mesh = new THREE.Mesh(geometry, material);
 
 					return {
-						type: _enum.TRIANGLE,
+						type: _enum.SQUARE,
+						mesh: mesh,
+					}
+				}, id, forced);
+			}
+
+			//
+			this.plane = function(vector, id, forced)
+			{
+				return $getMesh(function()
+				{
+					let material = new THREE.MeshPhongMaterial(___engine.materialConfig);
+					let size = vector.get(0);
+					let geometry = new THREE.PlaneGeometry(size.x, size.y);
+					let mesh = new THREE.Mesh(geometry, material);
+
+					return {
+						type: _enum.PLANE,
 						mesh: mesh,
 					}
 				}, id, forced);
