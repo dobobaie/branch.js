@@ -159,6 +159,41 @@
         .render()
       ;
 
+      // Example 10          
+      BRANCH
+        .init(function() {
+          this.height = areaSize;
+          this.width = areaSize + 200;
+        }, 'ex10')
+
+        .update(function() {
+          let app = BRANCH.get('ex10');
+          let scene = app.get('scene1');
+          let merge = scene.get('myMerge', BRANCH.MERGE);
+          merge.rotation.x += 0.1;
+          merge.rotation.z -= 0.1;
+        })
+
+        .scene()
+        .position(BRANCH.vector(0, 0, 10))
+        
+        .point(BRANCH.math.lemniscate(BRANCH.vector(0, 0, 0))).size(4).merge('myMerge')
+
+        .back()
+
+        .point(BRANCH.math.lemniscate(BRANCH.vector(0, 0, 0))).size(4).rotation(BRANCH.vector(0, 0, 1.57)).merge('myMerge')
+
+        .back()
+
+        .line(BRANCH.vector(-5, 0, 0).vector(5, 0, 0)).merge('myMerge')
+
+        .back()
+
+        .line(BRANCH.vector(0, -3, 0).vector(0, 3, 0)).merge('myMerge')
+
+        .render()
+      ;
+
       /*
           Examples THREE.JS mixed with BRANCH.JS
       */

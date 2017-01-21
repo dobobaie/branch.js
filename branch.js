@@ -4,6 +4,8 @@ var BRANCH = (function()
 	var _enum = {
 		NONE: 'none',
 
+		MESH: 'mesh',
+		POINT: 'point',
 		TEXT: 'text',
 		LINE: 'line',
 		CIRCLE: 'circle',
@@ -13,6 +15,7 @@ var BRANCH = (function()
 		CONE: 'cone',
 		LIGHT: 'light',
 		SQUARE: 'square',
+		LINE: 'line',
 		PLANE: 'plane',
 		
 		COLOR: 'color',
@@ -20,12 +23,14 @@ var BRANCH = (function()
 		VECTOR3: 'vector3',
 		VECTOR4: 'vector4',
 
+		MATH: 'math',
+		VECTOR: 'vector',
+		MERGE: 'merge',
 		STOP: 'stop',
 		CAMERA: 'camera',
 		SCENE: 'scene',
 		RENDERER: 'renderer',
 		BRANCH: 'branch',
-		MESH: 'mesh',
 		UPDATE: 'update',
 		DRAW: 'draw',
 	}
@@ -81,7 +86,7 @@ var BRANCH = (function()
 	//
 	var $getId = function(obj, type, id, len)
 	{
-		len = (typeof(len) == 'undefined' ? 0 : len);
+		len = (typeof(len) == 'undefined' ? 1 : len);
 		if ((id == null || typeof(id) == 'undefined') && (id = type+(obj.length + len)) && $findKey(obj, id) != -1) {
 			return $getId(obj, type, null, len + 1);
 		}
@@ -117,6 +122,7 @@ var BRANCH = (function()
 		//
 		var __engine = {
 			this: this,
+			type: _enum.BRANCH,
 			renderer: null,
 			scene: [],
 			update: [],
@@ -220,12 +226,16 @@ var BRANCH = (function()
 		{
 			var ___engine = {
 				this: this,
+				type: _enum.SCENE,
 				scene: null,
 				camera: [],
 				mesh: [],
+				merge: [],
 				config: {},
 				materialConfig: {},
 				cameraConfig: {},
+				pointMaterialConfig: {},
+				lineMaterialConfig: {},
 			};
 
 			//
@@ -249,7 +259,18 @@ var BRANCH = (function()
 					x: 0,
 					y: 0,
 					z: 1000,
+					w: 0,
 				},
+			}
+
+			//
+			var ___pointMaterialConfig = {
+				sizeAttenuation: false,
+			}
+
+			//
+			var ___lineMaterialConfig = {
+
 			}
 
 			//
@@ -260,11 +281,13 @@ var BRANCH = (function()
 				$extend(___engine.config, ___defaultConfig);
 				$extend(___engine.materialConfig, ___defaultMaterialConfig);
 				$extend(___engine.cameraConfig, ___defaultCameraConfig);
+				$extend(___engine.pointMaterialConfig, ___pointMaterialConfig);
+				$extend(___engine.lineMaterialConfig, ___lineMaterialConfig);
 
 				// Make a camera manager (with one to default) and make a camera switcher
 				let cameraId = $getId(___engine.camera, _enum.CAMERA);
 				let camera = new THREE.PerspectiveCamera(___engine.cameraConfig.fov, ___engine.cameraConfig.aspect, ___engine.cameraConfig.near, ___engine.cameraConfig.far);
-				camera.position.set(___engine.cameraConfig.vector.x, ___engine.cameraConfig.vector.y, ___engine.cameraConfig.vector.z);
+				camera.position.set(___engine.cameraConfig.vector.x, ___engine.cameraConfig.vector.y, ___engine.cameraConfig.vector.z, ___engine.cameraConfig.vector.w);
 				camera.name = cameraId;
 				___engine.scene.add(camera);
 				___engine.camera.push({
@@ -273,7 +296,60 @@ var BRANCH = (function()
 					enable: true,
 				});
 
+				$extend(___engine.this.position, camera.position);
+				$extend(___engine.this.rotation, camera.rotation);
+
 				delete this.init;
+				return  ___engine.this;
+			}
+
+			// Camera temporary
+			this.position = function(vec)
+			{
+				for (var index in ___engine.camera) {
+					if (___engine.camera[index].enable == true)
+					{
+						if (typeof(vec) == 'object') {
+							let vector = vec.get(0);
+							___engine.this.position.x = vector.x;
+							___engine.this.position.y = vector.y;
+							___engine.this.position.z = vector.z;
+							___engine.this.position.w = vector.w;
+						}
+						if (___engine.camera[index].camera.position.x == ___engine.this.position.x && ___engine.camera[index].camera.position.y == ___engine.this.position.y &&
+								___engine.camera[index].camera.position.z == ___engine.this.position.z && ___engine.camera[index].camera.position.w == ___engine.this.position.w) {
+							return ___engine.this;
+						}
+						vec = (typeof(vec) == 'undefined' ? _engine.this.vector(___engine.this.position.x, ___engine.this.position.y, ___engine.this.position.z, ___engine.this.position.w) : vec);
+						$extend(___engine.camera[index].camera.position, vec.get(0));
+						return  ___engine.this;
+					}
+				}
+				return  ___engine.this;
+			}
+
+			// Camera temporary
+			this.rotation = function(vec)
+			{
+				for (var index in ___engine.camera) {
+					if (___engine.camera[index].enable == true)
+					{
+						if (typeof(vec) == 'object') {
+							let vector = vec.get(0);
+							___engine.this.rotation.x = vector.x;
+							___engine.this.rotation.y = vector.y;
+							___engine.this.rotation.z = vector.z;
+							___engine.this.rotation.w = vector.w;
+						}
+						if (___engine.camera[index].camera.rotation.x == ___engine.this.rotation.x && ___engine.camera[index].camera.rotation.y == ___engine.this.rotation.y &&
+								___engine.camera[index].camera.rotation.z == ___engine.this.rotation.z && ___engine.camera[index].camera.rotation.w == ___engine.this.rotation.w) {
+							return ___engine.this;
+						}
+						vec = (typeof(vec) == 'undefined' ? _engine.this.vector(___engine.this.rotation.x, ___engine.this.rotation.y, ___engine.this.rotation.z, ___engine.this.rotation.w) : vec);
+						$extend(___engine.camera[index].camera.rotation, vec.get(0));
+						return  ___engine.this;
+					}
+				}
 				return  ___engine.this;
 			}
 
@@ -300,6 +376,7 @@ var BRANCH = (function()
 					type: datas.type,	
 					mesh: build,
 					inScene: false,
+					merged: false,
 				});
 				return build;
 			}
@@ -356,7 +433,6 @@ var BRANCH = (function()
 			{
 				return $getMesh(function()
 				{
-					//let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
 					let material = new THREE.MeshPhongMaterial(___engine.materialConfig);
 
 					let getSize = size.get(0);
@@ -398,26 +474,6 @@ var BRANCH = (function()
 
 					return {
 						type: _enum.CIRCLE,
-						mesh: mesh,
-					}
-				}, id, forced);
-			}
-
-			//
-			this.line = function(vector, id, forced)
-			{
-				return $getMesh(function()
-				{
-					let material = new THREE.LineBasicMaterial(___engine.materialConfig);
-					let geometry = new THREE.Geometry();
-					let points = vector.get();
-					for (var index in points) {
-						geometry.vertices.push(points[index]);
-					}
-					let mesh = new THREE.Line(geometry, material);
-					
-					return {
-						type: _enum.LINE,
 						mesh: mesh,
 					}
 				}, id, forced);
@@ -476,6 +532,46 @@ var BRANCH = (function()
 			}
 
 			//
+			this.line = function(vectors, id, forced)
+			{
+				return $getMesh(function()
+				{
+					let material = new THREE.LineBasicMaterial(___engine.lineMaterialConfig);
+					let geometry = new THREE.Geometry();
+					vectors = vectors.get();
+					for (var index in vectors) {
+						geometry.vertices.push(vectors[index]);
+					}
+					let mesh = new THREE.Line(geometry, material);
+					
+					return {
+						type: _enum.LINE,
+						mesh: mesh,
+					}
+				}, id, forced);
+			}
+
+			//
+			this.point = function(vectors, id, forced)
+			{
+				return $getMesh(function()
+				{
+					let material = new THREE.PointsMaterial(___engine.pointMaterialConfig);
+					let geometry = new THREE.Geometry();
+					vectors = vectors.get();
+					for (var index in vectors) {
+						geometry.vertices.push(vectors[index]);
+					}
+					let mesh = new THREE.Points(geometry, material);
+
+					return {
+						type: _enum.POINT,
+						mesh: mesh,
+					}
+				}, id, forced);
+			}
+
+			//
 			this.text = function(text, id, forced)
 			{
 				return $getMesh(function()
@@ -502,9 +598,7 @@ var BRANCH = (function()
 								size: 30,
 								curveSegments: 4
 							});
-							let oldMesh = ___engine.mesh[find].mesh.get(null, _enum.MESH);
-							oldMesh.geometry = geometry;
-							___engine.mesh[find].mesh = mesh;
+							mesh.geometry = geometry;
 							if (___engine.mesh[find].inScene == true) {
 								___engine.scene.add(mesh);
 							}
@@ -524,7 +618,7 @@ var BRANCH = (function()
 			{
 				var ____engine = {
 					this: this,
-					type: _enum.NONE,
+					type: _enum.MESH,
 					mesh: null,
 					config: {},
 				}
@@ -537,12 +631,13 @@ var BRANCH = (function()
 				//
 				this.init = function(id, type, mesh, callback)
 				{
-					____engine.type = type;
 					____engine.mesh = mesh;
+					____engine.type = type; 
 					____engine.mesh.name = id;
 					$extend(___engine.config, ____defaultConfig);
 					$extend(____engine.this.position, mesh.position);
 					$extend(____engine.this.rotation, mesh.rotation);
+
 					/*** TEST (Black magic) ***/ // I don't know if I keep it or not...
 					for (var index in mesh.material) {
 						if (typeof(mesh.material[index]) != 'function') {
@@ -628,9 +723,10 @@ var BRANCH = (function()
 						____engine.this.position.y = vector.y;
 						____engine.this.position.z = vector.z;
 						____engine.this.position.w = vector.w;
-					} else if (____engine.mesh.position.x == ____engine.this.position.x && ____engine.mesh.position.y == ____engine.this.position.y &&
+					}
+					if (____engine.mesh.position.x == ____engine.this.position.x && ____engine.mesh.position.y == ____engine.this.position.y &&
 							____engine.mesh.position.z == ____engine.this.position.z && ____engine.mesh.position.w == ____engine.this.position.w) {
-						return $copy(___engine.this, ____engine.this);
+						return ____engine.this;
 					}
 					vec = (typeof(vec) == 'undefined' ? _engine.this.vector(____engine.this.position.x, ____engine.this.position.y, ____engine.this.position.z, ____engine.this.position.w) : vec);
 					$extend(____engine.mesh.position, vec.get(0));
@@ -647,9 +743,10 @@ var BRANCH = (function()
 						____engine.this.rotation.y = vector.y;
 						____engine.this.rotation.z = vector.z;
 						____engine.this.rotation.w = vector.w;
-					} else if (____engine.mesh.rotation.x == ____engine.this.rotation.x && ____engine.mesh.rotation.y == ____engine.this.rotation.y &&
+					}
+					if (____engine.mesh.rotation.x == ____engine.this.rotation.x && ____engine.mesh.rotation.y == ____engine.this.rotation.y &&
 							____engine.mesh.rotation.z == ____engine.this.rotation.z && ____engine.mesh.rotation.w == ____engine.this.rotation.w) {
-						return $copy(___engine.this, ____engine.this);
+						return ____engine.this;
 					}
 					vec = (typeof(vec) == 'undefined' ? _engine.this.vector(____engine.this.rotation.x, ____engine.this.rotation.y, ____engine.this.rotation.z, ____engine.this.rotation.w) : vec);
 					$extend(____engine.mesh.rotation, vec.get(0));
@@ -668,7 +765,15 @@ var BRANCH = (function()
 				//
 				this.render = function()
 				{
-					___engine.this.render(____engine.id);
+					let find = $findKey(___engine.mesh, ____engine.mesh.name);
+					if (find == -1) {
+						return null;
+					}
+					___engine.config.stop = false;
+					if (___engine.mesh[find].inScene == false) {
+						___engine.scene.add(___engine.mesh[find].mesh.get(null, _enum.MESH));
+						___engine.mesh[find].inScene = true;
+					}
 					return ____engine.this;
 				}
 
@@ -679,6 +784,39 @@ var BRANCH = (function()
 					___engine.scene.remove(____engine.mesh);
 					___engine.mesh.splice(find, 1);
 					return ___engine.this;
+				}
+
+				//
+				this.back = function(id, type)
+				{
+					if (typeof(id) == 'string') {
+						type = (typeof(type) == 'undefined' ? _enum.MERGE : type);
+						return ___engine.this.get(id, type);
+					}
+					return ___engine.this;
+				}
+
+				//
+				this.merge = function(id)
+				{
+					if (typeof(id) != 'string') {
+						return null;
+					}
+					let find = $findKey(___engine.merge, id);
+					let me = $findKey(___engine.mesh, ____engine.mesh.name);
+					if (find == -1) {
+						let merge = new $merge;
+						merge.init(___engine.mesh[me].mesh);
+						___engine.merge.push({
+							id: id,
+							merge: merge,
+						});
+						___engine.mesh[me].merged = true;
+						return merge;
+					}
+					___engine.merge[find].merge.push(___engine.mesh[me].mesh);
+					___engine.mesh[me].merged = true;
+					return ___engine.merge[find].merge;
 				}
 
 				//
@@ -702,6 +840,122 @@ var BRANCH = (function()
 			}
 
 			//
+			var $merge = function()
+			{
+				var ____engine = {
+					this: this,
+					type: _enum.MERGE,
+					mesh: [],
+				}
+
+				//
+				this.init = function(mesh)
+				{
+					____engine.this.push(mesh);
+					$extend(____engine.this.position, {x: 0, y: 0, z: 0, w: 0, lx: 0, ly: 0, lz: 0, lw: 0});
+					$extend(____engine.this.rotation, {x: 0, y: 0, z: 0, w: 0, lx: 0, ly: 0, lz: 0, lw: 0});
+					return ____engine.this;
+				}
+
+				//
+				this.push = function(mesh)
+				{
+					____engine.mesh.push(mesh);
+
+					/*** TEST (Black magic) ***/ // I don't know if I keep it or not...
+					let material = mesh.get(null, _enum.MESH).material;
+					$extend(material, {
+						stop: '',
+						remove: '',	
+						render: '',
+					});
+					for (var index in material) {
+						if (typeof(material[index]) != 'function') {
+							this[index] = function (param) {
+								let name = arguments.callee.myname;
+								for (var index in ____engine.mesh) {
+									____engine.mesh[index][name](param);
+								}
+								return ____engine.this;
+							};
+							this[index].myname = index;
+						}
+					}
+					$extend(____engine.this, this);
+					/*** END ***/
+
+					delete ____engine.this.init;
+					return ____engine.this;
+				}
+
+				//
+				this.position = function(vec)
+				{
+					if (typeof(vec) == 'object') {
+						let vector = vec.get(0);
+						____engine.this.position.x = vector.x;
+						____engine.this.position.y = vector.y;
+						____engine.this.position.z = vector.z;
+						____engine.this.position.w = vector.w;
+					}
+					vec = (typeof(vec) == 'undefined' ? _engine.this.vector(____engine.this.position.x, ____engine.this.position.y, ____engine.this.position.z, ____engine.this.position.w) : vec);
+					vec = vec.get(0);
+					for (var index in ____engine.mesh) {
+						____engine.mesh[index].position.x += vec.x - ____engine.this.position.lx;
+						____engine.mesh[index].position.y += vec.y - ____engine.this.position.ly;
+						____engine.mesh[index].position.z += vec.z - ____engine.this.position.lz;
+						____engine.mesh[index].position.w += vec.w - ____engine.this.position.lw;
+					}
+					if (typeof(vac) == 'undefined') {
+						____engine.this.position.lx = ____engine.this.position.x;
+						____engine.this.position.ly = ____engine.this.position.y;
+						____engine.this.position.lz = ____engine.this.position.z;
+						____engine.this.position.lw = ____engine.this.position.w;
+					}
+					return ____engine.this;
+				}
+
+				//
+				this.rotation = function(vec)
+				{
+					if (typeof(vec) == 'object') {
+						let vector = vec.get(0);
+						____engine.this.rotation.x = vector.x;
+						____engine.this.rotation.y = vector.y;
+						____engine.this.rotation.z = vector.z;
+						____engine.this.rotation.w = vector.w;
+					}
+					vec = (typeof(vec) == 'undefined' ? _engine.this.vector(____engine.this.rotation.x, ____engine.this.rotation.y, ____engine.this.rotation.z, ____engine.this.rotation.w) : vec);
+					vec = vec.get(0);
+					for (var index in ____engine.mesh) {
+						____engine.mesh[index].rotation.x += vec.x - ____engine.this.rotation.lx;
+						____engine.mesh[index].rotation.y += vec.y - ____engine.this.rotation.ly;
+						____engine.mesh[index].rotation.z += vec.z - ____engine.this.rotation.lz;
+						____engine.mesh[index].rotation.w += vec.w - ____engine.this.rotation.lw;
+					}
+					if (typeof(vac) == 'undefined') {
+						____engine.this.rotation.lx = ____engine.this.rotation.x;
+						____engine.this.rotation.ly = ____engine.this.rotation.y;
+						____engine.this.rotation.lz = ____engine.this.rotation.z;
+						____engine.this.rotation.lw = ____engine.this.rotation.w;
+					}
+					return ____engine.this;
+				}
+
+				//
+				this.back = function(id, type)
+				{
+					if (typeof(id) == 'string') {
+						type = (typeof(type) == 'undefined' ? _enum.MERGE : type);
+						return ___engine.this.get(id, type);
+					}
+					return ___engine.this;
+				}
+
+				return ____engine.this;
+			}
+
+			//
 			this.remove = function(id)
 			{
 				let find = $findKey(__engine.scene, ___engine.scene.name);
@@ -710,17 +964,9 @@ var BRANCH = (function()
 			}
 
 			//
-			this.render = function(id)
+			this.render = function()
 			{
 				___engine.config.stop = false;
-				let find = $findKey(___engine.mesh, id);
-				if (find != -1) {
-					if (___engine.mesh[find].inScene == false) {
-						___engine.scene.add(___engine.mesh[find].mesh.get(null, _enum.MESH));
-						___engine.mesh[find].inScene = true;
-					}
-					return ___engine.this;
-				}
 				for (var index in ___engine.mesh) {
 					if (___engine.mesh[index].inScene == false) {
 						___engine.scene.add(___engine.mesh[index].mesh.get(null, _enum.MESH));
@@ -740,15 +986,23 @@ var BRANCH = (function()
 			//
 			this.get = function(id, type)
 			{
+				let find;
 				type = (typeof(type) != 'undefined' ? type : _enum.MESH);
 				switch (type)
 				{
 					case _enum.MESH:
-						let find = $findKey(___engine.mesh, id);
+						find = $findKey(___engine.mesh, id);
 						if (find == -1) {
 							return ___engine.mesh;
 						}
 						return ___engine.mesh[find].mesh;
+					break;
+					case _enum.MERGE:
+						find = $findKey(___engine.merge, id);
+						if (find == -1) {
+							return ___engine.merge;
+						}
+						return ___engine.merge[find].merge;
 					break;
 					case _enum.STOP:
 						return __engine.config.stop;
@@ -820,6 +1074,34 @@ var BRANCH = (function()
 	}
 
 	//
+	this.math = (function()
+	{
+		var __engine = {
+			this: this,
+			type: _enum.MATH,
+		};
+
+		//
+		this.lemniscate = function(vector, precision, overcoat)
+		{
+			let x, y, scale;
+			let vectors = (typeof(vector) == 'undefined' ? _engine.this.vector(0, 0, 0) : vector);
+			precision = (typeof(precision) == 'undefined' ? 0.01 : precision);
+			overcoat = (typeof(overcoat) == 'undefined' ? 7 : overcoat);
+			for (let t = 0; t < overcoat; t += precision)
+			{
+				scale = 2 / (3  - Math.cos(2 * t));
+				x = scale * Math.cos(t);
+				y = (scale * Math.sin(2 * t)) / 2;
+				vectors.vector(x, y, vectors.get(0).z);
+			}
+			return vectors;
+		}
+
+		return __engine.this;
+	})();
+
+	//
 	this.vector = function()
 	{
 		let build = new $vector;
@@ -832,6 +1114,7 @@ var BRANCH = (function()
 	{
 		var __engine = {
 			this: this,
+			type: _enum.VECTOR,
 			vector: [],
 		};
 
@@ -936,27 +1219,39 @@ var BRANCH = (function()
 	//
 	var $update = setInterval(function()
 	{
-		for (var index in _engine.branch) {
-			let update = _engine.branch[index].branch.get(null, _enum.UPDATE);
+		for (var index in _engine.branch)
+		{
+			let branch = _engine.branch[index].branch;
+			
+			//
+			let update = branch.get(null, _enum.UPDATE);
 			for (var index2 in update) {
 				update[index2]();
 			}
-		}
 
-		for (var index in _engine.branch) {
-			let branch = _engine.branch[index].branch;
+			//
 			let scenes = branch.get();
-			for (var index2 in scenes) {
+			for (var index2 in scenes)
+			{
 				let scene = scenes[index2].scene;
+			
+				//
+				scene.position();
+				scene.rotation();
+
+				//
+				let merges = scene.get(null, _enum.MERGE);
+				for (var index3 in merges) {
+					merges[index3].merge.position();
+					merges[index3].merge.rotation();
+				}
+
+				//
 				let meshs = scene.get(null, _enum.MESH);
 				for (var index3 in meshs) {
-					if (typeof(meshs[index3].mesh.position) == 'function') {
-						meshs[index3].mesh.position();
-					}
-					if (typeof(meshs[index3].mesh.rotation) == 'function') {
-						meshs[index3].mesh.rotation();
-					}
-				}	
+					meshs[index3].mesh.position();
+					meshs[index3].mesh.rotation();
+				}
 			}	
 		}
 	}, _engine.config.timeUpdate);
