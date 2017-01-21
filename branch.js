@@ -296,62 +296,72 @@ var BRANCH = (function()
 					enable: true,
 				});
 
-				$extend(___engine.this.position, camera.position);
-				$extend(___engine.this.rotation, camera.rotation);
+				$extend(___engine.this.camera.position, camera.position);
+				$extend(___engine.this.camera.rotation, camera.rotation);
 
 				delete this.init;
 				return  ___engine.this;
 			}
 
-			// Camera temporary
-			this.position = function(vec)
-			{
-				for (var index in ___engine.camera) {
-					if (___engine.camera[index].enable == true)
-					{
-						if (typeof(vec) == 'object') {
-							let vector = vec.get(0);
-							___engine.this.position.x = vector.x;
-							___engine.this.position.y = vector.y;
-							___engine.this.position.z = vector.z;
-							___engine.this.position.w = vector.w;
-						}
-						if (___engine.camera[index].camera.position.x == ___engine.this.position.x && ___engine.camera[index].camera.position.y == ___engine.this.position.y &&
-								___engine.camera[index].camera.position.z == ___engine.this.position.z && ___engine.camera[index].camera.position.w == ___engine.this.position.w) {
-							return ___engine.this;
-						}
-						vec = (typeof(vec) == 'undefined' ? _engine.this.vector(___engine.this.position.x, ___engine.this.position.y, ___engine.this.position.z, ___engine.this.position.w) : vec);
-						$extend(___engine.camera[index].camera.position, vec.get(0));
-						return  ___engine.this;
-					}
+			//
+			this.camera = (function() {
+				var ____engine = {
+					this: this,
+					type: _enum.CAMERA,
 				}
-				return  ___engine.this;
-			}
 
-			// Camera temporary
-			this.rotation = function(vec)
-			{
-				for (var index in ___engine.camera) {
-					if (___engine.camera[index].enable == true)
-					{
-						if (typeof(vec) == 'object') {
-							let vector = vec.get(0);
-							___engine.this.rotation.x = vector.x;
-							___engine.this.rotation.y = vector.y;
-							___engine.this.rotation.z = vector.z;
-							___engine.this.rotation.w = vector.w;
+				//
+				this.position = function(vec)
+				{
+					for (var index in ___engine.camera) {
+						if (___engine.camera[index].enable == true)
+						{
+							if (typeof(vec) == 'object') {
+								let vector = vec.get(0);
+								___engine.this.camera.position.x = vector.x;
+								___engine.this.camera.position.y = vector.y;
+								___engine.this.camera.position.z = vector.z;
+								___engine.this.camera.position.w = vector.w;
+							}
+							if (___engine.camera[index].camera.position.x == ___engine.this.camera.position.x && ___engine.camera[index].camera.position.y == ___engine.this.camera.position.y &&
+									___engine.camera[index].camera.position.z == ___engine.this.camera.position.z && ___engine.camera[index].camera.position.w == ___engine.this.camera.position.w) {
+								return ___engine.this;
+							}
+							vec = (typeof(vec) == 'undefined' ? _engine.this.vector(___engine.this.camera.position.x, ___engine.this.camera.position.y, ___engine.this.camera.position.z, ___engine.this.camera.position.w) : vec);
+							$extend(___engine.camera[index].camera.position, vec.get(0));
+							return  ___engine.this;
 						}
-						if (___engine.camera[index].camera.rotation.x == ___engine.this.rotation.x && ___engine.camera[index].camera.rotation.y == ___engine.this.rotation.y &&
-								___engine.camera[index].camera.rotation.z == ___engine.this.rotation.z && ___engine.camera[index].camera.rotation.w == ___engine.this.rotation.w) {
-							return ___engine.this;
-						}
-						vec = (typeof(vec) == 'undefined' ? _engine.this.vector(___engine.this.rotation.x, ___engine.this.rotation.y, ___engine.this.rotation.z, ___engine.this.rotation.w) : vec);
-						$extend(___engine.camera[index].camera.rotation, vec.get(0));
-						return  ___engine.this;
 					}
+					return  ___engine.this;
 				}
-				return  ___engine.this;
-			}
+
+				//
+				this.rotation = function(vec)
+				{
+					for (var index in ___engine.camera) {
+						if (___engine.camera[index].enable == true)
+						{
+							if (typeof(vec) == 'object') {
+								let vector = vec.get(0);
+								___engine.this.camera.rotation.x = vector.x;
+								___engine.this.camera.rotation.y = vector.y;
+								___engine.this.camera.rotation.z = vector.z;
+								___engine.this.camera.rotation.w = vector.w;
+							}
+							if (___engine.camera[index].camera.rotation.x == ___engine.this.camera.rotation.x && ___engine.camera[index].camera.rotation.y == ___engine.this.camera.rotation.y &&
+									___engine.camera[index].camera.rotation.z == ___engine.this.camera.rotation.z && ___engine.camera[index].camera.rotation.w == ___engine.this.camera.rotation.w) {
+								return ___engine.this;
+							}
+							vec = (typeof(vec) == 'undefined' ? _engine.this.vector(___engine.this.camera.rotation.x, ___engine.this.camera.rotation.y, ___engine.this.camera.rotation.z, ___engine.this.camera.rotation.w) : vec);
+							$extend(___engine.camera[index].camera.rotation, vec.get(0));
+							return  ___engine.this;
+						}
+					}
+					return  ___engine.this;
+				}
+
+				return ____engine.this;
+			})();
 
 			//
 			var $getMesh = function(callback, id, forced)
@@ -523,6 +533,31 @@ var BRANCH = (function()
 					geometry.vertices.push(vector.get(0), vector.get(1), vector.get(2));
 					geometry.faces.push(new THREE.Face3(0, 1, 2));
 					let mesh = new THREE.Mesh(geometry, material);
+
+					return {
+						type: _enum.TRIANGLE,
+						mesh: mesh,
+					}
+				}, id, forced);
+			}
+
+			//
+			this.arc = function(pc, id, forced)
+			{
+				return $getMesh(function()
+				{
+					pc = (typeof(pc) == 'undefined' ? 50 : pc);
+					let calcul = ((Math.PI * 2) * pc) / 100
+					let curve = new THREE.EllipseCurve(
+						0, 0,
+						7, 15,
+						0, calcul
+					);
+					let points = curve.getSpacedPoints(120);
+					let path = new THREE.Path();
+					let geometry = path.createGeometry(points);
+					let material = new THREE.LineBasicMaterial(___engine.lineMaterialConfig);
+					let mesh = new THREE.Line(geometry, material);
 
 					return {
 						type: _enum.TRIANGLE,
@@ -991,16 +1026,22 @@ var BRANCH = (function()
 				switch (type)
 				{
 					case _enum.MESH:
+						if (typeof(id) == 'undefined' || id == null) {
+							return ___engine.mesh;
+						}
 						find = $findKey(___engine.mesh, id);
 						if (find == -1) {
-							return ___engine.mesh;
+							return null;
 						}
 						return ___engine.mesh[find].mesh;
 					break;
 					case _enum.MERGE:
+						if (typeof(id) == 'undefined' || id == null) {
+							return ___engine.merge;
+						}
 						find = $findKey(___engine.merge, id);
 						if (find == -1) {
-							return ___engine.merge;
+							return null;
 						}
 						return ___engine.merge[find].merge;
 					break;
@@ -1202,7 +1243,7 @@ var BRANCH = (function()
 		switch (type)
 		{
 			case _enum.BRANCH:
-				if (typeof(id) == 'undefined') {
+				if (typeof(id) == 'undefined' || id == null) {
 					return _engine.branch;
 				}
 				let find = $findKey(_engine.branch, id);
@@ -1236,8 +1277,8 @@ var BRANCH = (function()
 				let scene = scenes[index2].scene;
 			
 				//
-				scene.position();
-				scene.rotation();
+				scene.camera.position();
+				scene.camera.rotation();
 
 				//
 				let merges = scene.get(null, _enum.MERGE);
