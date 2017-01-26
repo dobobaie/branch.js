@@ -4,6 +4,7 @@ var BRANCH = (function()
 	var _enum = {
 		NONE: 'none',
 
+		SPHERE: 'sphere',
 		ARC: 'arc',
 		MESH: 'mesh',
 		POINT: 'point',
@@ -290,36 +291,88 @@ var BRANCH = (function()
 
 				___engine.scene = new THREE.Scene();
 				___engine.scene.name = id;
+				
 				$extend(___engine.config, ___defaultConfig);
 				$extend(___engine.materialConfig, ___defaultMaterialConfig);
 				$extend(___engine.cameraConfig, ___defaultCameraConfig);
 				$extend(___engine.pointMaterialConfig, ___pointMaterialConfig);
 				$extend(___engine.lineMaterialConfig, ___lineMaterialConfig);
 
-				// Make a camera manager (with one to default) and make a camera switcher
-				let cameraId = $getId(___engine.camera, _enum.CAMERA);
-				let camera = new THREE.PerspectiveCamera(___engine.cameraConfig.fov, ___engine.cameraConfig.aspect, ___engine.cameraConfig.near, ___engine.cameraConfig.far);
-				camera.position.set(___engine.cameraConfig.vector.x, ___engine.cameraConfig.vector.y, ___engine.cameraConfig.vector.z, ___engine.cameraConfig.vector.w);
-				camera.name = cameraId;
-				___engine.scene.add(camera);
-				___engine.camera.push({
-					id: cameraId,
-					camera:	camera,
-					enable: true,
-				});
-
-				$extend(___engine.this.camera.position, camera.position);
-				$extend(___engine.this.camera.rotation, camera.rotation);
+				___engine.this.camera = new $camera;
+				___engine.this.camera.add(_engine.this.vector(___engine.cameraConfig.vector.x, ___engine.cameraConfig.vector.y, ___engine.cameraConfig.vector.z, ___engine.cameraConfig.vector.w));
+				___engine.this.camera.switch('camera1');
 
 				delete ___engine.this.init;
 				return  ___engine.this;
 			}
 
 			//
-			this.camera = (function() {
+			var $camera = function()
+			{
 				var ____engine = {
 					this: this,
 					type: _enum.CAMERA,
+				}
+
+				//
+				this.switch = function(id)
+				{
+					let find = $findKey(___engine.camera, id);
+					if (find == -1) {
+						return null;
+					}
+					for (var index in ___engine.camera) {
+						if (___engine.camera[index].enable == true) {
+							___engine.camera[index].enable = false;
+							___engine.scene.remove(___engine.camera[index].camera);
+							break ;
+						}
+					}
+					___engine.camera[find].enable = true;
+					___engine.scene.add(___engine.camera[find].camera);
+					$extend(___engine.this.camera.position, ___engine.camera[find].camera.position, true, ['x', 'y', 'z', 'w']);
+					$extend(___engine.this.camera.rotation, ___engine.camera[find].camera.rotation, true, ['x', 'y', 'z', 'w']);
+					return  ___engine.this;
+				}
+
+				//
+				this.add = function(vector, id, forced)
+				{
+					vector = vector.get(0);
+					id = (typeof(id) == 'undefined' ? $getId(___engine.camera, _enum.CAMERA) : id);
+					let camera = new THREE.PerspectiveCamera(___engine.cameraConfig.fov, ___engine.cameraConfig.aspect, ___engine.cameraConfig.near, ___engine.cameraConfig.far);
+					camera.position.set(vector.x, vector.y, vector.z, vector.w);
+					camera.name = id;
+					___engine.camera.push({
+						id: id,
+						camera:	camera,
+						enable: false,
+					});
+					return  ___engine.this;
+				}
+
+				//
+				this.remove = function(id)
+				{
+					if (typeof(id) != 'undefined') {
+						let find = $findKey(___engine.camera, id);
+						if (find == -1) {
+							return null;
+						}
+						if (___engine.camera[find].enable == true) {
+							___engine.scene.remove(___engine.camera[find].camera);
+							___engine.camera.splice(find, 1);
+						}
+						return  ___engine.this;
+					}
+					for (var index in ___engine.camera) {
+						if (___engine.camera[index].enable == true) {
+							___engine.scene.remove(___engine.camera[index].camera);
+							___engine.camera.splice(index, 1);
+							return ___engine.this;
+						}
+					}
+					return  null;
 				}
 
 				//
@@ -363,7 +416,7 @@ var BRANCH = (function()
 				}
 
 				return ____engine.this;
-			})();
+			}
 
 			//
 			var $getMesh = function(callback, id, forced)
@@ -530,6 +583,21 @@ var BRANCH = (function()
 
 					return {
 						type: _enum.TRIANGLE,
+						mesh: mesh,
+					}
+				}, id, forced);
+			}
+
+			//
+			this.sphere = function(size, id, forced)
+			{
+				return $getMesh(function() {
+					let material = new THREE.MeshPhongMaterial(___engine.materialConfig);
+					let geometry = new THREE.SphereGeometry(size, 35, 35);
+					let mesh = new THREE.Mesh(geometry, material);
+
+					return {
+						type: _enum.SPHERE,
 						mesh: mesh,
 					}
 				}, id, forced);
@@ -1137,12 +1205,14 @@ var BRANCH = (function()
 						return __engine.config.stop;
 					break;
 					case _enum.CAMERA:
-						for (var index in ___engine.camera) {
-							if (___engine.camera[index].enable == true) {
-								return ___engine.camera[index].camera;
-							}
+						if (typeof(id) == 'undefined' || id == null) {
+							return ___engine.camera;
 						}
-						return null;
+						find = $findKey(___engine.camera, id);
+						if (find == -1) {
+							return null;
+						}
+						return ___engine.camera[find].camera;
 					break;
 					case _enum.SCENE:
 						return ___engine.scene;
@@ -1420,7 +1490,11 @@ var BRANCH = (function()
 						let _renderer = branch.get(null, _enum.RENDERER);
 						let _scene = scene.get(null, _enum.SCENE);
 						let _camera = scene.get(null, _enum.CAMERA);
-						_renderer.render(_scene, _camera);
+						for (var index3 in _camera) {
+							if (_camera[index3].enable == true) {
+								_renderer.render(_scene, _camera[index3].camera);
+							}
+						}
 					}
 				}
 			}

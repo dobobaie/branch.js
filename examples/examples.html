@@ -12,49 +12,79 @@
     <script>
       var app, scene, areaSize = (window.innerWidth / 2) - 14;
 
-      // Example 1
-      BRANCH
-        .init(function() {
-          this.height = areaSize;
-          this.width = areaSize;
-        })
-        .scene()
-        .triangle(BRANCH.vector(0, 0, 0).vector(0, 300, 0).vector(300, 0, 0))
-        //.darkness(false)
-        //.phong(true)
-        .color(0xff0000)
-        .wireframe(true)
-        .render()
-        //.remove()
+      app = BRANCH
+        .init({
+          height: areaSize * 2,
+          width: areaSize * 2,
+          dev: true,
+      }, 'example3d');
+
+      scene = app.scene('Scene3d');
+
+      scene
+        .camera.add(BRANCH.vector(0, 0, -900), 'myCamera')
+        .camera.switch('myCamera')
+        .camera.rotation(BRANCH.vector(0, 179.05, 0))
+      ;
+
+      scene
+        .cube(BRANCH.vector(100, 100, 100))
+        .color(0xA4A4A4)
+        .position(BRANCH.vector(0, 100, 0))
+        .merge('3d')
+      ;
+
+      scene
+        .cone(280)
+        .color(0xffff00)
+        .position(BRANCH.vector(-250, 0, 0))
+        .merge('3d')
       ;
      
-      // Example 2
-      app = BRANCH.init(function() {
-        this.height = areaSize;
-        this.width = areaSize;
-      });
-
-      scene = app.scene();
-
-      var vec = BRANCH.vector(0, 0, 0).vector(0, 300, 0).vector(300, 0, 0);
-      var t = scene.triangle(vec).wireframe(true);  
-      var c1 = scene.circle(16, vec.slice(0));
-      var c2 = scene.circle(16, vec.slice(1));
-      var c3 = scene.circle(16, vec.slice(2));
+      scene
+        .cylinder(180)
+        .color(BRANCH.random(BRANCH.COLOR))
+        .position(BRANCH.vector(250, 0, 0))
+        .merge('3d')
+      ;
+     
+      scene
+        .sphere(100)
+        .color(0x00ffff)
+        .position(BRANCH.vector(0, -200, -50))
+        .merge('3d')
+      ;
+     
+      scene
+        .get('3d', BRANCH.MERGE)
+        .rotation(BRANCH.vector(5, -5, 5))
+        .back()
+        .light(BRANCH.vector(0, 200, 350))
+        .back()
+        .light(BRANCH.vector(0, 200, -200))
+      ;
 
       scene.render();
 
+      let frame = 0;
+      let cameraAct = 'myCamera';
       app.update(function()
       {
-          let vector = BRANCH
-            .random(BRANCH.VECTOR3)
-            .random(BRANCH.VECTOR3)
-            .random(BRANCH.VECTOR3, BRANCH.vector(-200, -200), BRANCH.vector(200, 200))
-          ;
-          t.transform(vector).color(BRANCH.random(BRANCH.COLOR));
-          c1.position(vector.slice(0)).color(BRANCH.random(BRANCH.COLOR));
-          c2.position(vector.slice(1)).color(BRANCH.random(BRANCH.COLOR));
-          c3.position(vector.slice(2)).color(BRANCH.random(BRANCH.COLOR));
+        let scene3d = BRANCH.get('example3d').get('Scene3d');
+          
+        //
+        let merge = scene3d.get('3d', BRANCH.MERGE);
+        merge.rotation.x += 0.1;
+        merge.rotation.z -= 0.1;
+        merge.rotation.y -= 0.1;
+      
+        //
+        if (frame == 60) {
+          cameraAct = (cameraAct == 'myCamera' ? 'camera1' : 'myCamera');
+          scene3d.camera.switch(cameraAct);
+          frame = -1;
+        }
+        frame = frame + 1;
       });
 
       // Example 3
@@ -64,70 +94,12 @@
           this.width = areaSize;
         }, 'myBranch')
         .scene('myScene')
-        .circle(60, BRANCH.vector(0, 0, 0), 'myCirle')
+        .circle(60, 'myCirle')
       ;
 
       scene = BRANCH.get('myBranch').get('myScene');
       scene.get('myCirle').color(0x0000ff);
       scene.render();
-
-      // Example 4
-      app = BRANCH.init(function() {
-        this.height = areaSize;
-        this.width = areaSize;
-      });
-      scene = app.scene();
-      var obj = scene
-        .cube(BRANCH.vector(200, 200, 200), BRANCH.vector(0, 0, 0))
-        .color(0xA4A4A4)
-        .rotation(BRANCH.vector(5, 0, 5))
-       ;
-      scene.light(BRANCH.vector(50, 250, 400));
-      scene.render();
-
-      app.update(function() {
-        obj.rotation.x += 0.08;
-        obj.rotation.z += 0.08;
-      });
-      
-      // Example 5
-      app = BRANCH.init(function() {
-        this.height = areaSize;
-        this.width = areaSize;
-      });
-      var scene2 = app.scene();
-      scene2
-        .cone(180, 'myCone')
-        .color(0xffff00)
-        .rotation(BRANCH.vector(5, 5, 5))
-      ;
-      scene2.light(BRANCH.vector(50, 250, 400));
-      scene2.render();
-
-      app.update(function() {
-        scene2.get('myCone').rotation.y += 0.08;
-        scene2.get('myCone').rotation.z += 0.08;
-      });
-
-      // Example 6
-      app = BRANCH.init(function() {
-        this.height = areaSize;
-        this.width = areaSize;
-      });
-      scene = app.scene();
-      var obj2 = scene
-        .cylinder(180)
-        .color(BRANCH.random(BRANCH.COLOR))
-        .rotation(BRANCH.vector(5, -1, 1))
-      ;
-      scene.light(BRANCH.vector(50, 250, 400))
-      scene.render();
-    
-      app.update(function() {
-        obj2.rotation.x += 0.08;
-        obj2.rotation.z += 0.08;
-      });
-
 
       // Example 7
       app = BRANCH.init(function() {
@@ -138,61 +110,49 @@
       scene.text('BRANCH.JS').font('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/fonts/optimer_bold.typeface.json').position(BRANCH.vector(-100, 0, 0)).render(); // There are already a default font but for the example I add an other one
      
       // Example 8
-      app = BRANCH.init(function() {
-        this.height = areaSize;
-        this.width = areaSize;
-      });
-      scene = app.scene();
-      scene.line(BRANCH.vector(300, 0, 0).vector(300, 300, 0));
-      scene.line(BRANCH.vector(0, 300, 0).vector(0, 0, 0).vector(0, -300, 0).vector(-300, -300, 0));
-      scene.render();
-
-      // Example 9
       BRANCH
         .init(function() {
           this.height = areaSize;
           this.width = areaSize;
-        })
+        }, 'ex8')
         .scene()
         .square(BRANCH.vector(300, 300))
         .texture('http://sdg.repositoryhosting.com/git_public/sdg/sdg-blog.git/blob_plain/abced5687967687c3e429ddd18a38055d0439550:/Three-js-examples/images/crate.jpg')
         .render()
       ;
 
+      // Example 9
+       BRANCH
+        .init(function() {
+          this.height = areaSize;
+          this.width = areaSize;
+        })
+        .scene()
+        .camera.position(BRANCH.vector(0, 0, 100))
+        .arc(95)
+        .render()
+      ;
+      
       // Example 10          
       BRANCH
         .init(function() {
           this.height = areaSize;
           this.width = areaSize + 200;
         }, 'ex10')
-
-        .update(function() {
-          let app = BRANCH.get('ex10');
-          let scene = app.get('scene1');
-          let merge = scene.get('myMerge', BRANCH.MERGE);
-          merge.rotation.x += 0.1;
-          merge.rotation.z -= 0.1;
-        })
-
         .scene()
-        .position(BRANCH.vector(0, 0, 10))
-        
-        .point(BRANCH.math.lemniscate(BRANCH.vector(0, 0, 0))).size(4).merge('myMerge')
-
-        .back()
-
-        .point(BRANCH.math.lemniscate(BRANCH.vector(0, 0, 0))).size(4).rotation(BRANCH.vector(0, 0, 1.57)).merge('myMerge')
-
-        .back()
-
-        .line(BRANCH.vector(-5, 0, 0).vector(5, 0, 0)).merge('myMerge')
-
-        .back()
-
-        .line(BRANCH.vector(0, -3, 0).vector(0, 3, 0)).merge('myMerge')
-
-        .render()
+        .camera.position(BRANCH.vector(0, 0, 10))
+        .point(BRANCH.math.lemniscate()).size(4).merge('myMerge').back()
+        .point(BRANCH.math.lemniscate()).size(4).rotation(BRANCH.vector(0, 0, 1.57)).merge('myMerge').back()
+        .line(BRANCH.vector(-5, 0, 0).vector(5, 0, 0)).merge('myMerge').merge('myMerge2').back()
+        .line(BRANCH.vector(0, -3, 0).vector(0, 3, 0)).merge('myMerge2').color(0x0000ff).render()
       ;
+
+      app = BRANCH.get('ex10').update(function() {
+        let scene = app.get('scene1');
+        let merge = scene.get('myMerge2', BRANCH.MERGE);
+        merge.rotation.x += 0.1;
+        merge.rotation.z -= 0.1;
+      });
 
       /*
           Examples THREE.JS mixed with BRANCH.JS
