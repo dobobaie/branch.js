@@ -7,17 +7,64 @@
     </style>
   </head>
   <body>
-    <script src="https://cdn.rawgit.com/mrdoob/three.js/dev/build/three.min.js"></script>
-    <script src="https://cdn.rawgit.com/dobobaie/branch.js/master/branch.js"></script>
+    <script src="https://cdn.rawgit.com/mrdoob/three.js/dev/build/three.js"></script>
+    <script src="branch.js"></script>
     <script>
       var app, scene, areaSize = (window.innerWidth / 2) - 14;
+
+      // Example 1
+      /*
+      BRANCH
+        .init(function() {
+          this.height = areaSize;
+          this.width = areaSize;
+        })
+        .scene()
+        .triangle(BRANCH.vector(0, 0, 0).vector(0, 300, 0).vector(300, 0, 0))
+        //.darkness(false)
+        //.phong(true)
+        .color(0xff0000)
+        .wireframe(true)
+        .render()
+        //.remove()
+      ;
+     
+      // Example 2
+      app = BRANCH.init(function() {
+        this.height = areaSize;
+        this.width = areaSize;
+      });
+
+      scene = app.scene();
+
+      var vec = BRANCH.vector(0, 0, 0).vector(0, 300, 0).vector(300, 0, 0);
+      var t = scene.triangle(vec).wireframe(true);  
+      var c1 = scene.circle(16, vec.slice(0));
+      var c2 = scene.circle(16, vec.slice(1));
+      var c3 = scene.circle(16, vec.slice(2));
+
+      scene.render();
+
+      app.update(function()
+      {
+          let vector = BRANCH
+            .random(BRANCH.VECTOR3)
+            .random(BRANCH.VECTOR3)
+            .random(BRANCH.VECTOR3, BRANCH.vector(-200, -200), BRANCH.vector(200, 200))
+          ;
+          t.transform(vector).color(BRANCH.random(BRANCH.COLOR));
+          c1.position(vector.slice(0)).color(BRANCH.random(BRANCH.COLOR));
+          c2.position(vector.slice(1)).color(BRANCH.random(BRANCH.COLOR));
+          c3.position(vector.slice(2)).color(BRANCH.random(BRANCH.COLOR));
+      });
+      */
 
       app = BRANCH
         .init({
           height: areaSize * 2,
           width: areaSize * 2,
-          dev: true,
-      }, 'example3d');
+        }, 'example3d')
+      ;
 
       scene = app.scene('Scene3d');
 
@@ -57,11 +104,11 @@
      
       scene
         .get('3d', BRANCH.MERGE)
-        .rotation(BRANCH.vector(5, -5, 5))
+          .rotation(BRANCH.vector(5, -5, 5))
         .back()
-        .light(BRANCH.vector(0, 200, 350))
+          .light(BRANCH.vector(0, 200, 350))
         .back()
-        .light(BRANCH.vector(0, 200, -200))
+          .light(BRANCH.vector(0, 200, -200))
       ;
 
       scene.render();
@@ -87,7 +134,17 @@
         frame = frame + 1;
       });
 
-      // Example 3
+      // Example 7
+      app = BRANCH.init(function() {
+        this.height = areaSize * 2;
+        this.width = areaSize * 2;
+      });
+      scene = app.scene();
+      scene.text('BRANCH.JS').font('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/fonts/optimer_bold.typeface.json').position(BRANCH.vector(-100, -200, 0)); // There are already a default font but for the example I add an other one
+      scene.square(BRANCH.vector(300, 300)).texture('http://sdg.repositoryhosting.com/git_public/sdg/sdg-blog.git/blob_plain/abced5687967687c3e429ddd18a38055d0439550:/Three-js-examples/images/crate.jpg');
+      scene.render();
+
+     // Example 3
       BRANCH
         .init(function() {
           this.height = areaSize;
@@ -101,27 +158,7 @@
       scene.get('myCirle').color(0x0000ff);
       scene.render();
 
-      // Example 7
-      app = BRANCH.init(function() {
-        this.height = areaSize;
-        this.width = areaSize * 2;
-      });
-      scene = app.scene();
-      scene.text('BRANCH.JS').font('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/fonts/optimer_bold.typeface.json').position(BRANCH.vector(-100, 0, 0)).render(); // There are already a default font but for the example I add an other one
-     
-      // Example 8
-      BRANCH
-        .init(function() {
-          this.height = areaSize;
-          this.width = areaSize;
-        }, 'ex8')
-        .scene()
-        .square(BRANCH.vector(300, 300))
-        .texture('http://sdg.repositoryhosting.com/git_public/sdg/sdg-blog.git/blob_plain/abced5687967687c3e429ddd18a38055d0439550:/Three-js-examples/images/crate.jpg')
-        .render()
-      ;
-
-      // Example 9
+       // Example 9
        BRANCH
         .init(function() {
           this.height = areaSize;
@@ -153,10 +190,11 @@
         merge.rotation.x += 0.1;
         merge.rotation.z -= 0.1;
       });
-
+      
       /*
           Examples THREE.JS mixed with BRANCH.JS
       */
+      /*
       // Example 1
       app = BRANCH.init({
         height: 400,
@@ -202,6 +240,221 @@
       );
       
       THREErenderer.render(THREEscene, THREEcamera);
+      */
      </script>
+    <script>
+      
+      /*
+        // create the Cube
+        cube = new THREE.Mesh( new THREE.CubeGeometry( 200, 200, 200 ), new THREE.MeshNormalMaterial() );
+        cube.position.y = 150;
+        // add the object to the scene
+        scene.addObject( cube );
+      */
+
+      /*
+      //
+      const WIDTH = window.innerWidth;
+      const HEIGHT = window.innerHeight;
+      const FRAME = 60;
+      const Z = 0;
+      const MARGE = 100;
+
+      //
+      var c1, c2, c3, t1;
+      var renderer, scene, camera, frame = 0;
+
+      function pRand(size)
+      {
+        var rand = Math.floor(Math.random() * size) / 2;
+        rand -= (Math.floor(Math.random() * 10) % 2 == 0 ? size / 2 : 0);
+        rand = (rand > size - MARGE ? size - MARGE : rand);
+        rand = (rand < (size - MARGE) * -1 ? (size - MARGE) * -1 : rand);
+        return rand;
+      }
+
+      function circle(x, y, z, color)
+      {
+        color = (typeof(color) == 'undefined' ? 0xffff00 : color);
+
+        var geometry = new THREE.CircleGeometry(16, 100);
+        var material = new THREE.MeshBasicMaterial({
+            color: color,
+            //wireframe: true,
+        });
+        
+        this.mesh = new THREE.Mesh(geometry, material);
+        this.mesh.position.y = y;
+        this.mesh.position.x = x;
+        this.mesh.position.z = z;
+
+        scene.add(this.mesh);
+
+        return this.mesh;
+      }
+
+      function triangle(vec, vec2, vec3, color)
+      {
+        color = (typeof(color) == 'undefined' ? 0xff0000 : color);
+
+        var geometry = new THREE.Geometry();
+
+        geometry.vertices.push(vec, vec2, vec3);
+        
+        geometry.faces.push(new THREE.Face3(0, 1, 2));
+
+        var material = new THREE.MeshBasicMaterial({
+            color: color,
+            wireframe: true,
+        });
+        
+        this.mesh = new THREE.Mesh(geometry, material);
+        
+        scene.add(this.mesh);
+
+        return this.mesh;
+      }
+
+      function pixel(x, y, z, color)
+      {
+        color = (typeof(color) == 'undefined' ? 0xffffff : color);
+
+        var dotGeometry = new THREE.Geometry();
+        dotGeometry.vertices.push(new THREE.Vector3(x, y, z));
+       
+        var dotMaterial = new THREE.PointsMaterial({
+          size: 1,
+          sizeAttenuation: false,
+          color: color,
+        });
+       
+        var dot = new THREE.Points(dotGeometry, dotMaterial);
+        scene.add(dot);
+
+        return this.mesh;
+      }
+
+      (function()
+      {
+        // on initialise le moteur de rendu
+        renderer = new THREE.WebGLRenderer();
+
+        // si WebGL ne fonctionne pas sur votre navigateur vous pouvez utiliser le moteur de rendu Canvas à la place
+        // renderer = new THREE.CanvasRenderer();
+        //renderer.shadowMap.enabled = true;
+        //renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        //renderer.gammaInput = true;
+        //renderer.gammaOutput = true;
+
+        renderer.setSize(WIDTH, HEIGHT);
+        document.body.appendChild(renderer.domElement);
+
+        // on initialise la scène
+        scene = new THREE.Scene();
+
+        // on initialise la camera que l’on place ensuite sur la scène
+        camera = new THREE.PerspectiveCamera(50, WIDTH / HEIGHT, 1, 10000);
+        camera.position.set(0, 0, (WIDTH > HEIGHT) ? (WIDTH + MARGE) : (HEIGHT + MARGE));
+        scene.add(camera);
+       
+        // Floor
+        // var matFloor = new THREE.MeshPhongMaterial();
+        // var geoFloor = new THREE.BoxGeometry(2000, 1, 2000);
+        // var mshFloor = new THREE.Mesh(geoFloor, matFloor);
+        // matFloor.color.set(0x808080);
+        // mshFloor.receiveShadow = true;
+        // mshFloor.position.set(0, -0.05, 200);
+        // scene.add(mshFloor);
+      
+        // // Light
+        // var spotLight = new THREE.SpotLight( 0xffffff, 1 );
+        // spotLight.position.set( 15, 40, 35 );
+        // spotLight.castShadow = true;
+        // spotLight.angle = Math.PI / 4;
+        // spotLight.penumbra = 0.05;
+        // spotLight.decay = 2;
+        // spotLight.distance = 200;
+        // spotLight.shadow.mapSize.width = 1024;
+        // spotLight.shadow.mapSize.height = 1024;
+        // spotLight.shadow.camera.near = 1;
+        // spotLight.shadow.camera.far = 200;
+        // scene.add( spotLight );
+        
+        // var lightHelper = new THREE.SpotLightHelper( spotLight );
+        // scene.add( lightHelper );
+
+        //
+        let pos = {
+          x1: pRand(WIDTH),
+          y1: pRand(HEIGHT),
+          x2: pRand(WIDTH),
+          y2: pRand(HEIGHT),
+          x3: pRand(WIDTH),
+          y3: pRand(HEIGHT),
+        };
+
+        // on créer un triangle
+        t1 = new triangle(
+          new THREE.Vector3(pos.x1, pos.y1, Z),
+          new THREE.Vector3(pos.x2, pos.y2, Z),
+          new THREE.Vector3(pos.x3, pos.y3, Z)
+        );
+        
+        // on créer un cercle
+        c1 = new circle(pos.x1, pos.y1, Z);
+        c2 = new circle(pos.x2, pos.y2, Z);
+        c3 = new circle(pos.x3, pos.y3, Z);
+
+      })();
+
+      function animate()
+      {
+         if (frame == FRAME)
+          {
+            //
+            let pos = {
+              x1: pRand(WIDTH),
+              y1: pRand(HEIGHT),
+              x2: pRand(WIDTH),
+              y2: pRand(HEIGHT),
+              x3: pRand(WIDTH),
+              y3: pRand(HEIGHT),
+            };
+
+            //
+            t1.geometry.vertices[0].set(pos.x1, pos.y1, Z);
+            t1.geometry.vertices[1].set(pos.x2, pos.y2, Z);
+            t1.geometry.vertices[2].set(pos.x3, pos.y3, Z);
+            t1.geometry.verticesNeedUpdate = true;
+
+            //
+            c1.position.x = pos.x1;
+            c1.position.y = pos.y1;
+
+            //
+            c2.position.x = pos.x2;
+            c2.position.y = pos.y2;
+
+            //
+            c3.position.x = pos.x3;
+            c3.position.y = pos.y3;
+
+            //
+            frame = 0;
+          }
+
+          // On incrémente les frames
+          frame = frame + 1;
+
+          // on appel la fonction animate() récursivement à chaque frame
+          requestAnimationFrame(animate);
+         
+          // on effectue le rendu de la scène
+          renderer.render(scene, camera);
+      }
+
+      animate();
+      */
+    </script>
   </body>
 </html>
