@@ -30,6 +30,7 @@ var BRANCH = (function()
 		VECTOR3: 'vector3',
 		VECTOR4: 'vector4',
 
+		LANDMARK: 'landmark',
 		TYPE: 'type',
 		MATH: 'math',
 		VECTOR: 'vector',
@@ -244,11 +245,13 @@ var BRANCH = (function()
 				camera: [],
 				mesh: [],
 				merge: [],
+				landmark: null,
 				config: {},
 				materialConfig: {},
 				cameraConfig: {},
 				pointMaterialConfig: {},
 				lineMaterialConfig: {},
+				landmarkConfig: {},
 			};
 
 			//
@@ -277,6 +280,12 @@ var BRANCH = (function()
 			}
 
 			//
+			var ___defaultLandmarkConfig = {
+				enable: false,
+				margin: 100,
+			}
+
+			//
 			var ___pointMaterialConfig = {
 				sizeAttenuation: false,
 			}
@@ -296,16 +305,19 @@ var BRANCH = (function()
 
 				___engine.scene = new THREE.Scene();
 				___engine.scene.name = id;
-				
+
 				$extend(___engine.config, ___defaultConfig);
 				$extend(___engine.materialConfig, ___defaultMaterialConfig);
 				$extend(___engine.cameraConfig, ___defaultCameraConfig);
 				$extend(___engine.pointMaterialConfig, ___pointMaterialConfig);
 				$extend(___engine.lineMaterialConfig, ___lineMaterialConfig);
+				$extend(___engine.landmarkConfig, ___defaultLandmarkConfig);
 
 				___engine.this.camera = new $camera;
 				___engine.this.camera.add(_engine.this.vector(___engine.cameraConfig.vector.x, ___engine.cameraConfig.vector.y, ___engine.cameraConfig.vector.z, ___engine.cameraConfig.vector.w));
 				___engine.this.camera.switch('camera1');
+
+				___engine.landmark = new $landmark;
 
 				delete ___engine.this.init;
 				return  ___engine.this;
@@ -319,7 +331,50 @@ var BRANCH = (function()
 			}
 
 			//
-			var $getMesh = function(callback, id, forced)
+			var $landmark = function()
+			{
+				var ____engine = {
+					this: this,
+					type: _enum.LANDMARK,
+					mesh: [],
+				}
+
+				//
+				this.remove = function()
+				{
+					// Supprimer les object de ____engine.mesh
+					return  ____engine.this;
+				}
+
+				//
+				this.update = function(obj)
+				{
+					if (___engine.landmarkConfig.enable == false) {
+						return  ____engine.this;
+					}
+					this.remove();
+					return  ____engine.this;
+				}
+				
+				//
+				this.get = function(id, type)
+				{
+					type = (typeof(type) != 'undefined' ? type : _enum.NONE);
+					switch (type)
+					{
+						case _enum.MESH:
+							return ____engine.mesh;
+						break;
+						default:
+							return null;
+					}
+				}
+
+				return ____engine.this;
+			}
+
+			//
+			var $getMesh = function(callback, id, forced, landmark)
 			{
 				id = $getId(___engine.mesh, _enum.MESH, id);
 				let find = $findKey(___engine.mesh, id);
@@ -335,12 +390,12 @@ var BRANCH = (function()
 
 				let datas = callback();
 				let build = new $mesh;
-				build.init(id, datas.type, datas.mesh, datas.callback);
+				build.init(id, landmark, datas.type, datas.mesh, datas.callback);
 				return build;
 			}
 
 			//
-			this.add = function(mesh, type, id, forced)
+			this.add = function(mesh, type, id, forced, landmark)
 			{
 				return $getMesh(function()
 				{
@@ -348,11 +403,11 @@ var BRANCH = (function()
 						type: type,
 						mesh: mesh,
 					}
-				}, id, forced);
+				}, id, forced, landmark);
 			}
 
 			//
-			this.cone = function(height, id, forced)
+			this.cone = function(height, id, forced, landmark)
 			{
 				return $getMesh(function()
 				{
@@ -364,11 +419,11 @@ var BRANCH = (function()
 						type: _enum.CONE,
 						mesh: mesh,
 					}
-				}, id, forced);
+				}, id, forced, landmark);
 			}
 
 			//
-			this.cylinder = function(height, id, forced)
+			this.cylinder = function(height, id, forced, landmark)
 			{
 				return $getMesh(function()
 				{
@@ -383,11 +438,11 @@ var BRANCH = (function()
 						type: _enum.CYLINDER,
 						mesh: mesh,
 					}
-				}, id, forced);
+				}, id, forced, landmark);
 			}
 
 			//
-			this.cube = function(size, id, forced)
+			this.cube = function(size, id, forced, landmark)
 			{
 				return $getMesh(function()
 				{
@@ -400,11 +455,11 @@ var BRANCH = (function()
 						type: _enum.CUBE,
 						mesh: mesh,
 					}
-				}, id, forced);
+				}, id, forced, landmark);
 			}
 
 			//
-			this.light = function(vector, id, forced)
+			this.light = function(vector, id, forced, landmark)
 			{
 				return $getMesh(function()
 				{
@@ -416,11 +471,11 @@ var BRANCH = (function()
 						type: _enum.LIGHT,
 						mesh: mesh,
 					}
-				}, id, forced);
+				}, id, forced, landmark);
 			}
 
 			//
-			this.circle = function(radius, id, forced)
+			this.circle = function(radius, id, forced, landmark)
 			{
 				return $getMesh(function()
 				{
@@ -432,11 +487,11 @@ var BRANCH = (function()
 						type: _enum.CIRCLE,
 						mesh: mesh,
 					}
-				}, id, forced);
+				}, id, forced, landmark);
 			}
 
 			//
-			this.square = function(size, id, forced)
+			this.square = function(size, id, forced, landmark)
 			{
 				return $getMesh(function()
 				{
@@ -449,11 +504,11 @@ var BRANCH = (function()
 						type: _enum.SQUARE,
 						mesh: mesh,
 					}
-				}, id, forced);
+				}, id, forced, landmark);
 			}
 
 			//
-			this.plane = function(vector, id, forced)
+			this.plane = function(vector, id, forced, landmark)
 			{
 				return $getMesh(function()
 				{
@@ -467,11 +522,11 @@ var BRANCH = (function()
 						type: _enum.PLANE,
 						mesh: mesh,
 					}
-				}, id, forced);
+				}, id, forced, landmark);
 			}
 
 			//
-			this.triangle = function(vector, id, forced)
+			this.triangle = function(vector, id, forced, landmark)
 			{
 				return $getMesh(function()
 				{
@@ -485,11 +540,11 @@ var BRANCH = (function()
 						type: _enum.TRIANGLE,
 						mesh: mesh,
 					}
-				}, id, forced);
+				}, id, forced, landmark);
 			}
 
 			//
-			this.sphere = function(size, id, forced)
+			this.sphere = function(size, id, forced, landmark)
 			{
 				return $getMesh(function() {
 					let material = new THREE.MeshPhongMaterial(___engine.materialConfig);
@@ -500,11 +555,11 @@ var BRANCH = (function()
 						type: _enum.SPHERE,
 						mesh: mesh,
 					}
-				}, id, forced);
+				}, id, forced, landmark);
 			}
 
 			//
-			this.arc = function(pc, ratio, id, forced)
+			this.arc = function(pc, ratio, id, forced, landmark)
 			{
 				return $getMesh(function()
 				{
@@ -526,11 +581,11 @@ var BRANCH = (function()
 						type: _enum.ARC,
 						mesh: mesh,
 					}
-				}, id, forced);
+				}, id, forced, landmark);
 			}
 
 			//
-			this.line = function(vectors, id, forced)
+			this.line = function(vectors, id, forced, landmark)
 			{
 				return $getMesh(function()
 				{
@@ -546,11 +601,11 @@ var BRANCH = (function()
 						type: _enum.LINE,
 						mesh: mesh,
 					}
-				}, id, forced);
+				}, id, forced, landmark);
 			}
 
 			//
-			this.point = function(vectors, id, forced)
+			this.point = function(vectors, id, forced, landmark)
 			{
 				return $getMesh(function()
 				{
@@ -566,11 +621,11 @@ var BRANCH = (function()
 						type: _enum.POINT,
 						mesh: mesh,
 					}
-				}, id, forced);
+				}, id, forced, landmark);
 			}
 
 			//
-			this.text = function(text, id, forced)
+			this.text = function(text, id, forced, landmark)
 			{
 				return $getMesh(function()
 				{
@@ -611,7 +666,7 @@ var BRANCH = (function()
 						mesh: mesh,
 						callback: getFont,
 					}
-				}, id, forced);
+				}, id, forced, landmark);
 			}
 
 			//
@@ -620,6 +675,7 @@ var BRANCH = (function()
 				var ____engine = {
 					this: this,
 					type: _enum.MESH,
+					landmark: true,
 					mesh: null,
 					config: {},
 				}
@@ -630,7 +686,7 @@ var BRANCH = (function()
 				}
 
 				//
-				this.init = function(id, type, mesh, callback)
+				this.init = function(id, landmark, type, mesh, callback)
 				{
 					___engine.mesh.push({
 						id: id,
@@ -640,6 +696,7 @@ var BRANCH = (function()
 						merged: false,
 					});
 
+					____engine.landmark = (typeof(landmark) != 'boolean' ? true : landmark);
 					____engine.mesh = mesh;
 					____engine.type = type; 
 					____engine.mesh.name = id;
@@ -669,6 +726,10 @@ var BRANCH = (function()
 					}
 					$extend(____engine.this, this, false);
 					/*** END ***/
+
+					if (____engine.landmark == true) {
+						___engine.landmark.update(___engine.mesh, ____engine.mesh.name);
+					}
 
 					if (typeof(callback) == 'function') {
 						callback(____engine.this);
@@ -738,6 +799,9 @@ var BRANCH = (function()
 					if (typeof(____engine.mesh.geometry) != 'undefined') {
 						____engine.mesh.geometry.verticesNeedUpdate = true;
 					}
+					if (____engine.landmark == true) {
+						___engine.landmark.update(___engine.mesh, ____engine.mesh.name);
+					}
 					return ____engine.this;
 				}
 
@@ -751,6 +815,9 @@ var BRANCH = (function()
 					$extend(____engine.mesh.position, ____engine.this.position, true, ['x', 'y', 'z', 'w']);
 					if (typeof(____engine.mesh.geometry) != 'undefined') {
 						____engine.mesh.geometry.verticesNeedUpdate = true;
+					}
+					if (____engine.landmark == true) {
+						___engine.landmark.update(___engine.mesh, ____engine.mesh.name);
 					}
 					if (typeof(vec) == 'undefined') {
 						return ____engine.mesh.position;
@@ -768,6 +835,9 @@ var BRANCH = (function()
 					$extend(____engine.mesh.rotation, ____engine.this.rotation, true, ['x', 'y', 'z', 'w']);
 					if (typeof(____engine.mesh.geometry) != 'undefined') {
 						____engine.mesh.geometry.verticesNeedUpdate = true;
+					}
+					if (____engine.landmark == true) {
+						___engine.landmark.update(___engine.mesh, ____engine.mesh.name);
 					}
 					if (typeof(vec) == 'undefined') {
 						return ____engine.mesh.rotation;
@@ -804,6 +874,9 @@ var BRANCH = (function()
 					let find = $findKey(___engine.mesh, ____engine.id);
 					___engine.scene.remove(____engine.mesh);
 					___engine.mesh.splice(find, 1);
+					if (____engine.landmark == true) {
+						___engine.landmark.update(___engine.mesh, null);
+					}
 					return ___engine.this;
 				}
 
@@ -1145,7 +1218,7 @@ var BRANCH = (function()
 								let vector = vec.get(0);
 								$extend(___engine.this.camera.position, vector);
 							}
-							console.log(___engine.this.camera.position.z);
+							//console.log(___engine.this.camera.position.z);
 							$extend(___engine.camera[index].camera.position, ___engine.this.camera.position, true, ['x', 'y', 'z', 'w']);
 							if (typeof(vec) == 'undefined') {
 								return ___engine.camera[index].camera.position;
