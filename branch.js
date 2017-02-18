@@ -1,3 +1,8 @@
+/*
+
+	Corriger les système de triangle et lib math niveau propotion et couleur remplis à l'interieur des points points
+
+*/
 var BRANCH = (function()
 {
 	//
@@ -307,115 +312,10 @@ var BRANCH = (function()
 			}
 
 			//
-			var $camera = function()
+			this.color = function(color)
 			{
-				var ____engine = {
-					this: this,
-					type: _enum.CAMERA,
-				}
-
-				//
-				this.switch = function(id)
-				{
-					let find = $findKey(___engine.camera, id);
-					if (find == -1) {
-						return null;
-					}
-					for (var index in ___engine.camera) {
-						if (___engine.camera[index].enable == true) {
-							___engine.camera[index].enable = false;
-							___engine.scene.remove(___engine.camera[index].camera);
-							break ;
-						}
-					}
-					___engine.camera[find].enable = true;
-					___engine.scene.add(___engine.camera[find].camera);
-					$extend(___engine.this.camera.position, ___engine.camera[find].camera.position, true, ['x', 'y', 'z', 'w']);
-					$extend(___engine.this.camera.rotation, ___engine.camera[find].camera.rotation, true, ['x', 'y', 'z', 'w']);
-					return  ___engine.this;
-				}
-
-				//
-				this.add = function(vector, id, forced)
-				{
-					vector = vector.get(0);
-					id = (typeof(id) == 'undefined' ? $getId(___engine.camera, _enum.CAMERA) : id);
-					let camera = new THREE.PerspectiveCamera(___engine.cameraConfig.fov, ___engine.cameraConfig.aspect, ___engine.cameraConfig.near, ___engine.cameraConfig.far);
-					camera.position.set(vector.x, vector.y, vector.z, vector.w);
-					camera.name = id;
-					___engine.camera.push({
-						id: id,
-						camera:	camera,
-						enable: false,
-					});
-					return  ___engine.this;
-				}
-
-				//
-				this.remove = function(id)
-				{
-					if (typeof(id) != 'undefined') {
-						let find = $findKey(___engine.camera, id);
-						if (find == -1) {
-							return null;
-						}
-						if (___engine.camera[find].enable == true) {
-							___engine.scene.remove(___engine.camera[find].camera);
-							___engine.camera.splice(find, 1);
-						}
-						return  ___engine.this;
-					}
-					for (var index in ___engine.camera) {
-						if (___engine.camera[index].enable == true) {
-							___engine.scene.remove(___engine.camera[index].camera);
-							___engine.camera.splice(index, 1);
-							return ___engine.this;
-						}
-					}
-					return  null;
-				}
-
-				//
-				this.position = function(vec)
-				{
-					for (var index in ___engine.camera) {
-						if (___engine.camera[index].enable == true)
-						{
-							if (typeof(vec) == 'object') {
-								let vector = vec.get(0);
-								$extend(___engine.this.camera.position, vector);
-							}
-							$extend(___engine.camera[index].camera.position, ___engine.this.camera.position, true, ['x', 'y', 'z', 'w']);
-							if (typeof(vec) == 'undefined') {
-								return ___engine.camera[index].camera.position;
-							}
-							return  ___engine.this;
-						}
-					}
-					return  ___engine.this;
-				}
-
-				//
-				this.rotation = function(vec)
-				{
-					for (var index in ___engine.camera) {
-						if (___engine.camera[index].enable == true)
-						{
-							if (typeof(vec) == 'object') {
-								let vector = vec.get(0);
-								$extend(___engine.this.camera.rotation, vector);
-							}
-							$extend(___engine.camera[index].camera.rotation, ___engine.this.camera.rotation, true, ['x', 'y', 'z', 'w']);
-							if (typeof(vec) == 'undefined') {
-								return ___engine.camera[index].camera.rotation;
-							}
-							return  ___engine.this;
-						}
-					}
-					return  ___engine.this;
-				}
-
-				return ____engine.this;
+				___engine.scene.background = new THREE.Color(color);
+				return  ___engine.this;
 			}
 
 			//
@@ -457,7 +357,7 @@ var BRANCH = (function()
 				return $getMesh(function()
 				{
 					let material = new THREE.MeshPhongMaterial(___engine.materialConfig);
-					let geometry = new THREE.CylinderGeometry(0, 50, height, 32);
+					let geometry = new THREE.CylinderGeometry(0, 50, height, 35);
 					let mesh = new THREE.Mesh(geometry, material);
 
 					return {
@@ -679,6 +579,9 @@ var BRANCH = (function()
 					let mesh = new THREE.Mesh(geometry, material);
 
 					let getFont = function(mesh) {
+
+						// Mettre un système pour charger la font en dehors de cette fonction ou entrer l'url pour le charger ici
+
 						mesh = mesh.get(null, _enum.MESH);
 						let loader = new THREE.FontLoader();
 						loader.load(___engine.config.font, function(font) {
@@ -805,6 +708,7 @@ var BRANCH = (function()
 				//
 				this.font = function(url)
 				{
+					// NE MARCHE PAS
 					let loader = new THREE.FontLoader();
 					loader.load(url, function(font) {
 						____engine.mesh.geometry.font = font;
@@ -816,6 +720,7 @@ var BRANCH = (function()
 				//
 				this.texture = function(url)
 				{
+					// Mettre un système pour charcher la texture en externe ou entrer l'url pour le charger ici
 					let loader = new THREE.TextureLoader();
 					loader.load(url, function(texture) {
 						____engine.this.map(texture);
@@ -1035,7 +940,7 @@ var BRANCH = (function()
 						$extend(____engine.this.position, vector);
 					}
 					for (var index in ____engine.merged) {
-						____engine.merged[index].merge.position.x += ____engine.this.position.x  - ____engine.this.position.lx;
+						____engine.merged[index].merge.position.x += ____engine.this.position.x - ____engine.this.position.lx;
 						____engine.merged[index].merge.position.y += ____engine.this.position.y - ____engine.this.position.ly;
 						____engine.merged[index].merge.position.z += ____engine.this.position.z - ____engine.this.position.lz;
 						____engine.merged[index].merge.position.w += ____engine.this.position.w - ____engine.this.position.lw;
@@ -1061,7 +966,7 @@ var BRANCH = (function()
 						$extend(____engine.this.rotation, vector);
 					}
 					for (var index in ____engine.merged) {
-						____engine.merged[index].merge.rotation.x += ____engine.this.rotation.x  - ____engine.this.rotation.lx;
+						____engine.merged[index].merge.rotation.x += ____engine.this.rotation.x - ____engine.this.rotation.lx;
 						____engine.merged[index].merge.rotation.y += ____engine.this.rotation.y - ____engine.this.rotation.ly;
 						____engine.merged[index].merge.rotation.z += ____engine.this.rotation.z - ____engine.this.rotation.lz;
 						____engine.merged[index].merge.rotation.w += ____engine.this.rotation.w - ____engine.this.rotation.lw;
@@ -1086,7 +991,13 @@ var BRANCH = (function()
 					}
 					let find = $findKey(___engine.merge, id);
 					if (find != -1 && ___engine.merge[find].merge.get(____engine.id, _enum.MERGE) != null) {
-						// ICI REMPLACER EN FONCTION DE FORCED
+						if (typeof(forced) == 'boolean' && forced == true) {
+						// 	let merge = new $merge;
+						// 	merge.init(id, ___engine.merge[me].merge);
+						// 	___engine.merge[find].merge = merge;
+						// 	___engine.merge[find].merged = true;
+						// 	return merge;
+						}
 						return null;
 					}
 					let me = $findKey(___engine.merge, ____engine.id);
@@ -1103,10 +1014,19 @@ var BRANCH = (function()
 				}
 
 				//
-				this.remove = function()
+				this.remove = function(id, mesh)
 				{
-					// TO do
-					return ____engine.this;
+					let find = $findKey(____engine.merged, id);
+					if (find == -1) {
+						return null;
+					}
+					if (typeof(mesh) == 'boolean' && mesh == true) {
+						for (var index in ____engine.merged) {
+							____engine.merged[index].merge.remove(___engine.merge[index].id);
+						}
+					}
+					___engine.merge.slice(find, 1);
+					return ___engine.this;
 				}
 
 				//
@@ -1141,6 +1061,119 @@ var BRANCH = (function()
 						default:
 							return null;
 					}
+				}
+
+				return ____engine.this;
+			}
+
+			//
+			var $camera = function()
+			{
+				var ____engine = {
+					this: this,
+					type: _enum.CAMERA,
+				}
+
+				//
+				this.switch = function(id)
+				{
+					let find = $findKey(___engine.camera, id);
+					if (find == -1) {
+						return null;
+					}
+					for (var index in ___engine.camera) {
+						if (___engine.camera[index].enable == true) {
+							___engine.camera[index].enable = false;
+							___engine.scene.remove(___engine.camera[index].camera);
+							break ;
+						}
+					}
+					___engine.camera[find].enable = true;
+					___engine.scene.add(___engine.camera[find].camera);
+					$extend(___engine.this.camera.position, ___engine.camera[find].camera.position, true, ['x', 'y', 'z', 'w']);
+					$extend(___engine.this.camera.rotation, ___engine.camera[find].camera.rotation, true, ['x', 'y', 'z', 'w']);
+					return  ___engine.this;
+				}
+
+				//
+				this.add = function(vector, id, forced)
+				{
+					vector = vector.get(0);
+					id = (typeof(id) == 'undefined' ? $getId(___engine.camera, _enum.CAMERA) : id);
+					let camera = new THREE.PerspectiveCamera(___engine.cameraConfig.fov, ___engine.cameraConfig.aspect, ___engine.cameraConfig.near, ___engine.cameraConfig.far);
+					camera.position.set(vector.x, vector.y, vector.z, vector.w);
+					camera.name = id;
+					___engine.camera.push({
+						id: id,
+						camera:	camera,
+						enable: false,
+					});
+					return  ___engine.this;
+				}
+
+				//
+				this.remove = function(id)
+				{
+					if (typeof(id) != 'undefined') {
+						let find = $findKey(___engine.camera, id);
+						if (find == -1) {
+							return null;
+						}
+						if (___engine.camera[find].enable == true) {
+							___engine.scene.remove(___engine.camera[find].camera);
+							___engine.camera.splice(find, 1);
+						}
+						return  ___engine.this;
+					}
+					for (var index in ___engine.camera) {
+						if (___engine.camera[index].enable == true) {
+							___engine.scene.remove(___engine.camera[index].camera);
+							___engine.camera.splice(index, 1);
+							return ___engine.this;
+						}
+					}
+					return  null;
+				}
+
+				//
+				this.position = function(vec)
+				{
+					for (var index in ___engine.camera) {
+						if (___engine.camera[index].enable == true)
+						{
+							if (typeof(vec) == 'object') {
+								let vector = vec.get(0);
+								$extend(___engine.this.camera.position, vector);
+							}
+							console.log(___engine.this.camera.position.z);
+							$extend(___engine.camera[index].camera.position, ___engine.this.camera.position, true, ['x', 'y', 'z', 'w']);
+							if (typeof(vec) == 'undefined') {
+								return ___engine.camera[index].camera.position;
+							}
+							return  ___engine.this;
+						}
+					}
+					return  ___engine.this;
+				}
+
+				//
+				this.rotation = function(vec)
+				{
+					for (var index in ___engine.camera) {
+						if (___engine.camera[index].enable == true)
+						{
+							if (typeof(vec) == 'object') {
+								let vector = vec.get(0);
+								$extend(___engine.this.camera.rotation, vector);
+							}
+							$extend(___engine.camera[index].camera.rotation, ___engine.this.camera.rotation, true, ['x', 'y', 'z', 'w']);
+							if (typeof(vec) == 'undefined') {
+								return ___engine.camera[index].camera.rotation;
+							}
+							return  ___engine.this;
+						}
+					}
+					return  ___engine.this;
 				}
 
 				return ____engine.this;
@@ -1265,7 +1298,7 @@ var BRANCH = (function()
 	this.random = function(type, vecMin, vecMax)
 	{
 		if (type == _enum.COLOR) {
-			return parseInt(Math.floor(Math.random()*16777215).toString(16), 16);
+			return parseInt(Math.floor(Math.random() * 0xffffff).toString(16), 16);
 		}
 		let build = new $vector;
 		build.random(type, vecMin, vecMax);
