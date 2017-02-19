@@ -30,6 +30,7 @@ var BRANCH = (function()
 		VECTOR3: 'vector3',
 		VECTOR4: 'vector4',
 
+		ENABLE: 'enable',
 		LANDMARK: 'landmark',
 		TYPE: 'type',
 		MATH: 'math',
@@ -242,10 +243,10 @@ var BRANCH = (function()
 				this: this,
 				type: _enum.SCENE,
 				scene: null,
-				camera: [],
+				camera: null,
+				landmark: null,
 				mesh: [],
 				merge: [],
-				landmark: null,
 				config: {},
 				materialConfig: {},
 				cameraConfig: {},
@@ -313,10 +314,9 @@ var BRANCH = (function()
 				$extend(___engine.lineMaterialConfig, ___lineMaterialConfig);
 				$extend(___engine.landmarkConfig, ___defaultLandmarkConfig);
 
-				___engine.this.camera = new $camera;
-				___engine.this.camera.add(_engine.this.vector(___engine.cameraConfig.vector.x, ___engine.cameraConfig.vector.y, ___engine.cameraConfig.vector.z, ___engine.cameraConfig.vector.w));
-				___engine.this.camera.switch('camera1');
-
+				___engine.camera = new $camera;
+				___engine.camera.init(_engine.this.vector(___engine.cameraConfig.vector.x, ___engine.cameraConfig.vector.y, ___engine.cameraConfig.vector.z, ___engine.cameraConfig.vector.w));
+	
 				___engine.landmark = new $landmark;
 
 				delete ___engine.this.init;
@@ -347,7 +347,7 @@ var BRANCH = (function()
 				}
 
 				//
-				this.update = function(obj)
+				this.update = function(obj, id)
 				{
 					if (___engine.landmarkConfig.enable == false) {
 						return  ____engine.this;
@@ -1145,86 +1145,120 @@ var BRANCH = (function()
 				var ____engine = {
 					this: this,
 					type: _enum.CAMERA,
+					camera: [],
 				}
 
 				//
-				this.switch = function(id)
+				this.init = function(vector)
 				{
-					let find = $findKey(___engine.camera, id);
-					if (find == -1) {
-						return null;
-					}
-					for (var index in ___engine.camera) {
-						if (___engine.camera[index].enable == true) {
-							___engine.camera[index].enable = false;
-							___engine.scene.remove(___engine.camera[index].camera);
-							break ;
-						}
-					}
-					___engine.camera[find].enable = true;
-					___engine.scene.add(___engine.camera[find].camera);
-					$extend(___engine.this.camera.position, ___engine.camera[find].camera.position, true, ['x', 'y', 'z', 'w']);
-					$extend(___engine.this.camera.rotation, ___engine.camera[find].camera.rotation, true, ['x', 'y', 'z', 'w']);
-					return  ___engine.this;
+					$extend(____engine.this.position, {x: 0, y: 0, z: 0, w: 0}, true, ['x', 'y', 'z', 'w']);
+					$extend(____engine.this.rotation, {x: 0, y: 0, z: 0, w: 0}, true, ['x', 'y', 'z', 'w']);
+
+					____engine.this.add(vector, 'camera1');
+					____engine.this.switch('camera1')
+
+					delete ____engine.this.init;
+					return ____engine.this;
 				}
 
 				//
 				this.add = function(vector, id, forced)
 				{
 					vector = vector.get(0);
-					id = (typeof(id) == 'undefined' ? $getId(___engine.camera, _enum.CAMERA) : id);
+					id = (typeof(id) == 'undefined' ? $getId(____engine.camera, _enum.CAMERA) : id);
 					let camera = new THREE.PerspectiveCamera(___engine.cameraConfig.fov, ___engine.cameraConfig.aspect, ___engine.cameraConfig.near, ___engine.cameraConfig.far);
 					camera.position.set(vector.x, vector.y, vector.z, vector.w);
 					camera.name = id;
-					___engine.camera.push({
+					____engine.camera.push({
 						id: id,
 						camera:	camera,
 						enable: false,
 					});
-					return  ___engine.this;
+					return  ____engine.this;
 				}
 
 				//
-				this.remove = function(id)
+				this.fov = function(val)
 				{
-					if (typeof(id) != 'undefined') {
-						let find = $findKey(___engine.camera, id);
-						if (find == -1) {
-							return null;
-						}
-						if (___engine.camera[find].enable == true) {
-							___engine.scene.remove(___engine.camera[find].camera);
-							___engine.camera.splice(find, 1);
-						}
-						return  ___engine.this;
+					let find = ____engine.this.get(null, _enum.ENABLE)
+					if (find == -1) {
+						return null;
 					}
-					for (var index in ___engine.camera) {
-						if (___engine.camera[index].enable == true) {
-							___engine.scene.remove(___engine.camera[index].camera);
-							___engine.camera.splice(index, 1);
-							return ___engine.this;
-						}
-					}
-					return  null;
+					____engine.camera[find].camera.fov = val;
+					____engine.camera[find].camera.updateProjectionMatrix();
+					return  ____engine.this;
 				}
-
+				
+				//
+				this.aspect = function(val)
+				{
+					let find = ____engine.this.get(null, _enum.ENABLE)
+					if (find == -1) {
+						return null;
+					}
+					____engine.camera[find].camera.aspect = val;
+					____engine.camera[find].camera.updateProjectionMatrix();
+					return  ____engine.this;
+				}
+				
+				//
+				this.near = function(val)
+				{
+					let find = ____engine.this.get(null, _enum.ENABLE)
+					if (find == -1) {
+						return null;
+					}
+					____engine.camera[find].camera.near = val;
+					____engine.camera[find].camera.updateProjectionMatrix();
+					return  ____engine.this;
+				}
+				
+				//
+				this.far = function(val)
+				{
+					let find = ____engine.this.get(null, _enum.ENABLE)
+					if (find == -1) {
+						return null;
+					}
+					____engine.camera[find].camera.far = val;
+					____engine.camera[find].camera.updateProjectionMatrix();
+					return  ____engine.this;
+				}
+	
+				//
+				this.switch = function(id)
+				{
+					let find = $findKey(____engine.camera, id);
+					if (find == -1) {
+						return null;
+					}
+					let camera = ____engine.this.get(_enum.CAMERA, _enum.ENABLE)
+					if (camera != null) {
+						$extend(camera.position, ____engine.this.position, true, ['x', 'y', 'z', 'w']);
+						$extend(camera.rotation, ____engine.this.rotation, true, ['x', 'y', 'z', 'w']);
+						___engine.scene.remove(camera.camera);
+					}
+					____engine.camera[find].enable = true;
+					___engine.scene.add(____engine.camera[find].camera);
+					$extend(____engine.this.position, ____engine.camera[find].camera.position, true, ['x', 'y', 'z', 'w']);
+					$extend(____engine.this.rotation, ____engine.camera[find].camera.rotation, true, ['x', 'y', 'z', 'w']);
+					return  ____engine.this;
+				}
+				
 				//
 				this.position = function(vec)
 				{
-					for (var index in ___engine.camera) {
-						if (___engine.camera[index].enable == true)
-						{
-							if (typeof(vec) == 'object') {
-								let vector = vec.get(0);
-								$extend(___engine.this.camera.position, vector);
-							}
-							//console.log(___engine.this.camera.position.z);
-							$extend(___engine.camera[index].camera.position, ___engine.this.camera.position, true, ['x', 'y', 'z', 'w']);
-							if (typeof(vec) == 'undefined') {
-								return ___engine.camera[index].camera.position;
-							}
-							return  ___engine.this;
-						}
+					let find = ____engine.this.get(null, _enum.ENABLE)
+					if (find == -1) {
+						return null;
+					}
+					if (typeof(vec) == 'object') {
+						let vector = vec.get(0);
+						$extend(____engine.this.position, vector);
+					}
+					$extend(____engine.camera[find].camera.position, ____engine.this.position, true, ['x', 'y', 'z', 'w']);
+					if (typeof(vec) == 'undefined') {
+						return ____engine.camera[find].camera.position;
 					}
 					return  ___engine.this;
 				}
@@ -1232,21 +1266,58 @@ var BRANCH = (function()
 				//
 				this.rotation = function(vec)
 				{
-					for (var index in ___engine.camera) {
-						if (___engine.camera[index].enable == true)
-						{
-							if (typeof(vec) == 'object') {
-								let vector = vec.get(0);
-								$extend(___engine.this.camera.rotation, vector);
-							}
-							$extend(___engine.camera[index].camera.rotation, ___engine.this.camera.rotation, true, ['x', 'y', 'z', 'w']);
-							if (typeof(vec) == 'undefined') {
-								return ___engine.camera[index].camera.rotation;
-							}
-							return  ___engine.this;
-						}
+					let find = ____engine.this.get(null, _enum.ENABLE)
+					if (find == -1) {
+						return null;
+					}
+					if (typeof(vec) == 'object') {
+						let vector = vec.get(0);
+						$extend(____engine.this.rotation, vector);
+					}
+					$extend(____engine.camera[find].camera.rotation, ____engine.this.rotation, true, ['x', 'y', 'z', 'w']);
+					if (typeof(vec) == 'undefined') {
+						return ____engine.camera[find].camera.rotation;
 					}
 					return  ___engine.this;
+				}
+
+				//
+				this.remove = function(id)
+				{
+					let find = $findKey(____engine.camera, id);
+					if (find == -1 && (find = ____engine.this.get(null, _enum.ENABLE)) == -1) {
+						return null;
+					}
+					___engine.scene.remove(____engine.camera[find].camera);
+					____engine.camera.splice(find, 1);
+					return  ___engine.this;
+				}
+
+				//
+				this.get = function(id, type)
+				{
+					let find;
+					type = (typeof(type) != 'undefined' ? type : _enum.CAMERA);
+					switch (type)
+					{
+						case _enum.CAMERA:
+							return ____engine.camera;
+						break;
+						case _enum.ENABLE:
+							for (var index in ____engine.camera) {
+								if (____engine.camera[index].enable == true) {
+									if (typeof(id) == 'string' && id == _enum.CAMERA) {
+										return ____engine.camera[index].camera;
+									}
+									return index;
+									break;
+								}
+							}
+							return null;
+						break;
+						default:
+							return null;
+					}
 				}
 
 				return ____engine.this;
@@ -1311,14 +1382,7 @@ var BRANCH = (function()
 						return __engine.config.stop;
 					break;
 					case _enum.CAMERA:
-						if (typeof(id) == 'undefined' || id == null) {
-							return ___engine.camera;
-						}
-						find = $findKey(___engine.camera, id);
-						if (find == -1) {
-							return null;
-						}
-						return ___engine.camera[find].camera;
+						return ___engine.camera;
 					break;
 					case _enum.SCENE:
 						return ___engine.scene;
@@ -1556,8 +1620,9 @@ var BRANCH = (function()
 				let scene = scenes[index2].scene;
 			
 				//
-				scene.camera.position();
-				scene.camera.rotation();
+				let camera = scene.get(null, _enum.CAMERA);
+				camera.position();
+				camera.rotation();
 
 				//
 				let merges = scene.get(null, _enum.MERGE);
@@ -1595,7 +1660,8 @@ var BRANCH = (function()
 					if (scene.get(null, _enum.STOP) == false) {
 						let _renderer = branch.get(null, _enum.RENDERER);
 						let _scene = scene.get(null, _enum.SCENE);
-						let _camera = scene.get(null, _enum.CAMERA);
+						let _cameraObj = scene.get(null, _enum.CAMERA);
+						let _camera = _cameraObj.get(null, _enum.CAMERA);
 						for (var index3 in _camera) {
 							if (_camera[index3].enable == true) {
 								_renderer.render(_scene, _camera[index3].camera);
