@@ -14,7 +14,6 @@ var BRANCH = (function()
 		MESH: 'mesh',
 		POINT: 'point',
 		TEXT: 'text',
-		LINE: 'line',
 		CIRCLE: 'circle',
 		TRIANGLE: 'triangle',
 		CUBE: 'cube',
@@ -30,6 +29,7 @@ var BRANCH = (function()
 		VECTOR3: 'vector3',
 		VECTOR4: 'vector4',
 
+		CONTROLS: 'controls',
 		ENABLE: 'enable',
 		LANDMARK: 'landmark',
 		TYPE: 'type',
@@ -204,7 +204,6 @@ var BRANCH = (function()
 		{
 			__engine.config.stop = false;
 			for (var index in __engine.scene) {
-				__engine.scene[index].stop();
 				__engine.scene[index].render();
 			}
 			return __engine.this;
@@ -214,6 +213,9 @@ var BRANCH = (function()
 		this.stop = function()
 		{
 			__engine.config.stop = true;
+			for (var index in __engine.scene) {
+				__engine.scene[index].stop();
+			}
 			return __engine.this;
 		}
 
@@ -243,16 +245,22 @@ var BRANCH = (function()
 				this: this,
 				type: _enum.SCENE,
 				scene: null,
+				render: false,
+
 				camera: null,
+				controls: null,
 				landmark: null,
+
 				mesh: [],
 				merge: [],
+			
 				config: {},
 				materialConfig: {},
 				cameraConfig: {},
 				pointMaterialConfig: {},
 				lineMaterialConfig: {},
 				landmarkConfig: {},
+				controlsConfig: {},
 			};
 
 			//
@@ -287,6 +295,20 @@ var BRANCH = (function()
 			}
 
 			//
+			var ___defaultControlsConfig = {
+				enable: true,
+				property: {
+					rotateSpeed: 1.0,
+					zoomSpeed: 1.2,
+					panSpeed: 0.8,
+					noZoom: false,
+					noPan: false,
+					staticMoving: true,
+					dynamicDampingFactor: 0.3,
+				},
+			}
+
+			//
 			var ___pointMaterialConfig = {
 				sizeAttenuation: false,
 			}
@@ -313,14 +335,23 @@ var BRANCH = (function()
 				$extend(___engine.pointMaterialConfig, ___pointMaterialConfig);
 				$extend(___engine.lineMaterialConfig, ___lineMaterialConfig);
 				$extend(___engine.landmarkConfig, ___defaultLandmarkConfig);
+				$extend(___engine.controlsConfig, ___defaultControlsConfig);
 
+				___engine.landmark = new $landmark;
 				___engine.camera = new $camera;
 				___engine.camera.init(_engine.this.vector(___engine.cameraConfig.vector.x, ___engine.cameraConfig.vector.y, ___engine.cameraConfig.vector.z, ___engine.cameraConfig.vector.w));
-	
-				___engine.landmark = new $landmark;
+				___engine.controls = new $controls;
+				___engine.controls.init();
 
 				delete ___engine.this.init;
 				return  ___engine.this;
+			}
+
+			//
+			this.config = function()
+			{
+				// À Faire
+				// Ajouter les prefixes également
 			}
 
 			//
@@ -423,16 +454,16 @@ var BRANCH = (function()
 			}
 
 			//
-			this.cylinder = function(height, id, forced, landmark)
+			this.cylinder = function(vector, id, forced, landmark)
 			{
 				return $getMesh(function()
 				{
 					let material = new THREE.MeshPhongMaterial(___engine.materialConfig);
-					let geometry = new THREE.CylinderGeometry(50, 50, height, 50);
-					
-					// THREE.CylinderGeometry(radiusTop, radiusBottom, height, radiusSegments, heightSegments, openEnded)
-					
+					let geometry = new THREE.CylinderGeometry(1, 1, 1, 50);
 					let mesh = new THREE.Mesh(geometry, material);
+
+					vector = (typeof(vector) != 'object' ? BRANCH.vector(50, 50, 50) : vector);
+					$extend(mesh.scale, vector.get(0));
 
 					return {
 						type: _enum.CYLINDER,
@@ -442,15 +473,35 @@ var BRANCH = (function()
 			}
 
 			//
-			this.cube = function(size, id, forced, landmark)
+			this.sphere = function(vector, id, forced, landmark)
+			{
+				return $getMesh(function() {
+					let material = new THREE.MeshPhongMaterial(___engine.materialConfig);
+					let geometry = new THREE.SphereGeometry(1, 35, 35);
+					let mesh = new THREE.Mesh(geometry, material);
+
+					vector = (typeof(vector) != 'object' ? BRANCH.vector(50, 50, 50) : vector);
+					$extend(mesh.scale, vector.get(0));
+
+					return {
+						type: _enum.SPHERE,
+						mesh: mesh,
+					}
+				}, id, forced, landmark);
+			}
+
+			//
+			this.cube = function(vector, id, forced, landmark)
 			{
 				return $getMesh(function()
 				{
 					let material = new THREE.MeshPhongMaterial(___engine.materialConfig);
-					let getSize = size.get(0);
-					let geometry = new THREE.BoxGeometry(getSize.x, getSize.y, getSize.z);
+					let geometry = new THREE.BoxGeometry(1, 1, 1);
 					let mesh = new THREE.Mesh(geometry, material);
 					
+					vector = (typeof(vector) != 'object' ? BRANCH.vector(50, 50, 50) : vector);
+					$extend(mesh.scale, vector.get(0));
+
 					return {
 						type: _enum.CUBE,
 						mesh: mesh,
@@ -463,8 +514,9 @@ var BRANCH = (function()
 			{
 				return $getMesh(function()
 				{
-					vector = (typeof(vector) == 'undefined' ? BRANCH.vector(0, 0, 0) : vector);
 					let mesh = new THREE.SpotLight();
+					
+					vector = (typeof(vector) != 'object' ? BRANCH.vector(0, 0, 0) : vector);
 					$extend(mesh.position, vector.get(0));
 
 					return {
@@ -475,12 +527,12 @@ var BRANCH = (function()
 			}
 
 			//
-			this.circle = function(radius, id, forced, landmark)
+			this.circle = function(ratio, id, forced, landmark)
 			{
 				return $getMesh(function()
 				{
 					let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
-					let geometry = new THREE.CircleGeometry(radius, 100);
+					let geometry = new THREE.CircleGeometry(ratio, 100);
 					let mesh = new THREE.Mesh(geometry, material);
 					
 					return {
@@ -538,21 +590,6 @@ var BRANCH = (function()
 
 					return {
 						type: _enum.TRIANGLE,
-						mesh: mesh,
-					}
-				}, id, forced, landmark);
-			}
-
-			//
-			this.sphere = function(size, id, forced, landmark)
-			{
-				return $getMesh(function() {
-					let material = new THREE.MeshPhongMaterial(___engine.materialConfig);
-					let geometry = new THREE.SphereGeometry(size, 35, 35);
-					let mesh = new THREE.Mesh(geometry, material);
-
-					return {
-						type: _enum.SPHERE,
 						mesh: mesh,
 					}
 				}, id, forced, landmark);
@@ -677,12 +714,9 @@ var BRANCH = (function()
 					type: _enum.MESH,
 					landmark: true,
 					mesh: null,
-					config: {},
-				}
-
-				//
-				var ____defaultConfig = {
-					stop: false,
+					config: {
+						stop: false,
+					},
 				}
 
 				//
@@ -700,19 +734,33 @@ var BRANCH = (function()
 					____engine.mesh = mesh;
 					____engine.type = type; 
 					____engine.mesh.name = id;
-					$extend(___engine.config, ____defaultConfig);
-					$extend(____engine.this.position, mesh.position);
-					$extend(____engine.this.rotation, mesh.rotation);
 
-					/*** TEST (Black magic) ***/ // I don't know if I keep it or not...
+					/*** Black magic 2 ***/
+					$addPrefix('name', ____engine.mesh.name);
+					//$addPrefix('font', ____engine.mesh.geometry.font);
+					//$addPrefix('texture', ____engine.this.map);
+					//$addPrefix('transform', ____engine.mesh.position);
+					$addPrefix('scale', ____engine.mesh.scale);
+					$addPrefix('position', ____engine.mesh.position);
+					$addPrefix('rotation', ____engine.mesh.rotation);
+					/*** END ***/
+
+					/*** Black magic 3 ***/
+					$addVector('scale', ____engine.mesh.scale);
+					$addVector('position', ____engine.mesh.position);
+					$addVector('rotation', ____engine.mesh.rotation);
+					/*** END ***/
+
+					/*** Black magic ***/
 					for (var index in mesh.material) {
-						if (typeof(mesh.material[index]) != 'function' && typeof(____engine.this[index]) == 'undefined') {
-							this[index] = function (param) {
+						if (typeof(mesh.material[index]) != 'function' && typeof(____engine.this[index]) == 'undefined' && index[0] != '_') {
+							$copyPropety(index, function (param) {
 								let name = arguments.callee.myname;
 								switch (name+typeof(param))
 								{
 									case 'colorstring':
 									case 'colornumber':
+										console.log(____engine.mesh.material[name]);
 										____engine.mesh.material[name].setHex(param);
 									break;
 									default :
@@ -720,15 +768,18 @@ var BRANCH = (function()
 								}
 								____engine.mesh.material.needsUpdate = true;
 								return ____engine.this;
-							}
-							this[index].myname = index;
+							});
+							$addPrefix(index, mesh.material[index]);
 						}
 					}
-					$extend(____engine.this, this, false);
 					/*** END ***/
 
 					if (____engine.landmark == true) {
 						___engine.landmark.update(___engine.mesh, ____engine.mesh.name);
+					}
+
+					if (___engine.render == true) {
+						____engine.this.render();
 					}
 
 					if (typeof(callback) == 'function') {
@@ -740,25 +791,96 @@ var BRANCH = (function()
 				}
 
 				//
-				this.material = function(param)
+				let $copyPropety = function(name, value)
 				{
-					//
-					return ____engine.this;
+					if (typeof(____engine.this[name]) != 'undefined') {
+						return null;
+					}
+					____engine.this[name] = value;
+					____engine.this[name].myname = name;
 				}
 
 				//
-				this.geometry = function(param)
+				let $addPrefix = function(name, value)
 				{
-					//
-					return ____engine.this;
+					if (typeof(____engine.this['_'+name]) != 'undefined') {
+						return null;
+					}
+					____engine.this['_'+name] = () => {};
+					Object.defineProperty(____engine.this, '_'+name, {
+						set: function(value2) {
+							if (typeof(value2) == 'undefined') {
+								return ;
+							}
+							____engine.this[name](value2);
+						},
+						get: function() {
+							return value;
+						},
+					});
+				}
+
+				//
+				let $addVector = function(name, value)
+				{
+					if (typeof(____engine.this[name].x) != 'undefined') {
+						return null;
+					}
+					Object.defineProperty(____engine.this[name], 'x', {
+						set: function(value2) {
+							if (typeof(value2) == 'undefined') {
+								return ;
+							}
+							____engine.this[name](BRANCH.vector(value2, value.y, value.z, value.w));
+						},
+						get: function() {
+							return value.x;
+						},
+					});
+					Object.defineProperty(____engine.this[name], 'y', {
+						set: function(value2) {
+							if (typeof(value2) == 'undefined') {
+								return ;
+							}
+							____engine.this[name](BRANCH.vector(value.x, value2, value.z, value.w));
+						},
+						get: function() {
+							return value.y;
+						},
+					});
+					Object.defineProperty(____engine.this[name], 'z', {
+						set: function(value2) {
+							if (typeof(value2) == 'undefined') {
+								return ;
+							}
+							____engine.this[name](BRANCH.vector(value.x, value.y, value2, value.w));
+						},
+						get: function() {
+							return value.z;
+						},
+					});
+					Object.defineProperty(____engine.this[name], 'w', {
+						set: function(value2) {
+							if (typeof(value2) == 'undefined') {
+								return ;
+							}
+							____engine.this[name](BRANCH.vector(value.x, value.y, value.z, value2));
+						},
+						get: function() {
+							return value.w;
+						},
+					});
 				}
 
 				//
 				this.name = function(id)
 				{
 					let find = $findKey(___engine.mesh, id);
-					if (typeof(id) == 'undefined' || find != -1) {
+					if (typeof(id) == 'string') {
 						return null;
+					}
+					if (find == -1) {
+						return ____engine.mesh.name;
 					}
 					find = $findKey(___engine.mesh, ____engine.mesh.name);
 					___engine.mesh[find].id = id;
@@ -769,7 +891,7 @@ var BRANCH = (function()
 				//
 				this.font = function(url)
 				{
-					// NE MARCHE PAS
+					// À TESTER
 					let loader = new THREE.FontLoader();
 					loader.load(url, function(font) {
 						____engine.mesh.geometry.font = font;
@@ -781,6 +903,7 @@ var BRANCH = (function()
 				//
 				this.texture = function(url)
 				{
+					// À TESTER
 					// Mettre un système pour charcher la texture en externe ou entrer l'url pour le charger ici
 					let loader = new THREE.TextureLoader();
 					loader.load(url, function(texture) {
@@ -792,6 +915,7 @@ var BRANCH = (function()
 				//
 				this.transform = function(vector)
 				{
+					// À Modifier
 					let points = vector.get();
 					for (var index in points) {
 						____engine.mesh.geometry.vertices[index].set(points[index].x, points[index].y, points[index].z, points[index].w);
@@ -806,51 +930,54 @@ var BRANCH = (function()
 				}
 
 				//
-				this.position = function(vec)
+				this.scale = function(vec, update)
 				{
-					if (typeof(vec) == 'object') {
-						let vector = vec.get(0);
-						$extend(____engine.this.position, vector);
+					if (typeof(vec) != 'object') {
+						return null;
 					}
-					$extend(____engine.mesh.position, ____engine.this.position, true, ['x', 'y', 'z', 'w']);
+					let vector = vec.get(0);
+					$extend(____engine.mesh.scale, vector);
 					if (typeof(____engine.mesh.geometry) != 'undefined') {
 						____engine.mesh.geometry.verticesNeedUpdate = true;
 					}
-					if (____engine.landmark == true) {
+					if (____engine.landmark == true && (typeof(update) != 'boolean' || update == true)) {
 						___engine.landmark.update(___engine.mesh, ____engine.mesh.name);
 					}
-					if (typeof(vec) == 'undefined') {
-						return ____engine.mesh.position;
+					return  ____engine.this;
+				}
+				
+				//
+				this.position = function(vec, update)
+				{
+					if (typeof(vec) != 'object') {
+						return null;
+					}
+					let vector = vec.get(0);
+					$extend(____engine.mesh.position, vector);
+					if (typeof(____engine.mesh.geometry) != 'undefined') {
+						____engine.mesh.geometry.verticesNeedUpdate = true;
+					}
+					if (____engine.landmark == true && (typeof(update) != 'boolean' || update == true)) {
+						___engine.landmark.update(___engine.mesh, ____engine.mesh.name);
 					}
 					return  ____engine.this;
 				}
 
 				//
-				this.rotation = function(vec)
+				this.rotation = function(vec, update)
 				{
-					if (typeof(vec) == 'object') {
-						let vector = vec.get(0);
-						$extend(____engine.this.rotation, vector);
+					if (typeof(vec) != 'object') {
+						return null;
 					}
-					$extend(____engine.mesh.rotation, ____engine.this.rotation, true, ['x', 'y', 'z', 'w']);
+					let vector = vec.get(0);
+					$extend(____engine.mesh.rotation, vector);
 					if (typeof(____engine.mesh.geometry) != 'undefined') {
 						____engine.mesh.geometry.verticesNeedUpdate = true;
 					}
-					if (____engine.landmark == true) {
+					if (____engine.landmark == true && (typeof(update) != 'boolean' || update == true)) {
 						___engine.landmark.update(___engine.mesh, ____engine.mesh.name);
 					}
-					if (typeof(vec) == 'undefined') {
-						return ____engine.mesh.rotation;
-					}
 					return  ____engine.this;
-				}
-
-				//
-				this.stop = function()
-				{
-					// It does nothing at this moment
-					____engine.config.stop = true;
-					return ____engine.this;
 				}
 
 				//
@@ -861,6 +988,7 @@ var BRANCH = (function()
 						return null;
 					}
 					___engine.config.stop = false;
+					____engine.config.stop = false;
 					if (___engine.mesh[find].inScene == false) {
 						___engine.scene.add(___engine.mesh[find].mesh.get(null, _enum.MESH));
 						___engine.mesh[find].inScene = true;
@@ -869,9 +997,25 @@ var BRANCH = (function()
 				}
 
 				//
+				this.stop = function()
+				{
+					let find = $findKey(___engine.mesh, ____engine.id);
+					if (find == -1) {
+						return null;
+					}
+					____engine.config.stop = true;
+					___engine.mesh[find].inScene = false;
+					___engine.scene.remove(____engine.mesh);
+					return ____engine.this;
+				}
+
+				//
 				this.remove = function()
 				{
 					let find = $findKey(___engine.mesh, ____engine.id);
+					if (find == -1) {
+						return null;
+					}
 					___engine.scene.remove(____engine.mesh);
 					___engine.mesh.splice(find, 1);
 					if (____engine.landmark == true) {
@@ -896,18 +1040,27 @@ var BRANCH = (function()
 					if (typeof(id) != 'string') {
 						return null;
 					}
-					let find = $findKey(___engine.merge, id);
 					let me = $findKey(___engine.mesh, ____engine.mesh.name);
+					if (me == -1) {
+						return null;
+					}
+					let find = $findKey(___engine.merge, id);
 					if (find == -1) {
 						let merge = new $merge;
-						merge.init(id, ___engine.mesh[me].mesh);
+						merge.init(id, ___engine.mesh[me].mesh, ____engine.landmark);
 						___engine.mesh[me].merged = true;
 						return merge;
 					}
-					// ICI COPIER L'ENVIRONNEMENT DE MESH VERS MERGE
-					___engine.merge[find].merge.push(id, ___engine.mesh[me].mesh);
+					___engine.merge[find].merge.push(id, ___engine.mesh[me].mesh, ____engine.landmark);
 					___engine.mesh[me].merged = true;
 					return ___engine.merge[find].merge;
+				}
+
+				//
+				this.unmerge = function()
+				{
+					// À faire
+					return ____engine.this;
 				}
 
 				//
@@ -939,12 +1092,21 @@ var BRANCH = (function()
 				var ____engine = {
 					this: this,
 					id: '',
+					landmark: false,
 					type: _enum.MERGE,
 					merged: [],
+					property: {
+						scale: _engine.this.vector(0, 0, 0, 0).get(0),
+						position: _engine.this.vector(0, 0, 0, 0).get(0),
+						rotation: _engine.this.vector(0, 0, 0, 0).get(0),
+					},
+					config: {
+						stop: false,
+					},
 				}
 
 				//
-				this.init = function(id, mesh)
+				this.init = function(id, mesh, landmark)
 				{
 					___engine.merge.push({
 						id: id,
@@ -953,10 +1115,9 @@ var BRANCH = (function()
 					});
 
 					____engine.id = id;
+					____engine.landmark = (typeof(landmark) != 'boolean' ? true : landmark);
 					____engine.this.push(id, mesh);
-					$extend(____engine.this.position, {x: 0, y: 0, z: 0, w: 0, lx: 0, ly: 0, lz: 0, lw: 0});
-					$extend(____engine.this.rotation, {x: 0, y: 0, z: 0, w: 0, lx: 0, ly: 0, lz: 0, lw: 0});
-					
+
 					delete ____engine.this.init;
 					return ____engine.this;
 				}
@@ -968,135 +1129,274 @@ var BRANCH = (function()
 						return null;
 					}
 
-					let copy = mesh;
-					if (mesh.get(null, _enum.TYPE) != _enum.MERGE) {
-						copy = mesh.get(null, _enum.MESH).material;
-						$extend(copy, {
-							stop: '',
-							remove: '',	
-							render: '',
-						});
-					}
-					
-					/*** TEST (Black magic) ***/ // I don't know if I keep it or not...
-					for (var index in copy) {
-						if (typeof(____engine.this[index]) == 'undefined' &&
-							((mesh.get(null, _enum.TYPE) != _enum.MERGE && typeof(copy[index]) != 'function') ||
-							(mesh.get(null, _enum.TYPE) == _enum.MERGE && typeof(copy[index]) == 'function'))) {
-							this[index] = function (param) {
+					/*** Black magic 2 ***/
+					$addPrefix('name', ____engine.id);
+					$addPrefix('scale', ____engine.property.scale);
+					$addPrefix('position', ____engine.property.position);
+					$addPrefix('rotation', ____engine.property.rotation);
+					/*** END ***/
+
+					/*** Black magic 3 ***/
+					$addVector('scale', ____engine.property.scale);
+					$addVector('position', ____engine.property.position);
+					$addVector('rotation', ____engine.property.rotation);
+					/*** END ***/
+
+					/*** Black magic ***/
+					for (var index in mesh) {
+						if (index[0] == '_') {
+							$copyPropety(index.substring(1), function (param) {
 								let name = arguments.callee.myname;
-								for (var index in ____engine.merged) {
-									____engine.merged[index].merge[name](param);
+								for (var key in ____engine.merged) {
+									if (typeof(____engine.merged[key].merge[name]) == 'function') {
+										____engine.merged[key].merge[name](param);
+									}
 								}
-								return ____engine.this;
-							};
-							this[index].myname = index;
+							});
+							$addPrefix(index.substring(1), mesh[index]);
 						}
 					}
-					$extend(____engine.this, this, false);
 					/*** END ***/
 
 					____engine.merged.push({
 						id: id,
 						merge: mesh,
 					});
-					delete ____engine.this.init;
+
 					return ____engine.this;
 				}
 
 				//
-				this.position = function(vec)
+				let $copyPropety = function(name, value)
 				{
-					// Mettre un système de ration selon z
-					if (typeof(vec) == 'object') {
-						let vector = vec.get(0);
-						$extend(____engine.this.position, vector);
+					if (typeof(____engine.this[name]) != 'undefined') {
+						return null;
 					}
-					for (var index in ____engine.merged) {
-						____engine.merged[index].merge.position.x += ____engine.this.position.x - ____engine.this.position.lx;
-						____engine.merged[index].merge.position.y += ____engine.this.position.y - ____engine.this.position.ly;
-						____engine.merged[index].merge.position.z += ____engine.this.position.z - ____engine.this.position.lz;
-						____engine.merged[index].merge.position.w += ____engine.this.position.w - ____engine.this.position.lw;
-					}
-					$extend(____engine.this.position, {
-						lx: ____engine.this.position.x,
-						ly: ____engine.this.position.y,
-						lz: ____engine.this.position.z,
-						lw: ____engine.this.position.w,
-					});
-					if (typeof(vec) == 'undefined') {
-						return $extend({}, ____engine.this.position, true, ['x', 'y', 'z', 'w'])
-					}
-					return ____engine.this;
+					____engine.this[name] = value;
+					____engine.this[name].myname = name;
 				}
 
 				//
-				this.rotation = function(vec)
+				let $addPrefix = function(name, value)
 				{
-					// Mettre un système de ration selon z
-					if (typeof(vec) == 'object') {
-						let vector = vec.get(0);
-						$extend(____engine.this.rotation, vector);
+					if (typeof(____engine.this['_'+name]) != 'undefined') {
+						return null;
 					}
-					for (var index in ____engine.merged) {
-						____engine.merged[index].merge.rotation.x += ____engine.this.rotation.x - ____engine.this.rotation.lx;
-						____engine.merged[index].merge.rotation.y += ____engine.this.rotation.y - ____engine.this.rotation.ly;
-						____engine.merged[index].merge.rotation.z += ____engine.this.rotation.z - ____engine.this.rotation.lz;
-						____engine.merged[index].merge.rotation.w += ____engine.this.rotation.w - ____engine.this.rotation.lw;
-					}
-					$extend(____engine.this.rotation, {
-						lx: ____engine.this.rotation.x,
-						ly: ____engine.this.rotation.y,
-						lz: ____engine.this.rotation.z,
-						lw: ____engine.this.rotation.w,
+					____engine.this['_'+name] = () => {};
+					Object.defineProperty(____engine.this, '_'+name, {
+						set: function(value2) {
+							if (typeof(value2) == 'undefined') {
+								return ;
+							}
+							____engine.this[name](value2);
+						},
+						get: function() {
+							return value;
+						},
 					});
-					if (typeof(vec) == 'undefined') {
-						return $extend({}, ____engine.this.rotation, true, ['x', 'y', 'z', 'w'])
+				}
+
+				//
+				let $addVector = function(name, value)
+				{
+					if (typeof(____engine.this[name].x) != 'undefined') {
+						return null;
 					}
+					Object.defineProperty(____engine.this[name], 'x', {
+						set: function(value2) {
+							if (typeof(value2) == 'undefined') {
+								return ;
+							}
+							____engine.this[name](BRANCH.vector(value2, value.y, value.z, value.w));
+						},
+						get: function() {
+							return value.x;
+						},
+					});
+					Object.defineProperty(____engine.this[name], 'y', {
+						set: function(value2) {
+							if (typeof(value2) == 'undefined') {
+								return ;
+							}
+							____engine.this[name](BRANCH.vector(value.x, value2, value.z, value.w));
+						},
+						get: function() {
+							return value.y;
+						},
+					});
+					Object.defineProperty(____engine.this[name], 'z', {
+						set: function(value2) {
+							if (typeof(value2) == 'undefined') {
+								return ;
+							}
+							____engine.this[name](BRANCH.vector(value.x, value.y, value2, value.w));
+						},
+						get: function() {
+							return value.z;
+						},
+					});
+					Object.defineProperty(____engine.this[name], 'w', {
+						set: function(value2) {
+							if (typeof(value2) == 'undefined') {
+								return ;
+							}
+							____engine.this[name](BRANCH.vector(value.x, value.y, value.z, value2));
+						},
+						get: function() {
+							return value.w;
+						},
+					});
+				}
+
+				//
+				this.name = function(id)
+				{
+					let find = $findKey(___engine.mesh, id);
+					if (typeof(id) == 'string') {
+						return null;
+					}
+					if (find == -1) {
+						return ____engine.id;
+					}
+					find = $findKey(___engine.merge, ____engine.id);
+					___engine.merge[find].id = id;
+					____engine.id = id;
 					return ____engine.this;
 				}
 
 				//
-				this.merge = function(id, forced)
+				this.scale = function(vec, update)
+				{
+					if (typeof(vec) != 'object') {
+						return null;
+					}
+					let vector = vec.get(0);
+					for (var index in ____engine.merged) {
+						____engine.merged[index].merge.scale(BRANCH.vector(
+							____engine.merged[index].merge.scale.x + (vector.x - ____engine.property.scale.x),
+							____engine.merged[index].merge.scale.y + (vector.y - ____engine.property.scale.y),
+							____engine.merged[index].merge.scale.z + (vector.z - ____engine.property.scale.z),
+							____engine.merged[index].merge.scale.w + (vector.w - ____engine.property.scale.w)
+						), false);
+					}
+					$extend(____engine.property.scale, vector);
+					if (____engine.landmark == true && (typeof(update) != 'boolean' || update == true)) {
+						___engine.landmark.update(___engine.mesh, ____engine.id);
+					}
+					return  ____engine.this;
+				}
+
+				//
+				this.position = function(vec, update)
+				{
+					if (typeof(vec) != 'object') {
+						return null;
+					}
+					let vector = vec.get(0);
+					for (var index in ____engine.merged) {
+						____engine.merged[index].merge.position(BRANCH.vector(
+							____engine.merged[index].merge.position.x + (vector.x - ____engine.property.position.x),
+							____engine.merged[index].merge.position.y + (vector.y - ____engine.property.position.y),
+							____engine.merged[index].merge.position.z + (vector.z - ____engine.property.position.z),
+							____engine.merged[index].merge.position.w + (vector.w - ____engine.property.position.w)
+						), false);
+					}
+					$extend(____engine.property.position, vector);
+					if (____engine.landmark == true && (typeof(update) != 'boolean' || update == true)) {
+						___engine.landmark.update(___engine.mesh, ____engine.id);
+					}
+					return  ____engine.this;
+				}
+
+				//
+				this.rotation = function(vec, update)
+				{
+					if (typeof(vec) != 'object') {
+						return null;
+					}
+					let vector = vec.get(0);
+					for (var index in ____engine.merged) {
+						____engine.merged[index].merge.rotation(BRANCH.vector(
+							____engine.merged[index].merge.rotation.x + (vector.x - ____engine.property.rotation.x),
+							____engine.merged[index].merge.rotation.y + (vector.y - ____engine.property.rotation.y),
+							____engine.merged[index].merge.rotation.z + (vector.z - ____engine.property.rotation.z),
+							____engine.merged[index].merge.rotation.w + (vector.w - ____engine.property.rotation.w)
+						), false);
+					}
+					$extend(____engine.property.rotation, vector);
+					if (____engine.landmark == true && (typeof(update) != 'boolean' || update == true)) {
+						___engine.landmark.update(___engine.mesh, ____engine.id);
+					}
+					return  ____engine.this;
+				}
+
+				//
+				this.merge = function(id)
 				{
 					if (typeof(id) != 'string') {
 						return null;
 					}
-					let find = $findKey(___engine.merge, id);
-					if (find != -1 && ___engine.merge[find].merge.get(____engine.id, _enum.MERGE) != null) {
-						if (typeof(forced) == 'boolean' && forced == true) {
-						// 	let merge = new $merge;
-						// 	merge.init(id, ___engine.merge[me].merge);
-						// 	___engine.merge[find].merge = merge;
-						// 	___engine.merge[find].merged = true;
-						// 	return merge;
-						}
+					let me = $findKey(___engine.merge, ____engine.id);
+					if (me == -1) {
 						return null;
 					}
-					let me = $findKey(___engine.merge, ____engine.id);
-					if (find == -1) {
-						let merge = new $merge;
-						merge.init(id, ___engine.merge[me].merge);
+					let find = $findKey(___engine.merge, id);
+					if (find != -1) {
+						let me2 = ___engine.merge[find].merge.get(____engine.id, _enum.MERGE);
+						if (me2 != null) {
+							return me2;
+						}
+						___engine.merge[find].merge.push(id, ___engine.merge[me].merge);
 						___engine.merge[me].merged = true;
-						return merge;
+						return ___engine.merge[find].merge;
 					}
-					// ICI COPIER L'ENVIRONNEMENT DE MESH VERS MERGE
-					___engine.merge[find].merge.push(id, ___engine.merge[me].merge);
+					let merge = new $merge;
+					merge.init(id, ___engine.merge[me].merge);
 					___engine.merge[me].merged = true;
-					return ___engine.merge[find].merge;
+					return merge;
 				}
 
 				//
-				this.remove = function(id, mesh)
+				this.unmerge = function(id)
 				{
 					let find = $findKey(____engine.merged, id);
 					if (find == -1) {
 						return null;
 					}
-					if (typeof(mesh) == 'boolean' && mesh == true) {
-						for (var index in ____engine.merged) {
-							____engine.merged[index].merge.remove(___engine.merge[index].id);
-						}
+					____engine.merged.merge.unmerge();
+					____engine.merged.slice(find, 1);
+					return ____engine.this;
+				}
+
+				//
+				this.render = function()
+				{
+					for (var index in ____engine.merged) {
+						____engine.merged[index].merge.render();
+					}
+					____engine.config.stop = false;
+					return ____engine.this;
+				}
+
+				//
+				this.stop = function()
+				{
+					for (var index in ____engine.merged) {
+						____engine.merged[index].merge.stop();
+					}
+					____engine.config.stop = true;
+					return ____engine.this;
+				}
+
+				//
+				this.remove = function()
+				{
+					let find = $findKey(____engine.merged, ____engine.id);
+					if (find == -1) {
+						return null;
+					}
+					for (var index in ____engine.merged) {
+						____engine.merged[index].merge.remove();
 					}
 					___engine.merge.slice(find, 1);
 					return ___engine.this;
@@ -1130,6 +1430,54 @@ var BRANCH = (function()
 						break;
 						case _enum.TYPE:
 							return ____engine.type;
+						break;
+						default:
+							return null;
+					}
+				}
+
+				return ____engine.this;
+			}
+
+			//
+			var $controls = function()
+			{
+				var ____engine = {
+					this: this,
+					type: _enum.CONTROLS,
+					controls: null,
+				}
+
+				//
+				this.init = function()
+				{
+					____engine.this.update();
+
+					delete ____engine.this.init;
+					return ____engine.this;
+				}
+
+				//
+				this.update = function()
+				{
+					let camera = ___engine.this.get(null, _enum.CAMERA).get(_enum.CAMERA, _enum.ENABLE);
+					if (camera == null || ___engine.controlsConfig.enable == false) {
+						____engine.controls = null;
+						return ____engine.this;
+					}
+					____engine.controls = new THREE.TrackballControls(camera);
+					$extend(____engine.controls, ___engine.controlsConfig.property, true);
+					return ____engine.this;
+				}
+
+				//
+				this.get = function(id, type)
+				{
+					type = (typeof(type) == 'undefined' ? _enum.CONTROLS : type);
+					switch (type)
+					{
+						case _enum.CONTROLS:
+							return ____engine.controls;
 						break;
 						default:
 							return null;
@@ -1334,6 +1682,7 @@ var BRANCH = (function()
 			//
 			this.render = function()
 			{
+				___engine.render = true;
 				___engine.config.stop = false;
 				for (var index in ___engine.mesh) {
 					if (___engine.mesh[index].inScene == false) {
@@ -1347,7 +1696,14 @@ var BRANCH = (function()
 			//
 			this.stop = function()
 			{
+				___engine.render = false;
 				__engine.config.stop = true;
+				for (var index in ___engine.mesh) {
+					if (___engine.mesh[index].inScene == true) {
+						___engine.mesh[index].remove();
+						___engine.mesh[index].inScene = false;
+					}
+				}
 				return ___engine.this;
 			}
 
@@ -1386,6 +1742,9 @@ var BRANCH = (function()
 					break;
 					case _enum.SCENE:
 						return ___engine.scene;
+					break;
+					case _enum.CONTROLS:
+						return ___engine.controls;
 					break;
 					default:
 						return null;
@@ -1621,21 +1980,21 @@ var BRANCH = (function()
 			
 				//
 				let camera = scene.get(null, _enum.CAMERA);
-				camera.position();
-				camera.rotation();
+				//camera.position();
+				//camera.rotation();
 
 				//
 				let merges = scene.get(null, _enum.MERGE);
 				for (var index3 in merges) {
-					merges[index3].merge.position();
-					merges[index3].merge.rotation();
+					//merges[index3].merge.position();
+					//merges[index3].merge.rotation();
 				}
 
 				//
 				let meshs = scene.get(null, _enum.MESH);
 				for (var index3 in meshs) {
-					meshs[index3].mesh.position();
-					meshs[index3].mesh.rotation();
+					//meshs[index3].mesh.position();
+					//meshs[index3].mesh.rotation();
 				}
 			}	
 		}
@@ -1661,6 +2020,12 @@ var BRANCH = (function()
 						let _renderer = branch.get(null, _enum.RENDERER);
 						let _scene = scene.get(null, _enum.SCENE);
 						let _cameraObj = scene.get(null, _enum.CAMERA);
+
+						let _controls = scene.get(null, _enum.CONTROLS).get(null, _enum.CONTROLS);
+						if (_controls != null) {
+							_controls.update();
+						}
+					
 						let _camera = _cameraObj.get(null, _enum.CAMERA);
 						for (var index3 in _camera) {
 							if (_camera[index3].enable == true) {
