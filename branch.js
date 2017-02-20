@@ -20,7 +20,6 @@ var BRANCH = (function()
 		CYLINDER: 'cylinder',
 		CONE: 'cone',
 		LIGHT: 'light',
-		SQUARE: 'square',
 		LINE: 'line',
 		PLANE: 'plane',
 		
@@ -109,6 +108,94 @@ var BRANCH = (function()
 			return $getId(obj, type, null, len + 1);
 		}
 		return id;
+	}
+
+	//
+	let $getProperty = function(me, type)
+	{
+		//
+	}
+
+	//
+	let $copyProperty = function(me, name, value)
+	{
+		if (typeof(me.this[name]) != 'undefined') {
+			return null;
+		}
+		me.this[name] = value;
+		me.this[name].myname = name;
+	}
+
+	//
+	let $addPrefix = function(me, name, value)
+	{
+		if (typeof(me.this['_'+name]) != 'undefined') {
+			return null;
+		}
+		me.this['_'+name] = () => {};
+		Object.defineProperty(me.this, '_'+name, {
+			set: function(value2) {
+				if (typeof(value2) == 'undefined') {
+					return ;
+				}
+				me.this[name](value2);
+			},
+			get: function() {
+				return value;
+			},
+		});
+	}
+
+	//
+	let $addVector = function(me, name, value)
+	{
+		if (typeof(me.this[name].x) != 'undefined') {
+			return null;
+		}
+		Object.defineProperty(me.this[name], 'x', {
+			set: function(value2) {
+				if (typeof(value2) == 'undefined') {
+					return ;
+				}
+				me.this[name](BRANCH.vector(value2, value.y, value.z, value.w));
+			},
+			get: function() {
+				return value.x;
+			},
+		});
+		Object.defineProperty(me.this[name], 'y', {
+			set: function(value2) {
+				if (typeof(value2) == 'undefined') {
+					return ;
+				}
+				me.this[name](BRANCH.vector(value.x, value2, value.z, value.w));
+			},
+			get: function() {
+				return value.y;
+			},
+		});
+		Object.defineProperty(me.this[name], 'z', {
+			set: function(value2) {
+				if (typeof(value2) == 'undefined') {
+					return ;
+				}
+				me.this[name](BRANCH.vector(value.x, value.y, value2, value.w));
+			},
+			get: function() {
+				return value.z;
+			},
+		});
+		Object.defineProperty(me.this[name], 'w', {
+			set: function(value2) {
+				if (typeof(value2) == 'undefined') {
+					return ;
+				}
+				me.this[name](BRANCH.vector(value.x, value.y, value.z, value2));
+			},
+			get: function() {
+				return value.w;
+			},
+		});
 	}
 
 	//
@@ -438,13 +525,22 @@ var BRANCH = (function()
 			}
 
 			//
-			this.cone = function(height, id, forced, landmark)
+			this.camera = function(id, forced, landmark)
+			{
+				//
+			}
+
+			//
+			this.cone = function(vector, id, forced, landmark)
 			{
 				return $getMesh(function()
 				{
 					let material = new THREE.MeshPhongMaterial(___engine.materialConfig);
-					let geometry = new THREE.CylinderGeometry(0, 50, height, 35);
+					let geometry = new THREE.CylinderGeometry(0, 1, 1, 50);
 					let mesh = new THREE.Mesh(geometry, material);
+
+					vector = (typeof(vector) != 'object' ? BRANCH.vector(50, 100, 50) : vector);
+					$extend(mesh.scale, vector.get(0));
 
 					return {
 						type: _enum.CONE,
@@ -462,7 +558,7 @@ var BRANCH = (function()
 					let geometry = new THREE.CylinderGeometry(1, 1, 1, 50);
 					let mesh = new THREE.Mesh(geometry, material);
 
-					vector = (typeof(vector) != 'object' ? BRANCH.vector(50, 50, 50) : vector);
+					vector = (typeof(vector) != 'object' ? BRANCH.vector(50, 100, 50) : vector);
 					$extend(mesh.scale, vector.get(0));
 
 					return {
@@ -510,17 +606,33 @@ var BRANCH = (function()
 			}
 
 			//
-			this.light = function(vector, id, forced, landmark)
+			this.light = function(id, forced, landmark)
 			{
 				return $getMesh(function()
 				{
 					let mesh = new THREE.SpotLight();
 					
-					vector = (typeof(vector) != 'object' ? BRANCH.vector(0, 0, 0) : vector);
-					$extend(mesh.position, vector.get(0));
-
 					return {
 						type: _enum.LIGHT,
+						mesh: mesh,
+					}
+				}, id, forced, landmark);
+			}
+
+			//
+			this.plane = function(vector, id, forced, landmark)
+			{
+				return $getMesh(function()
+				{
+					let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
+					let geometry = new THREE.PlaneGeometry(1, 1);
+					let mesh = new THREE.Mesh(geometry, material);
+
+					vector = (typeof(vector) != 'object' ? BRANCH.vector(50, 50, 50) : vector);
+					$extend(mesh.scale, vector.get(0));
+
+					return {
+						type: _enum.PLANE,
 						mesh: mesh,
 					}
 				}, id, forced, landmark);
@@ -537,41 +649,6 @@ var BRANCH = (function()
 					
 					return {
 						type: _enum.CIRCLE,
-						mesh: mesh,
-					}
-				}, id, forced, landmark);
-			}
-
-			//
-			this.square = function(size, id, forced, landmark)
-			{
-				return $getMesh(function()
-				{
-					size = size.get(0);
-					let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
-					let geometry = new THREE.PlaneGeometry(size.x, size.y);
-					let mesh = new THREE.Mesh(geometry, material);
-
-					return {
-						type: _enum.SQUARE,
-						mesh: mesh,
-					}
-				}, id, forced, landmark);
-			}
-
-			//
-			this.plane = function(vector, id, forced, landmark)
-			{
-				return $getMesh(function()
-				{
-					vector = (typeof(vector) == 'undefined' ? BRANCH.vector(0, 0, 0) : vector);
-					let material = new THREE.MeshPhongMaterial(___engine.materialConfig);
-					let size = vector.get(0);
-					let geometry = new THREE.PlaneGeometry(size.x, size.y);
-					let mesh = new THREE.Mesh(geometry, material);
-
-					return {
-						type: _enum.PLANE,
 						mesh: mesh,
 					}
 				}, id, forced, landmark);
@@ -736,25 +813,25 @@ var BRANCH = (function()
 					____engine.mesh.name = id;
 
 					/*** Black magic 2 ***/
-					$addPrefix('name', ____engine.mesh.name);
-					//$addPrefix('font', ____engine.mesh.geometry.font);
-					//$addPrefix('texture', ____engine.this.map);
-					//$addPrefix('transform', ____engine.mesh.position);
-					$addPrefix('scale', ____engine.mesh.scale);
-					$addPrefix('position', ____engine.mesh.position);
-					$addPrefix('rotation', ____engine.mesh.rotation);
+					$addPrefix(____engine, 'name', ____engine.mesh.name);
+					//$addPrefix(____engine, 'font', ____engine.mesh.geometry.font);
+					//$addPrefix(____engine, 'texture', ____engine.this.map);
+					//$addPrefix(____engine, 'transform', ____engine.mesh.position);
+					$addPrefix(____engine, 'scale', ____engine.mesh.scale);
+					$addPrefix(____engine, 'position', ____engine.mesh.position);
+					$addPrefix(____engine, 'rotation', ____engine.mesh.rotation);
 					/*** END ***/
 
 					/*** Black magic 3 ***/
-					$addVector('scale', ____engine.mesh.scale);
-					$addVector('position', ____engine.mesh.position);
-					$addVector('rotation', ____engine.mesh.rotation);
+					$addVector(____engine, 'scale', ____engine.mesh.scale);
+					$addVector(____engine, 'position', ____engine.mesh.position);
+					$addVector(____engine, 'rotation', ____engine.mesh.rotation);
 					/*** END ***/
 
 					/*** Black magic ***/
 					for (var index in mesh.material) {
 						if (typeof(mesh.material[index]) != 'function' && typeof(____engine.this[index]) == 'undefined' && index[0] != '_') {
-							$copyPropety(index, function (param) {
+							$copyProperty(____engine, index, function (param) {
 								let name = arguments.callee.myname;
 								switch (name+typeof(param))
 								{
@@ -769,7 +846,7 @@ var BRANCH = (function()
 								____engine.mesh.material.needsUpdate = true;
 								return ____engine.this;
 							});
-							$addPrefix(index, mesh.material[index]);
+							$addPrefix(____engine, index, mesh.material[index]);
 						}
 					}
 					/*** END ***/
@@ -788,88 +865,6 @@ var BRANCH = (function()
 
 					delete ____engine.this.init;
 					return ____engine.this;
-				}
-
-				//
-				let $copyPropety = function(name, value)
-				{
-					if (typeof(____engine.this[name]) != 'undefined') {
-						return null;
-					}
-					____engine.this[name] = value;
-					____engine.this[name].myname = name;
-				}
-
-				//
-				let $addPrefix = function(name, value)
-				{
-					if (typeof(____engine.this['_'+name]) != 'undefined') {
-						return null;
-					}
-					____engine.this['_'+name] = () => {};
-					Object.defineProperty(____engine.this, '_'+name, {
-						set: function(value2) {
-							if (typeof(value2) == 'undefined') {
-								return ;
-							}
-							____engine.this[name](value2);
-						},
-						get: function() {
-							return value;
-						},
-					});
-				}
-
-				//
-				let $addVector = function(name, value)
-				{
-					if (typeof(____engine.this[name].x) != 'undefined') {
-						return null;
-					}
-					Object.defineProperty(____engine.this[name], 'x', {
-						set: function(value2) {
-							if (typeof(value2) == 'undefined') {
-								return ;
-							}
-							____engine.this[name](BRANCH.vector(value2, value.y, value.z, value.w));
-						},
-						get: function() {
-							return value.x;
-						},
-					});
-					Object.defineProperty(____engine.this[name], 'y', {
-						set: function(value2) {
-							if (typeof(value2) == 'undefined') {
-								return ;
-							}
-							____engine.this[name](BRANCH.vector(value.x, value2, value.z, value.w));
-						},
-						get: function() {
-							return value.y;
-						},
-					});
-					Object.defineProperty(____engine.this[name], 'z', {
-						set: function(value2) {
-							if (typeof(value2) == 'undefined') {
-								return ;
-							}
-							____engine.this[name](BRANCH.vector(value.x, value.y, value2, value.w));
-						},
-						get: function() {
-							return value.z;
-						},
-					});
-					Object.defineProperty(____engine.this[name], 'w', {
-						set: function(value2) {
-							if (typeof(value2) == 'undefined') {
-								return ;
-							}
-							____engine.this[name](BRANCH.vector(value.x, value.y, value.z, value2));
-						},
-						get: function() {
-							return value.w;
-						},
-					});
 				}
 
 				//
@@ -1130,22 +1125,22 @@ var BRANCH = (function()
 					}
 
 					/*** Black magic 2 ***/
-					$addPrefix('name', ____engine.id);
-					$addPrefix('scale', ____engine.property.scale);
-					$addPrefix('position', ____engine.property.position);
-					$addPrefix('rotation', ____engine.property.rotation);
+					$addPrefix(____engine, 'name', ____engine.id);
+					$addPrefix(____engine, 'scale', ____engine.property.scale);
+					$addPrefix(____engine, 'position', ____engine.property.position);
+					$addPrefix(____engine, 'rotation', ____engine.property.rotation);
 					/*** END ***/
 
 					/*** Black magic 3 ***/
-					$addVector('scale', ____engine.property.scale);
-					$addVector('position', ____engine.property.position);
-					$addVector('rotation', ____engine.property.rotation);
+					$addVector(____engine, 'scale', ____engine.property.scale);
+					$addVector(____engine, 'position', ____engine.property.position);
+					$addVector(____engine, 'rotation', ____engine.property.rotation);
 					/*** END ***/
 
 					/*** Black magic ***/
 					for (var index in mesh) {
 						if (index[0] == '_') {
-							$copyPropety(index.substring(1), function (param) {
+							$copyProperty(____engine, index.substring(1), function (param) {
 								let name = arguments.callee.myname;
 								for (var key in ____engine.merged) {
 									if (typeof(____engine.merged[key].merge[name]) == 'function') {
@@ -1153,7 +1148,7 @@ var BRANCH = (function()
 									}
 								}
 							});
-							$addPrefix(index.substring(1), mesh[index]);
+							$addPrefix(____engine, index.substring(1), mesh[index]);
 						}
 					}
 					/*** END ***/
@@ -1164,88 +1159,6 @@ var BRANCH = (function()
 					});
 
 					return ____engine.this;
-				}
-
-				//
-				let $copyPropety = function(name, value)
-				{
-					if (typeof(____engine.this[name]) != 'undefined') {
-						return null;
-					}
-					____engine.this[name] = value;
-					____engine.this[name].myname = name;
-				}
-
-				//
-				let $addPrefix = function(name, value)
-				{
-					if (typeof(____engine.this['_'+name]) != 'undefined') {
-						return null;
-					}
-					____engine.this['_'+name] = () => {};
-					Object.defineProperty(____engine.this, '_'+name, {
-						set: function(value2) {
-							if (typeof(value2) == 'undefined') {
-								return ;
-							}
-							____engine.this[name](value2);
-						},
-						get: function() {
-							return value;
-						},
-					});
-				}
-
-				//
-				let $addVector = function(name, value)
-				{
-					if (typeof(____engine.this[name].x) != 'undefined') {
-						return null;
-					}
-					Object.defineProperty(____engine.this[name], 'x', {
-						set: function(value2) {
-							if (typeof(value2) == 'undefined') {
-								return ;
-							}
-							____engine.this[name](BRANCH.vector(value2, value.y, value.z, value.w));
-						},
-						get: function() {
-							return value.x;
-						},
-					});
-					Object.defineProperty(____engine.this[name], 'y', {
-						set: function(value2) {
-							if (typeof(value2) == 'undefined') {
-								return ;
-							}
-							____engine.this[name](BRANCH.vector(value.x, value2, value.z, value.w));
-						},
-						get: function() {
-							return value.y;
-						},
-					});
-					Object.defineProperty(____engine.this[name], 'z', {
-						set: function(value2) {
-							if (typeof(value2) == 'undefined') {
-								return ;
-							}
-							____engine.this[name](BRANCH.vector(value.x, value.y, value2, value.w));
-						},
-						get: function() {
-							return value.z;
-						},
-					});
-					Object.defineProperty(____engine.this[name], 'w', {
-						set: function(value2) {
-							if (typeof(value2) == 'undefined') {
-								return ;
-							}
-							____engine.this[name](BRANCH.vector(value.x, value.y, value.z, value2));
-						},
-						get: function() {
-							return value.w;
-						},
-					});
 				}
 
 				//
@@ -1982,20 +1895,6 @@ var BRANCH = (function()
 				let camera = scene.get(null, _enum.CAMERA);
 				//camera.position();
 				//camera.rotation();
-
-				//
-				let merges = scene.get(null, _enum.MERGE);
-				for (var index3 in merges) {
-					//merges[index3].merge.position();
-					//merges[index3].merge.rotation();
-				}
-
-				//
-				let meshs = scene.get(null, _enum.MESH);
-				for (var index3 in meshs) {
-					//meshs[index3].mesh.position();
-					//meshs[index3].mesh.rotation();
-				}
 			}	
 		}
 	}, _engine.config.timeUpdate);
