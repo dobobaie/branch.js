@@ -1,3 +1,6 @@
+/*
+	Mettre une sécurité pour ne pas récupérer les scenes root
+*/
 var BRANCH = (function()
 {
 	//
@@ -223,19 +226,17 @@ var BRANCH = (function()
 			scene: [],
 			update: [],
 			draw: [],
-			config: {},
-		}
-
-		//
-		var __defaultConfig = {
-			el: document.body,
-			height: window.innerHeight,
-			width: window.innerWidth,
-			webGL: true,
-			renderer: {
-				antialias: true,
+			config: {
+				el: document.body,
+				height: window.innerHeight,
+				width: window.innerWidth,
+				webGL: true,
+				renderer: {
+					antialias: true,
+					autoClear: false,
+				},
+				stop: false,
 			},
-			stop: false,
 		}
 
 		//
@@ -249,7 +250,6 @@ var BRANCH = (function()
 			if (typeof(params) == 'function') {
 				params = new params();
 			}
-			$extend(__engine.config, __defaultConfig);
 			$extend(__engine.config, params);
 			
 			let canvas = document.createElement('canvas');
@@ -258,7 +258,7 @@ var BRANCH = (function()
 				new THREE.WebGLRenderer(__engine.config.renderer) :
 				new THREE.CanvasRenderer(__engine.config.renderer)
 			);
-			$extend(__engine.renderer, __engine.config);
+			$extend(__engine.renderer, __engine.config.renderer);
 			__engine.renderer.setSize(__engine.config.width, __engine.config.height);
 			__engine.renderer.name = id;
 			__engine.config.el.appendChild(__engine.renderer.domElement);
@@ -302,7 +302,7 @@ var BRANCH = (function()
 		}
 
 		//
-		this.scene = function(id, forced)
+		this.scene = function(id)
 		{
 			id = $getId(__engine.scene, _enum.SCENE, id);
 			let find = $findKey(__engine.scene, id);
@@ -311,17 +311,11 @@ var BRANCH = (function()
 				build.init(id);
 				return build;
 			}
-			if (typeof(forced) == 'boolean' && forced == true) {
-				let build = new $scene;
-				build.init(id);
-				__engine.scene[find].scene = build;
-				return build;
-			}
 			return null;
 		}
 
 		//
-		var $scene = function()
+		var $scene = function(root)
 		{
 			var ___engine = {
 				this: this,
@@ -354,6 +348,7 @@ var BRANCH = (function()
 			//
 			var ___defaultMaterialConfig = {
 				overdraw: true,
+				side: THREE.DoubleSide,
 			}
 
 			//
@@ -405,6 +400,7 @@ var BRANCH = (function()
 			{
 				__engine.scene.push({
 					id: id,
+					root: (typeof(root) != 'boolean' ? false : root),
 					scene: ___engine.this,
 				});
 
@@ -420,6 +416,10 @@ var BRANCH = (function()
 				$extend(___engine.controlsConfig, ___defaultControlsConfig);
 
 				___engine.landmark = new $landmark;
+				if ((typeof(root) != 'boolean' ? false : root) == false) {
+					___engine.landmark.init();
+					___engine.landmarkConfig.enable = false;
+				}
 				___engine.camera = new $camera;
 				___engine.camera.init(_engine.this.vector(___engine.cameraConfig.vector.x, ___engine.cameraConfig.vector.y, ___engine.cameraConfig.vector.z, ___engine.cameraConfig.vector.w));
 				___engine.controls = new $controls;
@@ -450,6 +450,18 @@ var BRANCH = (function()
 					this: this,
 					type: _enum.LANDMARK,
 					mesh: [],
+					scene: null,
+				}
+
+				//
+				this.init = function()
+				{
+					let id = $getId(__engine.scene, _enum.SCENE);
+					____engine.scene = new $scene(true);
+					____engine.scene.init(id);
+
+					delete ____engine.this.init;
+					return ____engine.this;
 				}
 
 				//
@@ -1960,28 +1972,46 @@ var BRANCH = (function()
 
 		for (var index in _engine.branch) {
 			let branch = _engine.branch[index].branch;
-			if (branch.get(_enum.STOP) == false) {
+			if (branch.get(_enum.STOP) == false)
+			{
+				let scenesRoot = [];
 				let scenes = branch.get(_enum.SCENE);
-				for (var index2 in scenes) {
-					let scene = scenes[index2].scene;
-					if (scene.get(_enum.STOP) == false) {
-						let _renderer = branch.get(_enum.RENDERER);
-						let _scene = scene.get(_enum.SCENE);
-						let _cameraObj = scene.get(_enum.CAMERA);
 
-						let _controls = scene.get(_enum.CONTROLS).get(_enum.CONTROLS);
-						if (_controls != null) {
-							_controls.update();
-						}
-					
-						let _camera = _cameraObj.get(_enum.CAMERA);
-						for (var index3 in _camera) {
-							if (_camera[index3].enable == true) {
-								_renderer.render(_scene, _camera[index3].camera);
-							}
+				let renderScene = function(scene) {
+					let _renderer = branch.get(_enum.RENDERER);
+					let _scene = scene.get(_enum.SCENE);
+					let _cameraObj = scene.get(_enum.CAMERA);
+
+					let _controls = scene.get(_enum.CONTROLS).get(_enum.CONTROLS);
+					if (_controls != null) {
+						_controls.update();
+					}
+
+					_renderer.clearDepth();
+
+					let _camera = _cameraObj.get(_enum.CAMERA);
+					for (var index3 in _camera) {
+						if (_camera[index3].enable == true) {
+							_renderer.render(_scene, _camera[index3].camera);
 						}
 					}
 				}
+
+				for (var index2 in scenes) {
+					let infosScene = scenes[index2];
+					let scene = infosScene.scene;	
+					if (scene.get(_enum.STOP) == false && infosScene.root == false) {
+						renderScene(scene);
+					}
+					if (scene.get(_enum.STOP) == false && infosScene.root == true) {
+						scenesRoot.push(infosScene.scene);
+					}
+				}
+
+				for (var index2 in scenesRoot) {
+					renderScene(scenesRoot[index2]);
+				}
+
 			}
 		}
 		requestAnimationFrame($draw);
