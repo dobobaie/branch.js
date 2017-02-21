@@ -1,8 +1,3 @@
-/*
-
-	Corriger les système de triangle et lib math niveau propotion et couleur remplis à l'interieur des points points
-
-*/
 var BRANCH = (function()
 {
 	//
@@ -1010,7 +1005,7 @@ var BRANCH = (function()
 				//
 				this.stop = function()
 				{
-					let find = $findKey(___engine.mesh, ____engine.id);
+					let find = $findKey(___engine.mesh, ____engine.mesh.name);
 					if (find == -1) {
 						return null;
 					}
@@ -1023,7 +1018,7 @@ var BRANCH = (function()
 				//
 				this.remove = function(update)
 				{
-					let find = $findKey(___engine.mesh, ____engine.id);
+					let find = $findKey(___engine.mesh, ____engine.mesh.name);
 					if (find == -1) {
 						return null;
 					}
