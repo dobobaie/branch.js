@@ -475,9 +475,9 @@ var BRANCH = (function()
 				}
 				
 				//
-				this.get = function(id, type)
+				this.get = function(type, id)
 				{
-					type = (typeof(type) != 'undefined' ? type : _enum.NONE);
+					let find;
 					switch (type)
 					{
 						case _enum.MESH:
@@ -522,6 +522,21 @@ var BRANCH = (function()
 						mesh: mesh,
 					}
 				}, id, forced, landmark);
+			}
+
+			//
+			this.merge = function(id, forced, landmark)
+			{
+				let find = $findKey(___engine.merge, id);
+				if (find == -1) {
+					let merge = new $merge;
+					merge.init(id, null, landmark);
+					return merge;
+				}
+				if (typeof(forced) == 'boolean' && forced == true) {
+
+				}
+				return null;
 			}
 
 			//
@@ -837,7 +852,6 @@ var BRANCH = (function()
 								{
 									case 'colorstring':
 									case 'colornumber':
-										console.log(____engine.mesh.material[name]);
 										____engine.mesh.material[name].setHex(param);
 									break;
 									default :
@@ -852,7 +866,7 @@ var BRANCH = (function()
 					/*** END ***/
 
 					if (____engine.landmark == true) {
-						___engine.landmark.update(___engine.mesh, ____engine.mesh.name);
+						___engine.landmark.update(____engine.mesh.name, ____engine.type);
 					}
 
 					if (___engine.render == true) {
@@ -919,7 +933,7 @@ var BRANCH = (function()
 						____engine.mesh.geometry.verticesNeedUpdate = true;
 					}
 					if (____engine.landmark == true) {
-						___engine.landmark.update(___engine.mesh, ____engine.mesh.name);
+						___engine.landmark.update(____engine.mesh.name, ____engine.type);
 					}
 					return ____engine.this;
 				}
@@ -936,7 +950,7 @@ var BRANCH = (function()
 						____engine.mesh.geometry.verticesNeedUpdate = true;
 					}
 					if (____engine.landmark == true && (typeof(update) != 'boolean' || update == true)) {
-						___engine.landmark.update(___engine.mesh, ____engine.mesh.name);
+						___engine.landmark.update(____engine.mesh.name, ____engine.type);
 					}
 					return  ____engine.this;
 				}
@@ -953,7 +967,7 @@ var BRANCH = (function()
 						____engine.mesh.geometry.verticesNeedUpdate = true;
 					}
 					if (____engine.landmark == true && (typeof(update) != 'boolean' || update == true)) {
-						___engine.landmark.update(___engine.mesh, ____engine.mesh.name);
+						___engine.landmark.update(____engine.mesh.name, ____engine.type);
 					}
 					return  ____engine.this;
 				}
@@ -970,7 +984,7 @@ var BRANCH = (function()
 						____engine.mesh.geometry.verticesNeedUpdate = true;
 					}
 					if (____engine.landmark == true && (typeof(update) != 'boolean' || update == true)) {
-						___engine.landmark.update(___engine.mesh, ____engine.mesh.name);
+						___engine.landmark.update(____engine.mesh.name, ____engine.type);
 					}
 					return  ____engine.this;
 				}
@@ -1005,7 +1019,7 @@ var BRANCH = (function()
 				}
 
 				//
-				this.remove = function()
+				this.remove = function(update)
 				{
 					let find = $findKey(___engine.mesh, ____engine.id);
 					if (find == -1) {
@@ -1013,8 +1027,8 @@ var BRANCH = (function()
 					}
 					___engine.scene.remove(____engine.mesh);
 					___engine.mesh.splice(find, 1);
-					if (____engine.landmark == true) {
-						___engine.landmark.update(___engine.mesh, null);
+					if (____engine.landmark == true && (typeof(update) != 'boolean' || update == true)) {
+						___engine.landmark.update(null, ____engine.type);
 					}
 					return ___engine.this;
 				}
@@ -1024,7 +1038,7 @@ var BRANCH = (function()
 				{
 					if (typeof(id) == 'string') {
 						type = (typeof(type) == 'undefined' ? _enum.MERGE : type);
-						return ___engine.this.get(id, type);
+						return ___engine.this.get(type, id);
 					}
 					return ___engine.this;
 				}
@@ -1055,13 +1069,18 @@ var BRANCH = (function()
 				this.unmerge = function()
 				{
 					// À faire
+					/*
+					if (____engine.landmark == true) {
+						___engine.landmark.update(____engine.mesh.name, ____engine.type);
+					}
+					*/
 					return ____engine.this;
 				}
 
 				//
-				this.get = function(id, type)
+				this.get = function(type, id)
 				{
-					type = (typeof(type) != 'undefined' ? type : _enum.NONE);
+					let find;
 					switch (type)
 					{
 						case _enum.MESH:
@@ -1110,19 +1129,6 @@ var BRANCH = (function()
 					});
 
 					____engine.id = id;
-					____engine.landmark = (typeof(landmark) != 'boolean' ? true : landmark);
-					____engine.this.push(id, mesh);
-
-					delete ____engine.this.init;
-					return ____engine.this;
-				}
-
-				//
-				this.push = function(id, mesh)
-				{
-					if (typeof(id) != 'string') {
-						return null;
-					}
 
 					/*** Black magic 2 ***/
 					$addPrefix(____engine, 'name', ____engine.id);
@@ -1137,6 +1143,17 @@ var BRANCH = (function()
 					$addVector(____engine, 'rotation', ____engine.property.rotation);
 					/*** END ***/
 
+					if (mesh != null) {
+						____engine.this.push(mesh, false, landmark);
+					}
+
+					delete ____engine.this.init;
+					return ____engine.this;
+				}
+
+				//
+				this.push = function(mesh, forced, landmark)
+				{
 					/*** Black magic ***/
 					for (var index in mesh) {
 						if (index[0] == '_') {
@@ -1153,8 +1170,16 @@ var BRANCH = (function()
 					}
 					/*** END ***/
 
+					if (____engine.landmark == false) {
+						____engine.landmark = (typeof(landmark) != 'boolean' ? true : landmark);
+					}
+
+					if (____engine.landmark == true) {
+						___engine.landmark.update(____engine.id, ____engine.type);
+					}
+					
 					____engine.merged.push({
-						id: id,
+						id: mesh._name,
 						merge: mesh,
 					});
 
@@ -1194,7 +1219,7 @@ var BRANCH = (function()
 					}
 					$extend(____engine.property.scale, vector);
 					if (____engine.landmark == true && (typeof(update) != 'boolean' || update == true)) {
-						___engine.landmark.update(___engine.mesh, ____engine.id);
+						___engine.landmark.update(____engine.id, ____engine.type);
 					}
 					return  ____engine.this;
 				}
@@ -1216,7 +1241,7 @@ var BRANCH = (function()
 					}
 					$extend(____engine.property.position, vector);
 					if (____engine.landmark == true && (typeof(update) != 'boolean' || update == true)) {
-						___engine.landmark.update(___engine.mesh, ____engine.id);
+						___engine.landmark.update(____engine.id, ____engine.type);
 					}
 					return  ____engine.this;
 				}
@@ -1238,7 +1263,7 @@ var BRANCH = (function()
 					}
 					$extend(____engine.property.rotation, vector);
 					if (____engine.landmark == true && (typeof(update) != 'boolean' || update == true)) {
-						___engine.landmark.update(___engine.mesh, ____engine.id);
+						___engine.landmark.update(____engine.id, ____engine.type);
 					}
 					return  ____engine.this;
 				}
@@ -1302,16 +1327,19 @@ var BRANCH = (function()
 				}
 
 				//
-				this.remove = function()
+				this.remove = function(update)
 				{
 					let find = $findKey(____engine.merged, ____engine.id);
 					if (find == -1) {
 						return null;
 					}
 					for (var index in ____engine.merged) {
-						____engine.merged[index].merge.remove();
+						____engine.merged[index].merge.remove(false);
 					}
 					___engine.merge.slice(find, 1);
+					if (____engine.landmark == true && (typeof(update) != 'boolean' || update == true)) {
+						___engine.landmark.update(null, ____engine.type);
+					}
 					return ___engine.this;
 				}
 
@@ -1320,15 +1348,15 @@ var BRANCH = (function()
 				{
 					if (typeof(id) == 'string') {
 						type = (typeof(type) == 'undefined' ? _enum.MERGE : type);
-						return ___engine.this.get(id, type);
+						return ___engine.this.get(type, id);
 					}
 					return ___engine.this;
 				}
 
 				//
-				this.get = function(id, type)
+				this.get = function(type, id)
 				{
-					type = (typeof(type) == 'undefined' ? _enum.MERGE : type);
+					let find;
 					switch (type)
 					{
 						case _enum.MERGE:
@@ -1373,7 +1401,7 @@ var BRANCH = (function()
 				//
 				this.update = function()
 				{
-					let camera = ___engine.this.get(null, _enum.CAMERA).get(_enum.CAMERA, _enum.ENABLE);
+					let camera = ___engine.this.get(_enum.CAMERA).get(_enum.ENABLE, _enum.CAMERA);
 					if (camera == null || ___engine.controlsConfig.enable == false) {
 						____engine.controls = null;
 						return ____engine.this;
@@ -1384,9 +1412,9 @@ var BRANCH = (function()
 				}
 
 				//
-				this.get = function(id, type)
+				this.get = function(type, id)
 				{
-					type = (typeof(type) == 'undefined' ? _enum.CONTROLS : type);
+					let find;
 					switch (type)
 					{
 						case _enum.CONTROLS:
@@ -1441,7 +1469,7 @@ var BRANCH = (function()
 				//
 				this.fov = function(val)
 				{
-					let find = ____engine.this.get(null, _enum.ENABLE)
+					let find = ____engine.this.get(_enum.ENABLE);
 					if (find == -1) {
 						return null;
 					}
@@ -1453,7 +1481,7 @@ var BRANCH = (function()
 				//
 				this.aspect = function(val)
 				{
-					let find = ____engine.this.get(null, _enum.ENABLE)
+					let find = ____engine.this.get(_enum.ENABLE);
 					if (find == -1) {
 						return null;
 					}
@@ -1465,7 +1493,7 @@ var BRANCH = (function()
 				//
 				this.near = function(val)
 				{
-					let find = ____engine.this.get(null, _enum.ENABLE)
+					let find = ____engine.this.get(_enum.ENABLE);
 					if (find == -1) {
 						return null;
 					}
@@ -1477,7 +1505,7 @@ var BRANCH = (function()
 				//
 				this.far = function(val)
 				{
-					let find = ____engine.this.get(null, _enum.ENABLE)
+					let find = ____engine.this.get(_enum.ENABLE);
 					if (find == -1) {
 						return null;
 					}
@@ -1493,7 +1521,7 @@ var BRANCH = (function()
 					if (find == -1) {
 						return null;
 					}
-					let camera = ____engine.this.get(_enum.CAMERA, _enum.ENABLE)
+					let camera = ____engine.this.get(_enum.ENABLE, _enum.CAMERA);
 					if (camera != null) {
 						$extend(camera.position, ____engine.this.position, true, ['x', 'y', 'z', 'w']);
 						$extend(camera.rotation, ____engine.this.rotation, true, ['x', 'y', 'z', 'w']);
@@ -1509,7 +1537,7 @@ var BRANCH = (function()
 				//
 				this.position = function(vec)
 				{
-					let find = ____engine.this.get(null, _enum.ENABLE)
+					let find = ____engine.this.get(_enum.ENABLE);
 					if (find == -1) {
 						return null;
 					}
@@ -1527,7 +1555,7 @@ var BRANCH = (function()
 				//
 				this.rotation = function(vec)
 				{
-					let find = ____engine.this.get(null, _enum.ENABLE)
+					let find = ____engine.this.get(_enum.ENABLE);
 					if (find == -1) {
 						return null;
 					}
@@ -1546,7 +1574,7 @@ var BRANCH = (function()
 				this.remove = function(id)
 				{
 					let find = $findKey(____engine.camera, id);
-					if (find == -1 && (find = ____engine.this.get(null, _enum.ENABLE)) == -1) {
+					if (find == -1 && (find = ____engine.this.get(_enum.ENABLE)) == -1) {
 						return null;
 					}
 					___engine.scene.remove(____engine.camera[find].camera);
@@ -1555,10 +1583,9 @@ var BRANCH = (function()
 				}
 
 				//
-				this.get = function(id, type)
+				this.get = function(type, id)
 				{
 					let find;
-					type = (typeof(type) != 'undefined' ? type : _enum.CAMERA);
 					switch (type)
 					{
 						case _enum.CAMERA:
@@ -1599,7 +1626,7 @@ var BRANCH = (function()
 				___engine.config.stop = false;
 				for (var index in ___engine.mesh) {
 					if (___engine.mesh[index].inScene == false) {
-						___engine.scene.add(___engine.mesh[index].mesh.get(null, _enum.MESH));
+						___engine.scene.add(___engine.mesh[index].mesh.get(_enum.MESH, null));
 						___engine.mesh[index].inScene = true;
 					}
 				}
@@ -1621,10 +1648,9 @@ var BRANCH = (function()
 			}
 
 			//
-			this.get = function(id, type)
+			this.get = function(type, id)
 			{
 				let find;
-				type = (typeof(type) != 'undefined' ? type : _enum.MESH);
 				switch (type)
 				{
 					case _enum.MESH:
@@ -1668,9 +1694,9 @@ var BRANCH = (function()
 		}
 
 		//
-		this.get = function(id, type)
+		this.get = function(type, id)
 		{
-			type = (typeof(type) != 'undefined' ? type : _enum.SCENE);
+			let find;
 			switch (type)
 			{
 				case _enum.SCENE:
@@ -1852,9 +1878,9 @@ var BRANCH = (function()
 	}
 
 	//
-	this.get = function(id, type)
+	this.get = function(type, id)
 	{
-		type = (typeof(type) != 'undefined' ? type : _enum.BRANCH);
+		let find;
 		switch (type)
 		{
 			case _enum.BRANCH:
@@ -1880,19 +1906,19 @@ var BRANCH = (function()
 			let branch = _engine.branch[index].branch;
 			
 			//
-			let update = branch.get(null, _enum.UPDATE);
+			let update = branch.get(_enum.UPDATE);
 			for (var index2 in update) {
 				update[index2]();
 			}
 
 			//
-			let scenes = branch.get();
+			let scenes = branch.get(_enum.SCENE);
 			for (var index2 in scenes)
 			{
 				let scene = scenes[index2].scene;
 			
 				//
-				let camera = scene.get(null, _enum.CAMERA);
+				let camera = scene.get(_enum.CAMERA);
 				//camera.position();
 				//camera.rotation();
 			}	
@@ -1903,7 +1929,7 @@ var BRANCH = (function()
 	var $draw = function()
 	{
 		for (var index in _engine.branch) {
-			let draw = _engine.branch[index].branch.get(null, _enum.DRAW);
+			let draw = _engine.branch[index].branch.get(_enum.DRAW);
 			for (var index2 in draw) {
 				draw[index2]();
 			}
@@ -1911,21 +1937,21 @@ var BRANCH = (function()
 
 		for (var index in _engine.branch) {
 			let branch = _engine.branch[index].branch;
-			if (branch.get(null, _enum.STOP) == false) {
-				let scenes = branch.get();
+			if (branch.get(_enum.STOP) == false) {
+				let scenes = branch.get(_enum.SCENE);
 				for (var index2 in scenes) {
 					let scene = scenes[index2].scene;
-					if (scene.get(null, _enum.STOP) == false) {
-						let _renderer = branch.get(null, _enum.RENDERER);
-						let _scene = scene.get(null, _enum.SCENE);
-						let _cameraObj = scene.get(null, _enum.CAMERA);
+					if (scene.get(_enum.STOP) == false) {
+						let _renderer = branch.get(_enum.RENDERER);
+						let _scene = scene.get(_enum.SCENE);
+						let _cameraObj = scene.get(_enum.CAMERA);
 
-						let _controls = scene.get(null, _enum.CONTROLS).get(null, _enum.CONTROLS);
+						let _controls = scene.get(_enum.CONTROLS).get(_enum.CONTROLS);
 						if (_controls != null) {
 							_controls.update();
 						}
 					
-						let _camera = _cameraObj.get(null, _enum.CAMERA);
+						let _camera = _cameraObj.get(_enum.CAMERA);
 						for (var index3 in _camera) {
 							if (_camera[index3].enable == true) {
 								_renderer.render(_scene, _camera[index3].camera);
