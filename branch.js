@@ -39,7 +39,7 @@ var BRANCH = (function()
 		CAMERA: 'camera',
 		SCENE: 'scene',
 		RENDERER: 'renderer',
-		BRANCH: 'branch',
+		APP: 'branch',
 		UPDATE: 'update',
 		DRAW: 'draw',
 	}
@@ -157,7 +157,7 @@ var BRANCH = (function()
 				if (typeof(value2) == 'undefined') {
 					return ;
 				}
-				me.this[name](BRANCH.vector(value2, value.y, value.z, value.w));
+				me.this[name](_engine.this.vector(value2, value.y, value.z, value.w));
 			},
 			get: function() {
 				return value.x;
@@ -168,7 +168,7 @@ var BRANCH = (function()
 				if (typeof(value2) == 'undefined') {
 					return ;
 				}
-				me.this[name](BRANCH.vector(value.x, value2, value.z, value.w));
+				me.this[name](_engine.this.vector(value.x, value2, value.z, value.w));
 			},
 			get: function() {
 				return value.y;
@@ -179,7 +179,7 @@ var BRANCH = (function()
 				if (typeof(value2) == 'undefined') {
 					return ;
 				}
-				me.this[name](BRANCH.vector(value.x, value.y, value2, value.w));
+				me.this[name](_engine.this.vector(value.x, value.y, value2, value.w));
 			},
 			get: function() {
 				return value.z;
@@ -190,7 +190,7 @@ var BRANCH = (function()
 				if (typeof(value2) == 'undefined') {
 					return ;
 				}
-				me.this[name](BRANCH.vector(value.x, value.y, value.z, value2));
+				me.this[name](_engine.this.vector(value.x, value.y, value.z, value2));
 			},
 			get: function() {
 				return value.w;
@@ -201,7 +201,7 @@ var BRANCH = (function()
 	//
 	this.init = function(params, id, forced)
 	{
-		id = $getId(_engine.branch, _enum.BRANCH, id);
+		id = $getId(_engine.branch, _enum.APP, id);
 		let find = $findKey(_engine.branch, id);
 		if (find == -1) {
 			let build = new $branch;
@@ -223,7 +223,7 @@ var BRANCH = (function()
 		//
 		var __engine = {
 			this: this,
-			type: _enum.BRANCH,
+			type: _enum.APP,
 			renderer: null,
 			scene: [],
 			update: [],
@@ -530,8 +530,7 @@ var BRANCH = (function()
 				let find = $findKey(___engine.merge, id);
 				if (find == -1) {
 					let merge = new $merge;
-					merge.init(id, null, landmark);
-					return merge;
+					return merge.init(id, null, landmark);
 				}
 				if (typeof(forced) == 'boolean' && forced == true) {
 
@@ -554,7 +553,7 @@ var BRANCH = (function()
 					let geometry = new THREE.CylinderGeometry(0, 1, 1, 50);
 					let mesh = new THREE.Mesh(geometry, material);
 
-					vector = (vector == null || typeof(vector) != 'object' ? BRANCH.vector(50, 100, 50) : vector);
+					vector = (vector == null || typeof(vector) != 'object' ? _engine.this.vector(50, 100, 50) : vector);
 					$extend(mesh.scale, vector.get(0));
 
 					return {
@@ -573,7 +572,7 @@ var BRANCH = (function()
 					let geometry = new THREE.CylinderGeometry(1, 1, 1, 50);
 					let mesh = new THREE.Mesh(geometry, material);
 
-					vector = (vector == null || typeof(vector) != 'object' ? BRANCH.vector(50, 100, 50) : vector);
+					vector = (vector == null || typeof(vector) != 'object' ? _engine.this.vector(50, 100, 50) : vector);
 					$extend(mesh.scale, vector.get(0));
 
 					return {
@@ -591,7 +590,7 @@ var BRANCH = (function()
 					let geometry = new THREE.SphereGeometry(1, 35, 35);
 					let mesh = new THREE.Mesh(geometry, material);
 
-					vector = (vector == null || typeof(vector) != 'object' ? BRANCH.vector(50, 50, 50) : vector);
+					vector = (vector == null || typeof(vector) != 'object' ? _engine.this.vector(50, 50, 50) : vector);
 					$extend(mesh.scale, vector.get(0));
 
 					return {
@@ -610,7 +609,7 @@ var BRANCH = (function()
 					let geometry = new THREE.BoxGeometry(1, 1, 1);
 					let mesh = new THREE.Mesh(geometry, material);
 					
-					vector = (vector == null || typeof(vector) != 'object' ? BRANCH.vector(50, 50, 50) : vector);
+					vector = (vector == null || typeof(vector) != 'object' ? _engine.this.vector(50, 50, 50) : vector);
 					$extend(mesh.scale, vector.get(0));
 
 					return {
@@ -643,7 +642,7 @@ var BRANCH = (function()
 					let geometry = new THREE.PlaneGeometry(1, 1);
 					let mesh = new THREE.Mesh(geometry, material);
 
-					vector = (vector == null || typeof(vector) != 'object' ? BRANCH.vector(50, 50, 50) : vector);
+					vector = (vector == null || typeof(vector) != 'object' ? _engine.this.vector(50, 50, 50) : vector);
 					$extend(mesh.scale, vector.get(0));
 
 					return {
@@ -662,7 +661,7 @@ var BRANCH = (function()
 					let geometry = new THREE.CircleGeometry(1, 100);
 					let mesh = new THREE.Mesh(geometry, material);
 					
-					vector = (vector == null || typeof(vector) != 'object' ? BRANCH.vector(50, 50, 50) : vector);
+					vector = (vector == null || typeof(vector) != 'object' ? _engine.this.vector(50, 50, 50) : vector);
 					$extend(mesh.scale, vector.get(0));
 
 					return {
@@ -1047,7 +1046,7 @@ var BRANCH = (function()
 				}
 
 				//
-				this.merge = function(id)
+				this.merge = function(id, forced)
 				{
 					if (typeof(id) != 'string') {
 						return null;
@@ -1058,14 +1057,12 @@ var BRANCH = (function()
 					}
 					let find = $findKey(___engine.merge, id);
 					if (find == -1) {
-						let merge = new $merge;
-						merge.init(id, ___engine.mesh[me].mesh, ____engine.landmark);
 						___engine.mesh[me].merged = true;
-						return merge;
+						let merge = new $merge;
+						return merge.init(id, ___engine.mesh[me].mesh, ____engine.landmark);
 					}
-					___engine.merge[find].merge.push(id, ___engine.mesh[me].mesh, ____engine.landmark);
 					___engine.mesh[me].merged = true;
-					return ___engine.merge[find].merge;
+					return ___engine.merge[find].merge.push(___engine.mesh[me].mesh, forced, ____engine.landmark);
 				}
 
 				//
@@ -1134,6 +1131,10 @@ var BRANCH = (function()
 					$addVector(____engine, 'rotation', ____engine.property.rotation);
 					/*** END ***/
 
+					____engine.this.rotation.z = -10;
+					____engine.this.rotation.y = -10;
+					____engine.this.rotation.z = -10;
+
 					if (mesh != null) {
 						____engine.this.push(mesh, false, landmark);
 					}
@@ -1147,7 +1148,7 @@ var BRANCH = (function()
 				{
 					/*** Black magic ***/
 					for (var index in mesh) {
-						if (index[0] == '_') {
+						if (index[0] == '_' && typeof(____engine.this[index.substring(1)]) == 'undefined') {
 							$copyProperty(____engine, index.substring(1), function (param) {
 								let name = arguments.callee.myname;
 								for (var key in ____engine.merged) {
@@ -1201,7 +1202,7 @@ var BRANCH = (function()
 					}
 					let vector = vec.get(0);
 					for (var index in ____engine.merged) {
-						____engine.merged[index].merge.scale(BRANCH.vector(
+						____engine.merged[index].merge.scale(_engine.this.vector(
 							____engine.merged[index].merge.scale.x + (vector.x - ____engine.property.scale.x),
 							____engine.merged[index].merge.scale.y + (vector.y - ____engine.property.scale.y),
 							____engine.merged[index].merge.scale.z + (vector.z - ____engine.property.scale.z),
@@ -1223,7 +1224,7 @@ var BRANCH = (function()
 					}
 					let vector = vec.get(0);
 					for (var index in ____engine.merged) {
-						____engine.merged[index].merge.position(BRANCH.vector(
+						____engine.merged[index].merge.position(_engine.this.vector(
 							____engine.merged[index].merge.position.x + (vector.x - ____engine.property.position.x),
 							____engine.merged[index].merge.position.y + (vector.y - ____engine.property.position.y),
 							____engine.merged[index].merge.position.z + (vector.z - ____engine.property.position.z),
@@ -1245,7 +1246,7 @@ var BRANCH = (function()
 					}
 					let vector = vec.get(0);
 					for (var index in ____engine.merged) {
-						____engine.merged[index].merge.rotation(BRANCH.vector(
+						____engine.merged[index].merge.rotation(_engine.this.vector(
 							____engine.merged[index].merge.rotation.x + (vector.x - ____engine.property.rotation.x),
 							____engine.merged[index].merge.rotation.y + (vector.y - ____engine.property.rotation.y),
 							____engine.merged[index].merge.rotation.z + (vector.z - ____engine.property.rotation.z),
@@ -1361,7 +1362,7 @@ var BRANCH = (function()
 				}
 
 				//
-				this.get = function(type, id)
+				this.get = function(type, id, full)
 				{
 					let find;
 					switch (type)
@@ -1374,7 +1375,10 @@ var BRANCH = (function()
 							if (find == -1) {
 								return null;
 							}
-							return ____engine.merged[find];
+							if (typeof(full) == 'boolean' && full == true) {
+								return ____engine.merged[find];
+							}
+							return ____engine.merged[find].merge;
 						break;
 						case _enum.TYPE:
 							return ____engine.type;
@@ -1590,7 +1594,7 @@ var BRANCH = (function()
 				}
 
 				//
-				this.get = function(type, id)
+				this.get = function(type, id, full)
 				{
 					let find;
 					switch (type)
@@ -1602,6 +1606,9 @@ var BRANCH = (function()
 							for (var index in ____engine.camera) {
 								if (____engine.camera[index].enable == true) {
 									if (typeof(id) == 'string' && id == _enum.CAMERA) {
+										if (typeof(full) == 'boolean' && full == true) {
+											return ____engine.camera[index];
+										}
 										return ____engine.camera[index].camera;
 									}
 									return index;
@@ -1655,7 +1662,7 @@ var BRANCH = (function()
 			}
 
 			//
-			this.get = function(type, id)
+			this.get = function(type, id, full)
 			{
 				let find;
 				switch (type)
@@ -1668,7 +1675,10 @@ var BRANCH = (function()
 						if (find == -1) {
 							return null;
 						}
-						return ___engine.mesh[find];
+						if (typeof(full) == 'boolean' && full == true) {
+							return ___engine.mesh[find];
+						}
+						return ___engine.mesh[find].mesh;
 					break;
 					case _enum.MERGE:
 						if (typeof(id) == 'undefined' || id == null) {
@@ -1678,7 +1688,10 @@ var BRANCH = (function()
 						if (find == -1) {
 							return null;
 						}
-						return ___engine.merge[find];
+						if (typeof(full) == 'boolean' && full == true) {
+							return ___engine.merge[find];
+						}
+						return ___engine.merge[find].merge;
 					break;
 					case _enum.STOP:
 						return __engine.config.stop;
@@ -1701,7 +1714,7 @@ var BRANCH = (function()
 		}
 
 		//
-		this.get = function(type, id)
+		this.get = function(type, id, full)
 		{
 			let find;
 			switch (type)
@@ -1714,7 +1727,10 @@ var BRANCH = (function()
 					if (find == -1) {
 						return null;
 					}
-					return __engine.scene[find];
+					if (typeof(full) == 'boolean' && full == true) {
+						return __engine.scene[find];
+					}	
+					return __engine.scene[find].scene;
 				break;
 				case _enum.STOP:
 					return __engine.config.stop;
@@ -1887,12 +1903,12 @@ var BRANCH = (function()
 	}
 
 	//
-	this.get = function(type, id)
+	this.get = function(type, id, full)
 	{
 		let find;
 		switch (type)
 		{
-			case _enum.BRANCH:
+			case _enum.APP:
 				if (typeof(id) == 'undefined' || id == null) {
 					return _engine.branch;
 				}
@@ -1900,6 +1916,9 @@ var BRANCH = (function()
 				if (find == -1) {
 					return null;
 				}
+				if (typeof(full) == 'boolean' && full == true) {
+						return _engine.branch[find];
+					}
 				return _engine.branch[find].branch;
 			break;
 			default:
