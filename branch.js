@@ -502,7 +502,7 @@ var BRANCH = (function()
 					if (typeof(forced) != 'boolean' || forced == false) {
 						return null;
 					}
-					___engine.scene.remove(___engine.mesh[find].mesh.get(null, _enum.MESH));
+					___engine.scene.remove(___engine.mesh[find].mesh.get(_enum.MESH));
 					___engine.mesh.splice(find, 1);
 				}
 
@@ -554,7 +554,7 @@ var BRANCH = (function()
 					let geometry = new THREE.CylinderGeometry(0, 1, 1, 50);
 					let mesh = new THREE.Mesh(geometry, material);
 
-					vector = (typeof(vector) != 'object' ? BRANCH.vector(50, 100, 50) : vector);
+					vector = (vector == null || typeof(vector) != 'object' ? BRANCH.vector(50, 100, 50) : vector);
 					$extend(mesh.scale, vector.get(0));
 
 					return {
@@ -573,7 +573,7 @@ var BRANCH = (function()
 					let geometry = new THREE.CylinderGeometry(1, 1, 1, 50);
 					let mesh = new THREE.Mesh(geometry, material);
 
-					vector = (typeof(vector) != 'object' ? BRANCH.vector(50, 100, 50) : vector);
+					vector = (vector == null || typeof(vector) != 'object' ? BRANCH.vector(50, 100, 50) : vector);
 					$extend(mesh.scale, vector.get(0));
 
 					return {
@@ -591,7 +591,7 @@ var BRANCH = (function()
 					let geometry = new THREE.SphereGeometry(1, 35, 35);
 					let mesh = new THREE.Mesh(geometry, material);
 
-					vector = (typeof(vector) != 'object' ? BRANCH.vector(50, 50, 50) : vector);
+					vector = (vector == null || typeof(vector) != 'object' ? BRANCH.vector(50, 50, 50) : vector);
 					$extend(mesh.scale, vector.get(0));
 
 					return {
@@ -610,7 +610,7 @@ var BRANCH = (function()
 					let geometry = new THREE.BoxGeometry(1, 1, 1);
 					let mesh = new THREE.Mesh(geometry, material);
 					
-					vector = (typeof(vector) != 'object' ? BRANCH.vector(50, 50, 50) : vector);
+					vector = (vector == null || typeof(vector) != 'object' ? BRANCH.vector(50, 50, 50) : vector);
 					$extend(mesh.scale, vector.get(0));
 
 					return {
@@ -643,7 +643,7 @@ var BRANCH = (function()
 					let geometry = new THREE.PlaneGeometry(1, 1);
 					let mesh = new THREE.Mesh(geometry, material);
 
-					vector = (typeof(vector) != 'object' ? BRANCH.vector(50, 50, 50) : vector);
+					vector = (vector == null || typeof(vector) != 'object' ? BRANCH.vector(50, 50, 50) : vector);
 					$extend(mesh.scale, vector.get(0));
 
 					return {
@@ -654,14 +654,17 @@ var BRANCH = (function()
 			}
 
 			//
-			this.circle = function(ratio, id, forced, landmark)
+			this.circle = function(vector, id, forced, landmark)
 			{
 				return $getMesh(function()
 				{
 					let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
-					let geometry = new THREE.CircleGeometry(ratio, 100);
+					let geometry = new THREE.CircleGeometry(1, 100);
 					let mesh = new THREE.Mesh(geometry, material);
 					
+					vector = (vector == null || typeof(vector) != 'object' ? BRANCH.vector(50, 50, 50) : vector);
+					$extend(mesh.scale, vector.get(0));
+
 					return {
 						type: _enum.CIRCLE,
 						mesh: mesh,
@@ -670,18 +673,20 @@ var BRANCH = (function()
 			}
 
 			//
-			this.triangle = function(vector, id, forced, landmark)
+			this.point = function(vectors, id, forced, landmark)
 			{
 				return $getMesh(function()
 				{
-					let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
+					let material = new THREE.PointsMaterial(___engine.pointMaterialConfig);
 					let geometry = new THREE.Geometry();
-					geometry.vertices.push(vector.get(0), vector.get(1), vector.get(2));
-					geometry.faces.push(new THREE.Face3(0, 1, 2));
-					let mesh = new THREE.Mesh(geometry, material);
+					vectors = vectors.get();
+					for (var index in vectors) {
+						geometry.vertices.push(vectors[index]);
+					}
+					let mesh = new THREE.Points(geometry, material);
 
 					return {
-						type: _enum.TRIANGLE,
+						type: _enum.POINT,
 						mesh: mesh,
 					}
 				}, id, forced, landmark);
@@ -714,6 +719,24 @@ var BRANCH = (function()
 			}
 
 			//
+			this.triangle = function(vector, id, forced, landmark)
+			{
+				return $getMesh(function()
+				{
+					let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
+					let geometry = new THREE.Geometry();
+					geometry.vertices.push(vector.get(0), vector.get(1), vector.get(2));
+					geometry.faces.push(new THREE.Face3(0, 1, 2));
+					let mesh = new THREE.Mesh(geometry, material);
+
+					return {
+						type: _enum.TRIANGLE,
+						mesh: mesh,
+					}
+				}, id, forced, landmark);
+			}
+
+			//
 			this.line = function(vectors, id, forced, landmark)
 			{
 				return $getMesh(function()
@@ -734,26 +757,6 @@ var BRANCH = (function()
 			}
 
 			//
-			this.point = function(vectors, id, forced, landmark)
-			{
-				return $getMesh(function()
-				{
-					let material = new THREE.PointsMaterial(___engine.pointMaterialConfig);
-					let geometry = new THREE.Geometry();
-					vectors = vectors.get();
-					for (var index in vectors) {
-						geometry.vertices.push(vectors[index]);
-					}
-					let mesh = new THREE.Points(geometry, material);
-
-					return {
-						type: _enum.POINT,
-						mesh: mesh,
-					}
-				}, id, forced, landmark);
-			}
-
-			//
 			this.text = function(text, id, forced, landmark)
 			{
 				return $getMesh(function()
@@ -766,7 +769,7 @@ var BRANCH = (function()
 
 						// Mettre un système pour charger la font en dehors de cette fonction ou entrer l'url pour le charger ici
 
-						mesh = mesh.get(null, _enum.MESH);
+						mesh = mesh.get(_enum.MESH);
 						let loader = new THREE.FontLoader();
 						loader.load(___engine.config.font, function(font) {
 							let find = $findKey(___engine.mesh, mesh.name);
@@ -999,7 +1002,7 @@ var BRANCH = (function()
 					___engine.config.stop = false;
 					____engine.config.stop = false;
 					if (___engine.mesh[find].inScene == false) {
-						___engine.scene.add(___engine.mesh[find].mesh.get(null, _enum.MESH));
+						___engine.scene.add(___engine.mesh[find].mesh.get(_enum.MESH));
 						___engine.mesh[find].inScene = true;
 					}
 					return ____engine.this;
@@ -1063,18 +1066,6 @@ var BRANCH = (function()
 					___engine.merge[find].merge.push(id, ___engine.mesh[me].mesh, ____engine.landmark);
 					___engine.mesh[me].merged = true;
 					return ___engine.merge[find].merge;
-				}
-
-				//
-				this.unmerge = function()
-				{
-					// À faire
-					/*
-					if (____engine.landmark == true) {
-						___engine.landmark.update(____engine.mesh.name, ____engine.type);
-					}
-					*/
-					return ____engine.this;
 				}
 
 				//
@@ -1301,8 +1292,24 @@ var BRANCH = (function()
 					if (find == -1) {
 						return null;
 					}
-					____engine.merged.merge.unmerge();
-					____engine.merged.slice(find, 1);
+					let me;
+					if (____engine.merged[find].merge.get(_enum.TYPE) == _enum.MERGE) {
+						me = $findKey(___engine.merge, id);
+						if (me == -1) {
+							return null;
+						}
+						___engine.merge[me].merged = false;
+					} else {
+						me = $findKey(___engine.mesh, id);
+						if (me == -1) {
+							return null;
+						}
+						___engine.mesh[me].merged = false;
+					}
+					____engine.merged.splice(find, 1);
+					if (____engine.landmark == true) {
+						___engine.landmark.update(____engine.id, ____engine.type);
+					}
 					return ____engine.this;
 				}
 
@@ -1626,7 +1633,7 @@ var BRANCH = (function()
 				___engine.config.stop = false;
 				for (var index in ___engine.mesh) {
 					if (___engine.mesh[index].inScene == false) {
-						___engine.scene.add(___engine.mesh[index].mesh.get(_enum.MESH, null));
+						___engine.scene.add(___engine.mesh[index].mesh.get(_enum.MESH));
 						___engine.mesh[index].inScene = true;
 					}
 				}
@@ -1661,7 +1668,7 @@ var BRANCH = (function()
 						if (find == -1) {
 							return null;
 						}
-						return ___engine.mesh[find].mesh;
+						return ___engine.mesh[find];
 					break;
 					case _enum.MERGE:
 						if (typeof(id) == 'undefined' || id == null) {
@@ -1671,7 +1678,7 @@ var BRANCH = (function()
 						if (find == -1) {
 							return null;
 						}
-						return ___engine.merge[find].merge;
+						return ___engine.merge[find];
 					break;
 					case _enum.STOP:
 						return __engine.config.stop;
@@ -1707,7 +1714,7 @@ var BRANCH = (function()
 					if (find == -1) {
 						return null;
 					}
-					return __engine.scene[find].scene;
+					return __engine.scene[find];
 				break;
 				case _enum.STOP:
 					return __engine.config.stop;
@@ -1730,13 +1737,15 @@ var BRANCH = (function()
 	}
 
 	//
-	this.random = function(type, vecMin, vecMax)
+	this.random = function(type, vecMin, vecMax, len)
 	{
 		if (type == _enum.COLOR) {
 			return parseInt(Math.floor(Math.random() * 0xffffff).toString(16), 16);
 		}
 		let build = new $vector;
-		build.random(type, vecMin, vecMax);
+		for (let i = 0; i < (typeof(len) != 'number' ? 1 : len); i++) {
+			build.random(type, vecMin, vecMax);
+		}
 		return build;
 	}
 
@@ -1816,8 +1825,8 @@ var BRANCH = (function()
 				w: 0,
 			};
 			
-			vecMin = (typeof(vecMin) == 'undefined' ? (new $vector).init([(window.innerWidth / 2) * -1, (window.innerHeight / 2) * -1, 0, 0]) : vecMin);
-			vecMax = (typeof(vecMax) == 'undefined' ? (new $vector).init([window.innerWidth / 2, window.innerHeight / 2, 0, 0]) : vecMax);
+			vecMin = (vecMin == null || typeof(vecMin) == 'undefined' ? (new $vector).init([(window.innerWidth / 2) * -1, (window.innerHeight / 2) * -1, 0, 0]) : vecMin);
+			vecMax = (vecMax == null || typeof(vecMax) == 'undefined' ? (new $vector).init([window.innerWidth / 2, window.innerHeight / 2, 0, 0]) : vecMax);
 
 			var rand = function(min, max)
 			{
