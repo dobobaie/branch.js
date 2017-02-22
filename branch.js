@@ -430,13 +430,6 @@ var BRANCH = (function()
 			}
 
 			//
-			this.config = function()
-			{
-				// À Faire
-				// Ajouter les prefixes également
-			}
-
-			//
 			this.color = function(color)
 			{
 				___engine.scene.background = new THREE.Color(color);
