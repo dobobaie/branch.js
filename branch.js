@@ -328,7 +328,7 @@ var BRANCH = (function()
 				landmark: null,
 
 				mesh: [],
-				merge: [],
+				// merge: [],
 			
 				config: {},
 				materialConfig: {},
@@ -1062,7 +1062,7 @@ var BRANCH = (function()
 						return merge.init(id, ___engine.mesh[me].mesh, ____engine.landmark);
 					}
 					___engine.mesh[me].merged = true;
-					return ___engine.merge[find].merge.push(___engine.mesh[me].mesh, forced, ____engine.landmark);
+					return ___engine.mesh[find].merge.push(___engine.mesh[me].mesh, forced, ____engine.landmark);
 				}
 
 				//
@@ -1110,9 +1110,10 @@ var BRANCH = (function()
 				//
 				this.init = function(id, mesh, landmark)
 				{
-					___engine.merge.push({
+					___engine.mesh.push({
 						id: id,
-						merge: ____engine.this,
+						type: ____engine.type,	
+						mesh: ____engine.this,
 						merged: false,
 					});
 
@@ -1188,8 +1189,8 @@ var BRANCH = (function()
 					if (find == -1) {
 						return ____engine.id;
 					}
-					find = $findKey(___engine.merge, ____engine.id);
-					___engine.merge[find].id = id;
+					find = $findKey(___engine.mesh, ____engine.id);
+					___engine.mesh[find].id = id;
 					____engine.id = id;
 					return ____engine.this;
 				}
@@ -1266,23 +1267,26 @@ var BRANCH = (function()
 					if (typeof(id) != 'string') {
 						return null;
 					}
-					let me = $findKey(___engine.merge, ____engine.id);
+					let me = $findKey(___engine.mesh, ____engine.id);
 					if (me == -1) {
 						return null;
 					}
-					let find = $findKey(___engine.merge, id);
+					let find = $findKey(___engine.mesh, id);
 					if (find != -1) {
-						let me2 = ___engine.merge[find].merge.get(____engine.id, _enum.MERGE);
+						if (___engine.mesh[find].type != _enum.MERGE) {
+							return null;
+						}
+						let me2 = ___engine.mesh[find].mesh.get(_enum.MERGE, ____engine.id);
 						if (me2 != null) {
 							return me2;
 						}
-						___engine.merge[find].merge.push(id, ___engine.merge[me].merge);
-						___engine.merge[me].merged = true;
-						return ___engine.merge[find].merge;
+						___engine.mesh[find].mesh.push(id, ___engine.mesh[me].mesh);
+						___engine.mesh[me].merged = true;
+						return ___engine.mesh[find].mesh;
 					}
 					let merge = new $merge;
-					merge.init(id, ___engine.merge[me].merge);
-					___engine.merge[me].merged = true;
+					merge.init(id, ___engine.mesh[me].mesh);
+					___engine.mesh[me].merged = true;
 					return merge;
 				}
 
@@ -1295,11 +1299,11 @@ var BRANCH = (function()
 					}
 					let me;
 					if (____engine.merged[find].merge.get(_enum.TYPE) == _enum.MERGE) {
-						me = $findKey(___engine.merge, id);
-						if (me == -1) {
+						me = $findKey(___engine.mesh, id);
+						if (me == -1 || ___engine.mesh[me].type != _enum.MERGE) {
 							return null;
 						}
-						___engine.merge[me].merged = false;
+						___engine.mesh[me].merged = false;
 					} else {
 						me = $findKey(___engine.mesh, id);
 						if (me == -1) {
@@ -1344,7 +1348,7 @@ var BRANCH = (function()
 					for (var index in ____engine.merged) {
 						____engine.merged[index].merge.remove(false);
 					}
-					___engine.merge.slice(find, 1);
+					___engine.mesh.slice(find, 1);
 					if (____engine.landmark == true && (typeof(update) != 'boolean' || update == true)) {
 						___engine.landmark.update(null, ____engine.type);
 					}
@@ -1679,19 +1683,6 @@ var BRANCH = (function()
 							return ___engine.mesh[find];
 						}
 						return ___engine.mesh[find].mesh;
-					break;
-					case _enum.MERGE:
-						if (typeof(id) == 'undefined' || id == null) {
-							return ___engine.merge;
-						}
-						find = $findKey(___engine.merge, id);
-						if (find == -1) {
-							return null;
-						}
-						if (typeof(full) == 'boolean' && full == true) {
-							return ___engine.merge[find];
-						}
-						return ___engine.merge[find].merge;
 					break;
 					case _enum.STOP:
 						return __engine.config.stop;
