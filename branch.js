@@ -7,11 +7,12 @@ var BRANCH = (function()
 	var _enum = {
 		NONE: 'none',
 
+		TEXT: 'text',
+		OBJ: 'obj',
 		SPHERE: 'sphere',
 		ARC: 'arc',
 		MESH: 'mesh',
 		POINT: 'point',
-		TEXT: 'text',
 		CIRCLE: 'circle',
 		TRIANGLE: 'triangle',
 		CUBE: 'cube',
@@ -328,7 +329,6 @@ var BRANCH = (function()
 				landmark: null,
 
 				mesh: [],
-				// merge: [],
 			
 				config: {},
 				materialConfig: {},
@@ -420,6 +420,7 @@ var BRANCH = (function()
 					___engine.landmark.init();
 					___engine.landmarkConfig.enable = false;
 				}
+
 				___engine.camera = new $camera;
 				___engine.camera.init(_engine.this.vector(___engine.cameraConfig.vector.x, ___engine.cameraConfig.vector.y, ___engine.cameraConfig.vector.z, ___engine.cameraConfig.vector.w));
 				___engine.controls = new $controls;
@@ -764,14 +765,15 @@ var BRANCH = (function()
 					let geometry = new THREE.Geometry();
 					let mesh = new THREE.Mesh(geometry, material);
 
-					let getFont = function(mesh) {
+					let getLoad = function(mesh) {
 
-						// Mettre un système pour charger la font en dehors de cette fonction ou entrer l'url pour le charger ici
 
-						mesh = mesh.get(_enum.MESH);
 						let loader = new THREE.FontLoader();
 						loader.load(___engine.config.font, function(font) {
-							let find = $findKey(___engine.mesh, mesh.name);
+							let name = mesh._name;
+						 	mesh.remove();
+						 	
+						 	let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
 							let geometry = new THREE.TextGeometry(text, {
 								material: 0,
 								extrudeMaterial: 1,
@@ -785,17 +787,41 @@ var BRANCH = (function()
 								size: 30,
 								curveSegments: 4
 							});
-							mesh.geometry = geometry;
-							if (___engine.mesh[find].inScene == true) {
-								___engine.scene.add(mesh);
-							}
+							let mesh2 = new THREE.Mesh(geometry, material);
+							___engine.this.add(mesh2, _enum.TEXT, name);
 						});
 					}
 
 					return {
-						type: _enum.TEXT,
+						type: _enum.NONE,
 						mesh: mesh,
-						callback: getFont,
+						callback: getLoad,
+					}
+				}, id, forced, landmark);
+			}
+
+			//
+			this.obj = function(url, id, forced, landmark)
+			{
+				return $getMesh(function()
+				{
+					let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
+					let geometry = new THREE.Geometry();
+					let mesh = new THREE.Mesh(geometry, material);
+
+					let getLoad = function(mesh) {
+						let loader = new THREE.OBJLoader();
+						loader.load(url, function(obj) {
+							let name = mesh._name;
+						 	mesh.remove();
+						 	___engine.this.add(obj, _enum.OBJ, name);
+						});
+					}
+
+					return {
+						type: _enum.NONE,
+						mesh: mesh,
+						callback: getLoad,
 					}
 				}, id, forced, landmark);
 			}
