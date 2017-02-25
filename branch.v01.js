@@ -555,8 +555,8 @@ var BRANCH = (function()
 			this.clearGrid = function()
 			{
 				let grid = ____engine.grid.object.get(_enum.OBJECTS);
-				for (var index in grid) {
-					grid[index].mesh.remove();
+				while (grid.length > 0) {
+					grid[0].mesh.remove();
 				}
 				return ____engine.this;
 			}
@@ -593,18 +593,20 @@ var BRANCH = (function()
 				};
 					
 				for (var index in objects) {
-					let geometry = ____engine.this.getGeometry(objects);
-					if (geometry != null)
-					{
-						//
-						toGeometry.min.x = (toGeometry.min.x > geometry.min.x ? geometry.min.x : toGeometry.min.x);
-						toGeometry.min.y = (toGeometry.min.y > geometry.min.y ? geometry.min.y : toGeometry.min.y);
-						toGeometry.min.z = (toGeometry.min.z > geometry.min.z ? geometry.min.z : toGeometry.min.z);
+					if (objects[index].merged == false) {
+						let geometry = ____engine.this.getGeometry(objects);
+						if (geometry != null)
+						{
+							//
+							toGeometry.min.x = (toGeometry.min.x > geometry.min.x ? geometry.min.x : toGeometry.min.x);
+							toGeometry.min.y = (toGeometry.min.y > geometry.min.y ? geometry.min.y : toGeometry.min.y);
+							toGeometry.min.z = (toGeometry.min.z > geometry.min.z ? geometry.min.z : toGeometry.min.z);
 
-						//
-						toGeometry.max.x = (toGeometry.max.x < geometry.max.x ? geometry.max.x : toGeometry.max.x);
-						toGeometry.max.x = (toGeometry.max.y < geometry.max.y ? geometry.max.y : toGeometry.max.y);
-						toGeometry.max.x = (toGeometry.max.z < geometry.max.z ? geometry.max.z : toGeometry.max.z);
+							//
+							toGeometry.max.x = (toGeometry.max.x < geometry.max.x ? geometry.max.x : toGeometry.max.x);
+							toGeometry.max.x = (toGeometry.max.y < geometry.max.y ? geometry.max.y : toGeometry.max.y);
+							toGeometry.max.x = (toGeometry.max.z < geometry.max.z ? geometry.max.z : toGeometry.max.z);
+						}
 					}
 				}
 
@@ -627,8 +629,8 @@ var BRANCH = (function()
 			this.clearOrigin = function()
 			{
 				let origin = ____engine.origin.object.get(_enum.OBJECTS);
-				for (var index in origin) {
-					origin[index].mesh.remove();
+				while (origin.length > 0) {
+					origin[0].mesh.remove();
 				}
 				return ____engine.this;
 			}
@@ -748,8 +750,8 @@ var BRANCH = (function()
 			this.clearMarker = function()
 			{
 				let marker = ____engine.marker.object.get(_enum.OBJECTS);
-				for (var index in marker) {
-					marker[index].mesh.remove();
+				while (marker.length > 0) {
+					marker[0].mesh.remove();
 				}
 				return ____engine.this;
 			}
