@@ -588,8 +588,8 @@ var BRANCH = (function()
 				let layer = __engine.this.get(_enum.OBJECTS); // À REMPLACER PAR LAYER
 				let objects = layer.get(_enum.OBJECTS);
 				let toGeometry = {
-					min: { x: 0, y: 0, z: 0 },
-					max: { x: 0, y: 0, z: 0 },
+					min: { x: 0, y: 0 },
+					max: { x: 0, y: 0 },
 				};
 					
 				for (var index in objects) {
@@ -600,12 +600,10 @@ var BRANCH = (function()
 							//
 							toGeometry.min.x = (toGeometry.min.x > geometry.min.x ? geometry.min.x : toGeometry.min.x);
 							toGeometry.min.y = (toGeometry.min.y > geometry.min.y ? geometry.min.y : toGeometry.min.y);
-							toGeometry.min.z = (toGeometry.min.z > geometry.min.z ? geometry.min.z : toGeometry.min.z);
-
+						
 							//
 							toGeometry.max.x = (toGeometry.max.x < geometry.max.x ? geometry.max.x : toGeometry.max.x);
 							toGeometry.max.x = (toGeometry.max.y < geometry.max.y ? geometry.max.y : toGeometry.max.y);
-							toGeometry.max.x = (toGeometry.max.z < geometry.max.z ? geometry.max.z : toGeometry.max.z);
 						}
 					}
 				}
