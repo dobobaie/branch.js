@@ -956,9 +956,9 @@ var BRANCH = (function()
 					border.min.z = (border2d_2.min.y < border2d_3.min.y ? border2d_2.min.y : border2d_3.min.y);
 
 					//
-					border.max.x = (border2d_1.max.x < border2d_2.max.x ? border2d_1.max.x : border2d_2.max.x);
-					border.max.y = (border2d_1.max.y < border2d_3.max.x ? border2d_1.max.y : border2d_3.max.x);
-					border.max.z = (border2d_2.max.y < border2d_3.max.y ? border2d_2.max.y : border2d_3.max.y);
+					border.max.x = (border2d_1.max.x > border2d_2.max.x ? border2d_1.max.x : border2d_2.max.x);
+					border.max.y = (border2d_1.max.y > border2d_3.max.x ? border2d_1.max.y : border2d_3.max.x);
+					border.max.z = (border2d_2.max.y > border2d_3.max.y ? border2d_2.max.y : border2d_3.max.y);
 
 					return border;
 				}
