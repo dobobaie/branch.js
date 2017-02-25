@@ -42,6 +42,7 @@ var BRANCH = (function()
 		UPDATE: 'update',
 		DRAW: 'draw',
 		ROOT: 'root',
+		RING: 'ring',
 		CALCULATION: 'calculation',
 	}
 
@@ -1137,6 +1138,26 @@ var BRANCH = (function()
 
 					return {
 						type: _enum.CIRCLE,
+						mesh: mesh,
+					}
+				}, id);
+			}
+
+			//
+			this.ring = function(vector, id)
+			{
+				return $getMesh(function()
+				{
+					//let material = new THREE.MeshPhongMaterial(___engine.materialConfig);
+					let material = new THREE.MeshBasicMaterial(___engine.materialConfig);
+					let geometry = new THREE.TorusGeometry(3, 0.3, 16, 50);
+					let mesh = new THREE.Mesh(geometry, material);
+					
+					vector = (vector == null || typeof(vector) != 'object' ? _engine.this.vector(50, 50, 50) : vector);
+					$extend(mesh.scale, vector.get(0));
+
+					return {
+						type: _enum.RING,
 						mesh: mesh,
 					}
 				}, id);
