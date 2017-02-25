@@ -26,6 +26,8 @@ var BRANCH = (function()
 
 		CONTROLS: 'controls',
 		CURRENT: 'current',
+		IDOBJECT: 'idobject',
+		IDLAYER: 'idlayer',
 		LANDMARK: 'landmark',
 		TYPE: 'type',
 		MATH: 'math',
@@ -39,6 +41,8 @@ var BRANCH = (function()
 		LAYER: 'layer',
 		UPDATE: 'update',
 		DRAW: 'draw',
+		ROOT: 'root',
+		CALCULATION: 'calculation',
 	}
 
 	//
@@ -160,13 +164,15 @@ var BRANCH = (function()
 	{
 		let __engine = {
 			this: this,
-			id: '',
-			current: '',
+			id: null,
+			currentLayer: null,
+			currentObject: null,
 			type: _enum.LAYER,
 			layer: [],
 			root: [],
 			camera: null,
 			renderer: null,
+			landmark: null,
 			config: {
 				timeUpdate: 100,
 				scene: {
@@ -210,7 +216,7 @@ var BRANCH = (function()
 						},
 					},
 					landmark: {
-						enable: false,
+						enable: true,
 						margin: 100,
 					}
 				},
@@ -245,8 +251,12 @@ var BRANCH = (function()
 			});
 
 			//
-			__engine.current = $getId(__engine.layer, _enum.LAYER);
-			__engine.this.switch(__engine.current);
+			__engine.currentLayer = $getId(__engine.layer, _enum.LAYER);
+			__engine.this.switch(__engine.currentLayer);
+
+			//
+			__engine.landmark = new $landmark;
+			__engine.landmark.init();
 
 			//
 			__engine.camera = new $camera;
@@ -275,7 +285,8 @@ var BRANCH = (function()
 				});
 				find = __engine.layer.length - 1;
 			}
-			__engine.current = id;
+			__engine.currentLayer = id;
+			__engine.currentObject = null;
 			$extend(__engine.this, __engine.layer[find].objects, true, ['get']);
 			return __engine.this;
 		}
@@ -292,6 +303,9 @@ var BRANCH = (function()
 		//
 		this.select = function(id, update)
 		{
+			if (typeof(update) != 'boolean' || update == true) {
+				__engine.landmark.update(id);
+			}
 			// console.log(id);
 		}
 
@@ -341,8 +355,14 @@ var BRANCH = (function()
 				case _enum.RENDERER:
 					return __engine.renderer;
 				break;
+				case _enum.IDLAYER:
+				return __engine.currentLayer;
+				break;
+				case _enum.IDOBJECT:
+					return __engine.currentObject;
+				break;
 				case _enum.CURRENT:
-					find = $findKey(__engine.layer, __engine.current);
+					find = $findKey(__engine.layer, __engine.currentLayer);
 					if (find == -1) {
 						return null;
 					}
@@ -353,7 +373,7 @@ var BRANCH = (function()
 				break;
 				case _enum.OBJECTS:
 					if (id == null || typeof(id) == 'undefined') {
-						id = __engine.current;
+						id = __engine.currentLayer;
 					}
 					find = $findKey(__engine.layer, id);
 					if (find == -1) {
@@ -374,8 +394,24 @@ var BRANCH = (function()
 					}
 					return __engine.layer[find].layer;
 				break;
+				case _enum.ROOT:
+					if (id == null || typeof(id) == 'undefined') {
+						return __engine.root;
+					}
+					find = $findKey(__engine.root, id);
+					if (find == -1) {
+						return null;
+					}
+					if (typeof(full) == 'boolean' && full == true) {
+						return __engine.root[find];
+					}
+					return __engine.root[find].layer;
+				break;
 				case _enum.CAMERA:
 					return __engine.camera;
+				break;
+				case _enum.LANDMARK:
+					return __engine.landmark;
 				break;
 				default:
 					return null;
@@ -454,51 +490,480 @@ var BRANCH = (function()
 						return null;
 				}
 			}
+		}
+	
+		//
+		const $landmark = function()
+		{
+			let ____engine = {
+				this: this,
+				type: _enum.LANDMARK,
+				calculation: null,
+				grid: {
+					id: '',
+					object: null,
+				},
+				origin: {
+					id: '',
+					object: null,
+				},
+				marker: {
+					id: '',
+					object: null,
+				}
+			}
 
 			//
-			const $landmark = function()
+			this.init = function()
 			{
-				let ____engine = {
+				//
+				____engine.calculation = new $calculation;
+
+				// Grid
+				____engine.grid.id = $getId(__engine.root, _enum.LANDMARK);
+				____engine.grid.object = new $object;
+				__engine.root.push({
+					id: ____engine.grid.id,
+					layer: new THREE.Scene(),
+					objects: ____engine.grid.object.init(____engine.grid.id, true),
+				});
+
+				// Marker
+				____engine.marker.id = $getId(__engine.root, _enum.LANDMARK);
+				____engine.marker.object = new $object;
+				__engine.root.push({
+					id: ____engine.marker.id,
+					layer: new THREE.Scene(),
+					objects: ____engine.marker.object.init(____engine.marker.id, true),
+				});
+
+				// Origin
+				____engine.origin.id = $getId(__engine.root, _enum.LANDMARK);
+				____engine.origin.object = new $object;
+				__engine.root.push({
+					id: ____engine.origin.id,
+					layer: new THREE.Scene(),
+					objects: ____engine.origin.object.init(____engine.origin.id, true),
+				});
+
+				delete ____engine.this.init;
+				return ____engine.this;
+			}
+
+			//
+			this.clearGrid = function()
+			{
+				let grid = ____engine.grid.object.get(_enum.OBJECTS);
+				for (var index in grid) {
+					grid[index].mesh.remove();
+				}
+				return ____engine.this;
+			}
+
+			//
+			this.grid = function()
+			{
+				let draw_grid = function(size)
+				{
+					for (let i = -1; i <= 1; i += 2)
+					{
+						for (let j = 0; j < size; j += 25)
+						{
+							____engine.grid.object
+								.line(_engine.this.vector(j * i, 0, size * i * -1).vector(j * i, 0, size * i))
+								.color(0xFFFFFF)
+							;
+						}
+						for (let j = 0; j < size; j += 25)
+						{
+							____engine.grid.object
+								.line(_engine.this.vector(size * i * -1, 0, j * i).vector(size * i, 0, j * i))
+								.color(0xFFFFFF)
+							;
+						}
+					}
+				}
+
+				let layer = __engine.this.get(_enum.OBJECTS); // À REMPLACER PAR LAYER
+				let objects = layer.get(_enum.OBJECTS);
+				let toGeometry = {
+					min: { x: 0, y: 0, z: 0 },
+					max: { x: 0, y: 0, z: 0 },
+				};
+					
+				for (var index in objects) {
+					let geometry = ____engine.this.getGeometry(objects);
+					if (geometry != null)
+					{
+						//
+						toGeometry.min.x = (toGeometry.min.x > geometry.min.x ? geometry.min.x : toGeometry.min.x);
+						toGeometry.min.y = (toGeometry.min.y > geometry.min.y ? geometry.min.y : toGeometry.min.y);
+						toGeometry.min.z = (toGeometry.min.z > geometry.min.z ? geometry.min.z : toGeometry.min.z);
+
+						//
+						toGeometry.max.x = (toGeometry.max.x < geometry.max.x ? geometry.max.x : toGeometry.max.x);
+						toGeometry.max.x = (toGeometry.max.y < geometry.max.y ? geometry.max.y : toGeometry.max.y);
+						toGeometry.max.x = (toGeometry.max.z < geometry.max.z ? geometry.max.z : toGeometry.max.z);
+					}
+				}
+
+				let min = toGeometry.min.x > toGeometry.min.y ? toGeometry.min.x : toGeometry.min.y;
+				let max = toGeometry.max.x > toGeometry.max.y ? toGeometry.max.x : toGeometry.max.y;
+
+				let max_obj = min < 1 ? min * -1 : min;
+
+				let minGrid = (((__engine.config.scene.width > __engine.config.scene.height ? __engine.config.scene.height : __engine.config.scene.width) * 80) / 100) / 2;
+
+				if (max_obj + __engine.config.scene.landmark.margin < minGrid) {
+					draw_grid(minGrid);
+				} else {
+					draw_grid((max_obj + __engine.config.scene.landmark.margin));
+				}
+				return ____engine.this;
+			}
+
+			//
+			this.clearOrigin = function()
+			{
+				let origin = ____engine.grid.object.get(_enum.OBJECTS);
+				for (var index in origin) {
+					origin[index].mesh.remove();
+				}
+				return ____engine.this;
+			}
+
+			//
+			this.origin = function(geometry)
+			{
+				let width = 3;
+				let origin = {
+					x: geometry.min.x + ((geometry.max.x - geometry.max.x) / 2),
+					y: geometry.min.y + ((geometry.max.y - geometry.max.y) / 2),
+					z: geometry.min.z + ((geometry.max.z - geometry.max.z) / 2),
+				}
+				let scale = function()
+				{
+					//
+					____engine.marker.object
+						.cube(_engine.this.vector(10, 10, 10))
+						.position(_engine.this.vector(origin.x + 30, origin.y + 0, origin.z + 0))
+						.color(0xFF0000)
+					;
+					//
+					____engine.marker.object
+						.cube(_engine.this.vector(10, 10, 10), null, false, false)
+						.position(_engine.this.vector(origin.x + 0, origin.y + 30, origin.z + 0))
+						.color(0x00FF00)
+					;
+					//
+					____engine.marker.object
+						.cube(_engine.this.vector(10, 10, 10))
+						.position(_engine.this.vector(origin.x + 0, origin.y + 0, origin.z + 30))
+						.color(0x0000FF)
+					;
+				}
+				let position = function()
+				{
+					//
+					____engine.marker.object
+						.cone(_engine.this.vector(width * 2, 10, width * 2))
+						.position(_engine.this.vector(origin.x + 30, origin.y + 0, origin.z + 0))
+						.rotation(_engine.this.vector(0, 0, -90 * Math.PI / 180))
+						.color(0xFF0000)
+					;
+					//
+					____engine.marker.object
+						.cone(_engine.this.vector(width * 2, 10, width * 2))
+						.position(_engine.this.vector(origin.x + 0, origin.y + 30, origin.z + 0))
+						.rotation(_engine.this.vector(0, 0, 0))
+						.color(0x00FF00)
+					;
+					//
+					____engine.marker
+						.object.cone(_engine.this.vector(width * 2, 10, width * 2))
+						.position(_engine.this.vector(origin.x + 0, origin.y + 0, origin.z + 30))
+						.rotation(_engine.this.vector(90 * Math.PI / 180, 0, 0))
+						.color(0x0000FF)
+					;
+				}
+				let rotation = function()
+				{
+					//
+					____engine.marker.object
+					.ring(_engine.this.vector(10, 10, 10))
+						.position(_engine.this.vector(origin.x, origin.y, origin.z))
+						.rotation(_engine.this.vector(0, 90 * Math.PI / 180, 0))
+						.color(0xFF0000)
+					;
+					//
+					____engine.marker.object
+						.ring(_engine.this.vector(10, 10, 10))
+						.position(_engine.this.vector(origin.x, origin.y, origin.z))
+						.rotation(_engine.this.vector(90 * Math.PI / 180, 0, 0))
+						.color(0x00FF00)
+					;
+					//
+					____engine.marker.object
+						.ring(_engine.this.vector(10, 10, 10))
+						.position(_engine.this.vector(origin.x, origin.y, origin.z))
+						.color(0x0000FF)
+					;
+				}
+				let axis = function()
+				{	
+					//
+					____engine.marker.object
+						.cylinder(_engine.this.vector(width, 30, width))
+						.position(_engine.this.vector(origin.x + 15, origin.y + 0, origin.z + 0))
+						.rotation(_engine.this.vector(0, 0, 90 * Math.PI / 180))
+						.color(0xFF0000)
+					;
+					//	
+					____engine.marker.object
+						.cylinder(_engine.this.vector(width, 30, width))
+						.position(_engine.this.vector(origin.x + 0, origin.y + 15, origin.z + 0))
+						.color(0x00FF00)
+					;
+					//
+					____engine.marker.object
+						.cylinder(_engine.this.vector(width, 30, width))
+						.position(_engine.this.vector(origin.x + 0, origin.y + 0, origin.z + 15))
+						.rotation(_engine.this.vector(90 * Math.PI / 180, 0))
+						.color(0x0000FF)
+					;
+				}
+
+				// À REMPLACER
+				____engine.marker.object.light().position(_engine.this.vector(0, 500, 1180));
+				____engine.marker.object.light().position(_engine.this.vector(0, 500, -1180));
+
+				axis();
+				position();
+
+				return ____engine.this;
+			}
+
+			//
+			this.clearMarker = function()
+			{
+				let marker = ____engine.marker.object.get(_enum.OBJECTS);
+				for (var index in marker) {
+					marker[index].mesh.remove();
+				}
+				return ____engine.this;
+			}
+
+			//
+			this.marker = function(geometry)
+			{
+				____engine.marker.object.line(_engine.this
+					.vector(geometry.min.x, geometry.max.y, geometry.min.x)
+					.vector(geometry.min.x, geometry.min.y, geometry.min.x)
+					.vector(geometry.max.x, geometry.min.y, geometry.min.x)
+					.vector(geometry.max.x, geometry.max.y, geometry.min.x)
+					.vector(geometry.min.x, geometry.max.y, geometry.min.x)
+					.vector(geometry.min.x, geometry.max.y, geometry.max.x)
+					.vector(geometry.min.x, geometry.min.y, geometry.max.x)
+					.vector(geometry.max.x, geometry.min.y, geometry.max.x)
+					.vector(geometry.max.x, geometry.max.y, geometry.max.x)
+					.vector(geometry.min.x, geometry.max.y, geometry.max.x)
+					.vector(geometry.max.x, geometry.max.y, geometry.max.x)
+					.vector(geometry.max.x, geometry.max.y, geometry.min.x)
+					.vector(geometry.max.x, geometry.min.y, geometry.min.x)
+					.vector(geometry.max.x, geometry.min.y, geometry.max.x)
+					.vector(geometry.min.x, geometry.min.y, geometry.max.x)
+					.vector(geometry.min.x, geometry.min.y, geometry.min.x)
+				).color(0xFCDC12);
+
+				return ____engine.this;
+			}
+
+			//
+			this.update = function(id)
+			{
+				// Clear
+				this.clearGrid();
+				this.clearOrigin();
+				this.clearMarker();
+				
+				//
+				if (__engine.config.scene.landmark.enable == false) {
+					return ____engine.this;
+				}
+
+				//
+				this.grid();
+
+				//
+				let layer = __engine.this.get(_enum.OBJECTS);
+				let objects = layer.get(_enum.OBJECTS);
+				let find = $findKey(objects, id);
+				if (find == -1) {
+					return ____engine.this;
+				}
+				
+				//
+				let geometry = ____engine.this.getGeometry(objects[find]);
+				if (geometry != null) {
+					this.origin(geometry);
+					this.marker(geometry);
+				}
+				
+				return ____engine.this;
+			}
+
+			//
+			this.getGeometry = function(objects)
+			{
+				if (objects.type == _enum.MERGE) {
+					let toGeometry = {
+						min: { x: 0, y: 0, z: 0 },
+						max: { x: 0, y: 0, z: 0 },
+					}
+					let merge = objects.mesh.get(_enum.MERGE);
+					for (var index in merge) {
+						let geometry = ____engine.this.getGeometry(merge[index]);
+						if (geometry != null)
+						{
+							//
+							toGeometry.min.x = (toGeometry.min.x > geometry.min.x ? geometry.min.x : toGeometry.min.x);
+							toGeometry.min.y = (toGeometry.min.y > geometry.min.y ? geometry.min.y : toGeometry.min.y);
+							toGeometry.min.z = (toGeometry.min.z > geometry.min.z ? geometry.min.z : toGeometry.min.z);
+
+							//
+							toGeometry.max.x = (toGeometry.max.x < geometry.max.x ? geometry.max.x : toGeometry.max.x);
+							toGeometry.max.x = (toGeometry.max.y < geometry.max.y ? geometry.max.y : toGeometry.max.y);
+							toGeometry.max.x = (toGeometry.max.z < geometry.max.z ? geometry.max.z : toGeometry.max.z);
+						}
+					}
+					return toGeometry;
+				}
+
+				return ____engine.calculation.getBorder3dObject(objects.mesh, objects.type);
+			};
+
+			//
+			const $calculation = function()
+			{
+				let _____engine = {
 					this: this,
-					type: _enum.LANDMARK,
+					type: _enum.CALCULATION,
 				}
 
 				//
-				this.init = function()
+				this.getGeometryObject = function(object, type)
 				{
+					let geometry = { x: 0, y: 0, z: 0 }
+					
+					switch (type)
+					{
+						case _enum.SPHERE:
+							geometry.x = object.scale.y / 2;
+							geometry.y = object.scale.y / 2;
+							geometry.z = object.scale.y / 2;
+						break;
+						case _enum.CYLINDER:
+							geometry.x = object.scale.x;
+							geometry.y = object.scale.y / 2;
+							geometry.z = object.scale.z;
 
+						break;
+						case _enum.CONE:
+							geometry.x = object.scale.x;
+							geometry.y = object.scale.y / 2;
+							geometry.z = object.scale.z;
+						break;
+						case _enum.CUBE:
+							geometry.x = object.scale.x / 2;
+							geometry.y = object.scale.y / 2;
+							geometry.z = object.scale.z / 2;
+						break;
+						default:
+							return null;
+					}
+					return geometry;
 				}
 
 				//
-				this.grid = function()
+				this.getBorder2dObject = function(object, angle)
 				{
-
+					let border = {
+						min: { x: 0, y: 0 },
+						max: { x: 0, y: 0 },
+					}
+					let point_face = [
+						{ x: 0 - object.scale.x, y: 0 - object.scale.y },
+						{ x: 0 + object.scale.x, y: 0 - object.scale.y },
+						{ x: 0 + object.scale.x, y: 0 + object.scale.y },
+						{ x: 0 - object.scale.x, y: 0 + object.scale.y },
+					];
+					angle = (typeof(angle) == 'undefined' ? 0 : angle);
+					
+					//
+					for (let i = 0; i < point_face.length; i += 1)
+					{
+						let x = object.position.x + ((point_face[i].x) * Math.cos(angle)) - ((point_face[i].y) * Math.sin(angle));
+						let y = object.position.y + ((point_face[i].x) * Math.sin(angle)) + ((point_face[i].y) * Math.cos(angle));
+						
+						border.max.x = (border.max.x == -1 || x > border.max.x ? x : border.max.x);
+						border.min.x = (border.min.x == -1 || x < border.min.x ? x : border.min.x);
+						
+						border.max.y = (border.max.y == -1 || y > border.max.y ? y : border.max.y);
+						border.max.y = (border.min.y == -1 || y < border.min.y ? y : border.min.y);
+					}
+					return border;
 				}
 
 				//
-				this.origin = function()
+				this.getBorder3dObject = function(object, type)
 				{
-					let scale = function() {
-
+					let border = {
+						min: { x: 0, y: 0, z: 0 },
+						max: { x: 0, y: 0, z: 0 },
 					}
 
-					let position = function() {
-
+					//
+					let geometry = _____engine.this.getGeometryObject(object, type);
+					if (geometry == null) {
+						return null;
 					}
 
-					let rotation = function() {
-
+					//
+					if (type == _enum.SPHERE) {
+						border.min = { x: geometry.x * -1, y: geometry.y * -1, z: geometry.z * -1 };
+						border.max = geometry;
+						return border;
 					}
-				}
 
-				//
-				this.update = function()
-				{
+					//
+					let border2d_1 = _____engine.this.getBorder2dObject({
+						position: { x: object.position.x, y: object.position.y },
+						scale: { x: geometry.x, y: geometry.y },
+					}, object.rotation.z);
+					let border2d_2 = _____engine.this.getBorder2dObject({
+						position: { x: object.position.x, y: object.position.z },
+						scale: { x: geometry.x, y: geometry.z },
+					}, object.rotation.y);
+					let border2d_3 = _____engine.this.getBorder2dObject({
+						position: { x: object.position.y, y: object.position.z },
+						scale: { x: geometry.y, y: geometry.z },
+					}, object.rotation.x);
 
+					//
+					border.min.x = (border2d_1.min.x < border2d_2.min.x ? border2d_1.min.x : border2d_2.min.x);
+					border.min.y = (border2d_1.min.y < border2d_3.min.x ? border2d_1.min.y : border2d_3.min.x);
+					border.min.z = (border2d_2.min.y < border2d_3.min.y ? border2d_2.min.y : border2d_3.min.y);
+
+					//
+					border.max.x = (border2d_1.max.x < border2d_2.max.x ? border2d_1.max.x : border2d_2.max.x);
+					border.max.y = (border2d_1.max.y < border2d_3.max.x ? border2d_1.max.y : border2d_3.max.x);
+					border.max.z = (border2d_2.max.y < border2d_3.max.y ? border2d_2.max.y : border2d_3.max.y);
+
+					return border;
 				}
 			}
 		}
-	
+
 		//
 		const $object = function()
 		{
@@ -506,13 +971,15 @@ var BRANCH = (function()
 				this: this,
 				type: _enum.OBJECTS,
 				layer: '',
+				root: false,
 				mesh: [],
 			}
 
 			//
-			this.init = function(id)
+			this.init = function(id, root)
 			{
 				___engine.layer = id;
+				___engine.root = (typeof(root) == 'boolean' ? root : false);
 
 				delete ___engine.this.init;
 				return ___engine.this;
@@ -930,14 +1397,22 @@ var BRANCH = (function()
 					/*** END ***/
 
 					//
-					__engine.this.select(____engine.mesh.name, true);
+					__engine.this.select(____engine.mesh.name, !___engine.root);
 
 					//
-					let find = $findKey(__engine.layer, ___engine.layer);
-					if (find == -1) {
-						return null;
+					if (___engine.root == true) {
+						let find = $findKey(__engine.root, ___engine.layer);
+						if (find == -1) {
+							return null;
+						}
+						__engine.root[find].layer.add(mesh);
+					} else {
+						let find = $findKey(__engine.layer, ___engine.layer);
+						if (find == -1) {
+							return null;
+						}
+						__engine.layer[find].layer.add(mesh);
 					}
-					__engine.layer[find].layer.add(mesh);
 
 					//
 					if (typeof(callback) == 'function') {
@@ -1004,7 +1479,7 @@ var BRANCH = (function()
 				}
 
 				//
-				this.scale = function(vec, update)
+				this.scale = function(vec)
 				{
 					if (typeof(vec) != 'object') {
 						return null;
@@ -1014,12 +1489,12 @@ var BRANCH = (function()
 					if (typeof(____engine.mesh.geometry) != 'undefined') {
 						____engine.mesh.geometry.verticesNeedUpdate = true;
 					}
-					__engine.this.select(____engine.mesh.name, true);
+					__engine.this.select(____engine.mesh.name, !___engine.root);
 					return  ____engine.this;
 				}
 				
 				//
-				this.position = function(vec, update)
+				this.position = function(vec)
 				{
 					if (typeof(vec) != 'object') {
 						return null;
@@ -1029,12 +1504,12 @@ var BRANCH = (function()
 					if (typeof(____engine.mesh.geometry) != 'undefined') {
 						____engine.mesh.geometry.verticesNeedUpdate = true;
 					}
-					__engine.this.select(____engine.mesh.name, true);
+					__engine.this.select(____engine.mesh.name, !___engine.root);
 					return  ____engine.this;
 				}
 
 				//
-				this.rotation = function(vec, update)
+				this.rotation = function(vec)
 				{
 					if (typeof(vec) != 'object') {
 						return null;
@@ -1044,7 +1519,7 @@ var BRANCH = (function()
 					if (typeof(____engine.mesh.geometry) != 'undefined') {
 						____engine.mesh.geometry.verticesNeedUpdate = true;
 					}
-					__engine.this.select(____engine.mesh.name, true);
+					__engine.this.select(____engine.mesh.name, !___engine.root);
 					return  ____engine.this;
 				}
 
@@ -1058,21 +1533,25 @@ var BRANCH = (function()
 					____engine.config.stop = true;
 					___engine.mesh[find].inScene = false;
 					__engine.this.unset(____engine.this);
-					__engine.this.select(____engine.mesh.name, true);
+					__engine.this.select(____engine.mesh.name, !___engine.root);
 					return ____engine.this;
 				}
 
 				//
 				this.remove = function()
 				{
+					let find2 = (___engine.root == true ? $findKey(__engine.root, ___engine.layer) : $findKey(__engine.layer, ___engine.layer));
 					let find = $findKey(___engine.mesh, ____engine.mesh.name);
-					let find2 = $findKey(__engine.layer, ___engine.layer);
-					if (find == -1 || find == -1) {
+					if (find == -1 || find2 == -1) {
 						return null;
 					}
 					___engine.mesh.splice(find, 1);
-					__engine.layer[find2].layer.remove(____engine.mesh);
-					__engine.this.select(____engine.mesh.name, true);
+					if (___engine.root == true) {
+						__engine.root[find2].layer.remove(____engine.mesh);
+					} else {
+						__engine.layer[find2].layer.remove(____engine.mesh);
+					}
+					__engine.this.select(null, !___engine.root);
 					return ___engine.this;
 				}
 
@@ -1206,7 +1685,7 @@ var BRANCH = (function()
 					/*** END ***/
 
 					//
-					__engine.this.select(____engine.id, true);
+					__engine.this.select(____engine.id, !___engine.root);
 					
 					return ____engine.this;
 				}
@@ -1228,7 +1707,7 @@ var BRANCH = (function()
 				}
 
 				//
-				this.scale = function(vec, update)
+				this.scale = function(vec)
 				{
 					if (typeof(vec) != 'object') {
 						return null;
@@ -1243,12 +1722,12 @@ var BRANCH = (function()
 						), false);
 					}
 					$extend(____engine.property.scale, vector);
-					__engine.this.select(____engine.id, true);
+					__engine.this.select(____engine.id, !___engine.root);
 					return  ____engine.this;
 				}
 
 				//
-				this.position = function(vec, update)
+				this.position = function(vec)
 				{
 					if (typeof(vec) != 'object') {
 						return null;
@@ -1263,12 +1742,12 @@ var BRANCH = (function()
 						), false);
 					}
 					$extend(____engine.property.position, vector);
-					__engine.this.select(____engine.id, true);
+					__engine.this.select(____engine.id, !___engine.root);
 					return  ____engine.this;
 				}
 
 				//
-				this.rotation = function(vec, update)
+				this.rotation = function(vec)
 				{
 					if (typeof(vec) != 'object') {
 						return null;
@@ -1283,7 +1762,7 @@ var BRANCH = (function()
 						), false);
 					}
 					$extend(____engine.property.rotation, vector);
-					__engine.this.select(____engine.id, true);
+					__engine.this.select(____engine.id, !___engine.root);
 					return  ____engine.this;
 				}
 
@@ -1338,7 +1817,7 @@ var BRANCH = (function()
 						___engine.mesh[me].merged = false;
 					}
 					____engine.merged.splice(find, 1);
-					__engine.this.select(____engine.id, true);
+					__engine.this.select(____engine.id, !___engine.root);
 					return ____engine.this;
 				}
 
@@ -1373,7 +1852,7 @@ var BRANCH = (function()
 						____engine.merged[index].merge.remove();
 					}
 					___engine.mesh.slice(find, 1);
-					__engine.this.select(____engine.id, true);
+					__engine.this.select(null, !___engine.root);
 					return ___engine.this;
 				}
 
@@ -1552,7 +2031,7 @@ var BRANCH = (function()
 	//
 	const $findKey = function(obj, id)
 	{
-		if (typeof(id) == 'undefined') {
+		if (id == null || typeof(id) != 'string') {
 			return -1;
 		}
 		for (let index in obj) {
@@ -1683,13 +2162,19 @@ var BRANCH = (function()
 			}
 
 			let camera = scene.get(_enum.CAMERA).get(_enum.CAMERA);
-			let layer = scene.get(_enum.LAYER);
 			let renderer = scene.get(_enum.RENDERER);
+			
+			let layer = scene.get(_enum.LAYER);
 			for (let index2 in layer) {
 				renderer.clearDepth();
 				renderer.render(layer[index2].layer, camera);
 			}
-		
+
+			let root = scene.get(_enum.ROOT);
+			for (let index2 in root) {
+				renderer.clearDepth();
+				renderer.render(root[index2].layer, camera);
+			}
 		}
 
 		requestAnimationFrame($draw);
