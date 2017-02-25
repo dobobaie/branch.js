@@ -110,12 +110,6 @@ var BRANCH = (function()
 	}
 
 	//
-	let $getProperty = function(me, type)
-	{
-		//
-	}
-
-	//
 	let $copyProperty = function(me, name, value)
 	{
 		if (typeof(me.this[name]) != 'undefined') {
@@ -263,6 +257,7 @@ var BRANCH = (function()
 			__engine.renderer.setSize(__engine.config.width, __engine.config.height);
 			__engine.renderer.name = id;
 			__engine.config.el.appendChild(__engine.renderer.domElement);
+			console.log(__engine.renderer.domElement);
 
 			delete __engine.this.init;
 			return __engine.this;
