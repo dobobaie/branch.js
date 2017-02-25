@@ -889,8 +889,8 @@ var BRANCH = (function()
 				this.getBorder2dObject = function(object, angle)
 				{
 					let border = {
-						min: { x: 0, y: 0 },
-						max: { x: 0, y: 0 },
+						min: { x: -1, y: -1 },
+						max: { x: -1, y: -1 },
 					}
 					let point_face = [
 						{ x: 0 - object.scale.x, y: 0 - object.scale.y },
