@@ -445,7 +445,7 @@ var BRANCH = (function()
 				$extend(___engine.camera.rotation, __engine.config.scene.camera.rotation);
 
 				//
-				___engine.controls = new THREE.TrackballControls(___engine.camera);
+				___engine.controls = new THREE.TrackballControls(___engine.camera, __engine.renderer.domElement);
 				$extend(___engine.controls, __engine.config.scene.controls.property, true);
 
 				//
@@ -489,11 +489,22 @@ var BRANCH = (function()
 			//
 			this.rotation = function(vector)
 			{
-				if (typeof(vec) != 'object') {
+				if (typeof(vector) != 'object') {
 					return null;
 				}
-				vector = vector.get(0);
-				$extend(___engine.camera.rotation, vector);
+
+				let rot = 0.5;
+				// console.log('ici');
+				___engine.camera.position.x = 0;
+				___engine.camera.position.y = Math.sin(rot) * 500;
+				___engine.camera.position.z = Math.cos(rot) * 500;
+				// console.log('ou la bas');
+				// console.log(___engine.camera);
+
+				console.log('here', Math.sin(rot) * 500, Math.cos(rot) * 500);
+
+				//vector = vector.get(0);
+				//$extend(___engine.camera.rotation, vector);
 				___engine.camera.updateProjectionMatrix();
 				return  ___engine.this;
 			}
