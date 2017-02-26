@@ -449,8 +449,8 @@ var BRANCH = (function()
 				$addPrefix(___engine, 'rotation', ___engine.camera);
 				
 				//
-				$addVector(___engine, 'position', ___engine.camera);
-				$addVector(___engine, 'rotation', ___engine.camera);
+				$addVector(___engine, 'position', ___engine.camera.position);
+				$addVector(___engine, 'rotation', ___engine.camera.rotation);
 
 				/*** Black magic ***/
 				for (let index in ___engine.camera) {
