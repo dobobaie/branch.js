@@ -824,7 +824,10 @@ var BRANCH = (function()
 					}
 					let merge = objects.mesh.get(_enum.MERGE);
 					for (var index in merge) {
-						let geometry = ____engine.this.getGeometry(merge[index]);
+						let geometry = ____engine.this.getGeometry({
+							mesh: merge[index].merge,
+							type: merge[index].merge.get(_enum.TYPE),
+						});
 						if (geometry != null)
 						{
 							//
@@ -840,7 +843,6 @@ var BRANCH = (function()
 					}
 					return toGeometry;
 				}
-
 				return ____engine.calculation.getBorder3dObject(objects.mesh, objects.type);
 			};
 
@@ -2187,7 +2189,7 @@ var BRANCH = (function()
 			let renderer = scene.get(_enum.RENDERER);
 			
 			renderer.clear();
-				
+			
 			let layer = scene.get(_enum.LAYER);
 			for (let index2 in layer) {
 				renderer.clearDepth();
