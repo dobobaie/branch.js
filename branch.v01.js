@@ -218,7 +218,7 @@ var BRANCH = (function()
 						},
 					},
 					landmark: {
-						enable: true,
+						enable: false,
 						margin: 100,
 					}
 				},
@@ -265,7 +265,7 @@ var BRANCH = (function()
 			__engine.camera.init();
 
 			//
-			$addPrefix(__engine, 'background', __engine.this.background);
+			$addPrefix(__engine, 'background', __engine.this);
 
 			delete __engine.this.init;
 			return __engine.this;
@@ -308,7 +308,8 @@ var BRANCH = (function()
 			if (typeof(update) != 'boolean' || update == true) {
 				__engine.landmark.update(id);
 			}
-			// console.log(id);
+			__engine.currentObject = id;
+			return  __engine.this;
 		}
 
 		//
@@ -434,6 +435,7 @@ var BRANCH = (function()
 			this.init = function()
 			{
 				//
+				// new THREE.OrthographicCamera(__engine.config.scene.width / - 2, __engine.config.scene.width / 2, __engine.config.scene.height / 2, __engine.config.scene.height / - 2, 10, 10000);
 				___engine.camera = new THREE.PerspectiveCamera(__engine.config.scene.camera.fov, __engine.config.scene.camera.aspect, __engine.config.scene.camera.near, __engine.config.scene.camera.far);
 				$extend(___engine.camera.position, __engine.config.scene.camera.position);
 				$extend(___engine.camera.rotation, __engine.config.scene.camera.rotation);
@@ -443,13 +445,27 @@ var BRANCH = (function()
 				$extend(___engine.controls, __engine.config.scene.controls.property, true);
 
 				//
-				$addPrefix(___engine, 'position', ___engine.camera.position);
-				$addPrefix(___engine, 'rotation', ___engine.camera.rotation);
+				$addPrefix(___engine, 'position', ___engine.camera);
+				$addPrefix(___engine, 'rotation', ___engine.camera);
 				
 				//
-				$addVector(___engine, 'position', ___engine.camera.position);
-				$addVector(___engine, 'rotation', ___engine.camera.rotation);
-				
+				$addVector(___engine, 'position', ___engine.camera);
+				$addVector(___engine, 'rotation', ___engine.camera);
+
+				/*** Black magic ***/
+				for (let index in ___engine.camera) {
+					if (typeof(___engine.camera[index]) != 'function' && typeof(___engine.this[index]) == 'undefined' && index[0] != '_') {
+						$copyProperty(___engine, index, function (param) {
+							let name = arguments.callee.myname;
+							___engine.camera[name] = param;
+							___engine.camera.updateProjectionMatrix();
+							return ___engine.this;
+						});
+						$addPrefix(___engine, index, ___engine.camera);
+					}
+				}
+				/*** END ***/
+
 				delete ___engine.this.init;
 				return ___engine.this;
 			}
@@ -462,6 +478,7 @@ var BRANCH = (function()
 				}
 				vector = vector.get(0);
 				$extend(___engine.camera.position, vector);
+				___engine.camera.updateProjectionMatrix();
 				return  ___engine.this;
 			}
 
@@ -473,6 +490,7 @@ var BRANCH = (function()
 				}
 				vector = vector.get(0);
 				$extend(___engine.camera.rotation, vector);
+				___engine.camera.updateProjectionMatrix();
 				return  ___engine.this;
 			}
 
@@ -1386,18 +1404,16 @@ var BRANCH = (function()
 					____engine.type = type; 
 					____engine.mesh.name = id;
 
-					/*** Black magic 2 ***/
-					$addPrefix(____engine, 'name', ____engine.mesh.name);
-					$addPrefix(____engine, 'scale', ____engine.mesh.scale);
-					$addPrefix(____engine, 'position', ____engine.mesh.position);
-					$addPrefix(____engine, 'rotation', ____engine.mesh.rotation);
-					/*** END ***/
+					//
+					$addPrefix(____engine, 'name', ____engine.mesh);
+					$addPrefix(____engine, 'scale', ____engine.mesh);
+					$addPrefix(____engine, 'position', ____engine.mesh);
+					$addPrefix(____engine, 'rotation', ____engine.mesh);
 
-					/*** Black magic 3 ***/
+					//
 					$addVector(____engine, 'scale', ____engine.mesh.scale);
 					$addVector(____engine, 'position', ____engine.mesh.position);
 					$addVector(____engine, 'rotation', ____engine.mesh.rotation);
-					/*** END ***/
 
 					/*** Black magic ***/
 					for (let index in mesh.material) {
@@ -1416,7 +1432,7 @@ var BRANCH = (function()
 								____engine.mesh.material.needsUpdate = true;
 								return ____engine.this;
 							});
-							$addPrefix(____engine, index, mesh.material[index]);
+							$addPrefix(____engine, index, mesh.material);
 						}
 					}
 					/*** END ***/
@@ -1592,12 +1608,12 @@ var BRANCH = (function()
 					if (typeof(id) != 'string') {
 						return null;
 					}
-					let find = $findKey(___engine.merge, id);
+					let find = $findKey(___engine.mesh, id);
 					if (find == -1) {
 						let merge = new $merge;
 						return merge.init(id, ____engine.mesh.name);
 					}
-					return ___engine.mesh[find].merge.push(____engine.mesh.name);
+					return ___engine.mesh[find].mesh.push(____engine.mesh.name);
 				}
 
 				//
@@ -1628,7 +1644,7 @@ var BRANCH = (function()
 			{
 				var ____engine = {
 					this: this,
-					id: '',
+					name: '',
 					type: _enum.MERGE,
 					merged: [],
 					property: {
@@ -1652,21 +1668,20 @@ var BRANCH = (function()
 					});
 
 					//
-					____engine.id = id;
+					____engine.name = id;
 
-					/*** Black magic 2 ***/
-					$addPrefix(____engine, 'name', ____engine.id);
-					$addPrefix(____engine, 'scale', ____engine.property.scale);
-					$addPrefix(____engine, 'position', ____engine.property.position);
-					$addPrefix(____engine, 'rotation', ____engine.property.rotation);
-					/*** END ***/
+					//
+					$addPrefix(____engine, 'name', ____engine);
+					$addPrefix(____engine, 'scale', ____engine.property);
+					$addPrefix(____engine, 'position', ____engine.property);
+					$addPrefix(____engine, 'rotation', ____engine.property);
 
-					/*** Black magic 3 ***/
+					//
 					$addVector(____engine, 'scale', ____engine.property.scale);
 					$addVector(____engine, 'position', ____engine.property.position);
 					$addVector(____engine, 'rotation', ____engine.property.rotation);
-					/*** END ***/
 
+					//
 					if (meshId != null && typeof(meshId) == 'string') {
 						____engine.this.push(meshId);
 					}
@@ -1704,7 +1719,7 @@ var BRANCH = (function()
 									}
 								}
 							});
-							$addPrefix(____engine, index.substring(1), mesh[index]);
+							$addPrefix(____engine, index.substring(1), mesh);
 						}
 					}
 					/*** END ***/
@@ -1723,11 +1738,11 @@ var BRANCH = (function()
 						return null;
 					}
 					if (find == -1) {
-						return ____engine.id;
+						return ____engine.name;
 					}
-					find = $findKey(___engine.mesh, ____engine.id);
+					find = $findKey(___engine.mesh, ____engine.name);
 					___engine.mesh[find].id = id;
-					____engine.id = id;
+					____engine.name = id;
 					return ____engine.this;
 				}
 
@@ -1747,7 +1762,7 @@ var BRANCH = (function()
 						), false);
 					}
 					$extend(____engine.property.scale, vector);
-					__engine.this.select(____engine.id, !___engine.root);
+					__engine.this.select(____engine.name, !___engine.root);
 					return  ____engine.this;
 				}
 
@@ -1767,7 +1782,7 @@ var BRANCH = (function()
 						), false);
 					}
 					$extend(____engine.property.position, vector);
-					__engine.this.select(____engine.id, !___engine.root);
+					__engine.this.select(____engine.name, !___engine.root);
 					return  ____engine.this;
 				}
 
@@ -1787,7 +1802,7 @@ var BRANCH = (function()
 						), false);
 					}
 					$extend(____engine.property.rotation, vector);
-					__engine.this.select(____engine.id, !___engine.root);
+					__engine.this.select(____engine.name, !___engine.root);
 					return  ____engine.this;
 				}
 
@@ -1797,7 +1812,7 @@ var BRANCH = (function()
 					if (typeof(id) != 'string') {
 						return null;
 					}
-					let me = $findKey(___engine.mesh, ____engine.id);
+					let me = $findKey(___engine.mesh, ____engine.name);
 					if (me == -1) {
 						return null;
 					}
@@ -1806,7 +1821,7 @@ var BRANCH = (function()
 						if (___engine.mesh[find].type != _enum.MERGE) {
 							return null;
 						}
-						let me2 = ___engine.mesh[find].mesh.get(_enum.MERGE, ____engine.id);
+						let me2 = ___engine.mesh[find].mesh.get(_enum.MERGE, ____engine.name);
 						if (me2 != null) {
 							return me2;
 						}
@@ -1842,7 +1857,7 @@ var BRANCH = (function()
 						___engine.mesh[me].merged = false;
 					}
 					____engine.merged.splice(find, 1);
-					__engine.this.select(____engine.id, !___engine.root);
+					__engine.this.select(____engine.name, !___engine.root);
 					return ____engine.this;
 				}
 
@@ -1869,7 +1884,7 @@ var BRANCH = (function()
 				//
 				this.remove = function()
 				{
-					let find = $findKey(____engine.merged, ____engine.id);
+					let find = $findKey(____engine.merged, ____engine.name);
 					if (find == -1) {
 						return null;
 					}
@@ -2089,7 +2104,7 @@ var BRANCH = (function()
 	}
 
 	//
-	const $addPrefix = function(me, name, value)
+	const $addPrefix = function(me, name, object)
 	{
 		if (typeof(me.this['_'+name]) != 'undefined') {
 			return null;
@@ -2103,7 +2118,7 @@ var BRANCH = (function()
 				me.this[name](value2);
 			},
 			get: function() {
-				return value;
+				return object[name];
 			},
 		});
 	}
