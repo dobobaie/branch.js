@@ -609,12 +609,8 @@ var BRANCH = (function()
 					}
 				}
 
-				console.log(toGeometry);
-
 				let min = toGeometry.min.x > toGeometry.min.y ? toGeometry.min.x : toGeometry.min.y;
 				let max = toGeometry.max.x > toGeometry.max.y ? toGeometry.max.x : toGeometry.max.y;
-
-				console.log(min, max);
 
 				let abs = min < 1 ? min * -1 : min;
 				let max_obj = abs > max ? abs : max;
