@@ -1315,7 +1315,7 @@ var BRANCH = (function()
 			}
 
 			//
-			this.obj = function(url, id)
+			this.obj = function(urlObj, urlMtl, id)
 			{
 				return $getMesh(function()
 				{
@@ -1324,12 +1324,26 @@ var BRANCH = (function()
 					let mesh = new THREE.Mesh(geometry, material);
 
 					let getLoad = function(mesh) {
-						let loader = new THREE.OBJLoader();
-						loader.load(url, function(obj) {
-							let name = mesh._name;
-						 	mesh.remove();
-						 	___engine.this.add(obj, _enum.OBJ, name);
-						});
+						let mtlLoad = function() {
+							var mtlLoader = new THREE.MTLLoader();
+							mtlLoader.load(urlMtl, objLoad);
+						}
+						let objLoad = function(materials) {
+							let objLoader = new THREE.OBJLoader();
+							if (typeof(materials) != 'undefined') {
+								objLoader.setMaterials(materials);
+							}
+							objLoader.load(urlObj, function(obj) {
+								let name = mesh._name;
+								mesh.remove();
+							 	___engine.this.add(obj, _enum.OBJ, name);
+							});
+						}
+						if (urlMtl != null && typeof(urlMtl) == 'string') {
+							mtlLoad();
+							return ;
+						}
+						objLoad();
 					}
 
 					return {
