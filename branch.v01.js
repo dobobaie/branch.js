@@ -758,22 +758,22 @@ var BRANCH = (function()
 			this.marker = function(geometry)
 			{
 				____engine.marker.object.line(_engine.this
-					.vector(geometry.min.x, geometry.max.y, geometry.min.x)
-					.vector(geometry.min.x, geometry.min.y, geometry.min.x)
-					.vector(geometry.max.x, geometry.min.y, geometry.min.x)
-					.vector(geometry.max.x, geometry.max.y, geometry.min.x)
-					.vector(geometry.min.x, geometry.max.y, geometry.min.x)
-					.vector(geometry.min.x, geometry.max.y, geometry.max.x)
-					.vector(geometry.min.x, geometry.min.y, geometry.max.x)
-					.vector(geometry.max.x, geometry.min.y, geometry.max.x)
-					.vector(geometry.max.x, geometry.max.y, geometry.max.x)
-					.vector(geometry.min.x, geometry.max.y, geometry.max.x)
-					.vector(geometry.max.x, geometry.max.y, geometry.max.x)
-					.vector(geometry.max.x, geometry.max.y, geometry.min.x)
-					.vector(geometry.max.x, geometry.min.y, geometry.min.x)
-					.vector(geometry.max.x, geometry.min.y, geometry.max.x)
-					.vector(geometry.min.x, geometry.min.y, geometry.max.x)
-					.vector(geometry.min.x, geometry.min.y, geometry.min.x)
+					.vector(geometry.min.x, geometry.max.y, geometry.min.z)
+					.vector(geometry.min.x, geometry.min.y, geometry.min.z)
+					.vector(geometry.max.x, geometry.min.y, geometry.min.z)
+					.vector(geometry.max.x, geometry.max.y, geometry.min.z)
+					.vector(geometry.min.x, geometry.max.y, geometry.min.z)
+					.vector(geometry.min.x, geometry.max.y, geometry.max.z)
+					.vector(geometry.min.x, geometry.min.y, geometry.max.z)
+					.vector(geometry.max.x, geometry.min.y, geometry.max.z)
+					.vector(geometry.max.x, geometry.max.y, geometry.max.z)
+					.vector(geometry.min.x, geometry.max.y, geometry.max.z)
+					.vector(geometry.max.x, geometry.max.y, geometry.max.z)
+					.vector(geometry.max.x, geometry.max.y, geometry.min.z)
+					.vector(geometry.max.x, geometry.min.y, geometry.min.z)
+					.vector(geometry.max.x, geometry.min.y, geometry.max.z)
+					.vector(geometry.min.x, geometry.min.y, geometry.max.z)
+					.vector(geometry.min.x, geometry.min.y, geometry.min.z)
 				).color(0xFCDC12);
 
 				return ____engine.this;
@@ -827,14 +827,14 @@ var BRANCH = (function()
 						if (geometry != null)
 						{
 							//
-							toGeometry.min.x = (toGeometry.min.x > geometry.min.x ? geometry.min.x : toGeometry.min.x);
-							toGeometry.min.y = (toGeometry.min.y > geometry.min.y ? geometry.min.y : toGeometry.min.y);
-							toGeometry.min.z = (toGeometry.min.z > geometry.min.z ? geometry.min.z : toGeometry.min.z);
+							toGeometry.min.x = (toGeometry.min.x < geometry.min.x ? toGeometry.min.x : geometry.min.x);
+							toGeometry.min.y = (toGeometry.min.y < geometry.min.y ? toGeometry.min.y : geometry.min.y);
+							toGeometry.min.z = (toGeometry.min.z < geometry.min.z ? toGeometry.min.z : geometry.min.z);
 
 							//
-							toGeometry.max.x = (toGeometry.max.x < geometry.max.x ? geometry.max.x : toGeometry.max.x);
-							toGeometry.max.y = (toGeometry.max.y < geometry.max.y ? geometry.max.y : toGeometry.max.y);
-							toGeometry.max.z = (toGeometry.max.z < geometry.max.z ? geometry.max.z : toGeometry.max.z);
+							toGeometry.max.x = (toGeometry.max.x > geometry.max.x ? toGeometry.max.x : geometry.max.x);
+							toGeometry.max.y = (toGeometry.max.y > geometry.max.y ? toGeometry.max.y : geometry.max.y);
+							toGeometry.max.z = (toGeometry.max.z > geometry.max.z ? toGeometry.max.z: geometry.max.z);
 						}
 					}
 					return toGeometry;
