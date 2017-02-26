@@ -20,8 +20,7 @@ Actually yes ! I own 3 important function "init", "update" and "draw"
 
 "init" create a new Three.js area in the dom.
 ```
-BRANCH.init(function() {
-	this.el = document.getElementById('canvas');
+BRANCH.scene(function() {
 	this.height = 200;
 	this.width = 200;
 });
