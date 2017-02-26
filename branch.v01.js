@@ -599,17 +599,18 @@ var BRANCH = (function()
 						if (geometry != null)
 						{
 							//
-							toGeometry.min.x = (toGeometry.min.x < geometry.min.x ? toGeometry.min.x : geometry.min.x);
-							toGeometry.min.y = (toGeometry.min.y < geometry.min.y ? toGeometry.min.y : geometry.min.y);
+							toGeometry.min.x = (toGeometry.min.x == 0 || toGeometry.min.x > geometry.min.x ? geometry.min.x : toGeometry.min.x);
+							toGeometry.min.y = (toGeometry.min.y == 0 || toGeometry.min.y > geometry.min.y ? geometry.min.y : toGeometry.min.y);
 
 							//
-							toGeometry.max.x = (toGeometry.max.x > geometry.max.x ? toGeometry.max.x : geometry.max.x);
-							toGeometry.max.y = (toGeometry.max.y > geometry.max.y ? toGeometry.max.y : geometry.max.y);
+							toGeometry.max.x = (toGeometry.max.x == 0 || toGeometry.max.x < geometry.max.x ? geometry.max.x : toGeometry.max.x);
+							toGeometry.max.y = (toGeometry.max.y == 0 || toGeometry.max.y < geometry.max.y ? geometry.max.y : toGeometry.max.y);
 						}
 					}
 				}
 
-				let min = toGeometry.min.x > toGeometry.min.y ? toGeometry.min.x : toGeometry.min.y;
+
+				let min = toGeometry.min.x < toGeometry.min.y ? toGeometry.min.x : toGeometry.min.y;
 				let max = toGeometry.max.x > toGeometry.max.y ? toGeometry.max.x : toGeometry.max.y;
 
 				let abs = min < 1 ? min * -1 : min;
@@ -832,14 +833,14 @@ var BRANCH = (function()
 						if (geometry != null)
 						{
 							//
-							toGeometry.min.x = (toGeometry.min.x < geometry.min.x ? toGeometry.min.x : geometry.min.x);
-							toGeometry.min.y = (toGeometry.min.y < geometry.min.y ? toGeometry.min.y : geometry.min.y);
-							toGeometry.min.z = (toGeometry.min.z < geometry.min.z ? toGeometry.min.z : geometry.min.z);
+							toGeometry.min.x = (toGeometry.min.x == 0 || toGeometry.min.x > geometry.min.x ? geometry.min.x : toGeometry.min.x);
+							toGeometry.min.y = (toGeometry.min.y == 0 || toGeometry.min.y > geometry.min.y ? geometry.min.y : toGeometry.min.y);
+							toGeometry.min.z = (toGeometry.min.z == 0 || toGeometry.min.z > geometry.min.z ? geometry.min.z : toGeometry.min.z);
 
 							//
-							toGeometry.max.x = (toGeometry.max.x > geometry.max.x ? toGeometry.max.x : geometry.max.x);
-							toGeometry.max.y = (toGeometry.max.y > geometry.max.y ? toGeometry.max.y : geometry.max.y);
-							toGeometry.max.z = (toGeometry.max.z > geometry.max.z ? toGeometry.max.z: geometry.max.z);
+							toGeometry.max.x = (toGeometry.max.x == 0 || toGeometry.max.x < geometry.max.x ? geometry.max.x : toGeometry.max.x);
+							toGeometry.max.y = (toGeometry.max.y == 0 || toGeometry.max.y < geometry.max.y ? geometry.max.y : toGeometry.max.y);
+							toGeometry.max.z = (toGeometry.max.z == 0 || toGeometry.max.z < geometry.max.z ? geometry.max.z : toGeometry.max.z);
 						}
 					}
 					return toGeometry;
