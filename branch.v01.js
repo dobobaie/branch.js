@@ -833,8 +833,8 @@ var BRANCH = (function()
 
 							//
 							toGeometry.max.x = (toGeometry.max.x < geometry.max.x ? geometry.max.x : toGeometry.max.x);
-							toGeometry.max.x = (toGeometry.max.y < geometry.max.y ? geometry.max.y : toGeometry.max.y);
-							toGeometry.max.x = (toGeometry.max.z < geometry.max.z ? geometry.max.z : toGeometry.max.z);
+							toGeometry.max.y = (toGeometry.max.y < geometry.max.y ? geometry.max.y : toGeometry.max.y);
+							toGeometry.max.z = (toGeometry.max.z < geometry.max.z ? geometry.max.z : toGeometry.max.z);
 						}
 					}
 					return toGeometry;
@@ -910,7 +910,7 @@ var BRANCH = (function()
 						border.min.x = (border.min.x == -1 || x < border.min.x ? x : border.min.x);
 						
 						border.max.y = (border.max.y == -1 || y > border.max.y ? y : border.max.y);
-						border.max.y = (border.min.y == -1 || y < border.min.y ? y : border.min.y);
+						border.min.y = (border.min.y == -1 || y < border.min.y ? y : border.min.y);
 					}
 					return border;
 				}
