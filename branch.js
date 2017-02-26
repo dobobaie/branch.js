@@ -236,6 +236,9 @@ var BRANCH = (function()
 			$extend(__engine.config.scene, params);
 			
 			//
+			__engine.config.scene.camera.aspect = __engine.config.scene.width / __engine.config.scene.height;
+
+			//
 			let canvas = document.createElement('canvas');
 			__engine.config.scene.webGL = (__engine.config.scene.webGL == true && window.WebGLRenderingContext && (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
 			__engine.renderer = (__engine.config.scene.webGL ? new THREE.WebGLRenderer(__engine.config.scene.renderer) : new THREE.CanvasRenderer(__engine.config.scene.renderer));
@@ -1025,7 +1028,7 @@ var BRANCH = (function()
 			//
 			this.merge = function(id)
 			{
-				id = (typeof(id) != 'string' ? $getId(__engine.layer, _enum.LAYER) : id);
+				id = (typeof(id) != 'string' ? $getId(__engine.layer, _enum.MERGE) : id);
 				let find = $findKey(___engine.mesh, id);
 				if (find != -1) {
 					return null;
