@@ -218,7 +218,7 @@ var BRANCH = (function()
 						},
 					},
 					landmark: {
-						enable: false,
+						enable: true,
 						margin: 100,
 					}
 				},
