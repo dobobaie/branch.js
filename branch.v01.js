@@ -182,6 +182,7 @@ var BRANCH = (function()
 					width: window.innerWidth,
 					webGL: true,
 					renderer: {
+						preserveDrawingBuffer: true,
 						antialias: true,
 						autoClear: false,
 					},
@@ -2189,6 +2190,8 @@ var BRANCH = (function()
 			let camera = scene.get(_enum.CAMERA).get(_enum.CAMERA);
 			let renderer = scene.get(_enum.RENDERER);
 			
+			renderer.clear();
+				
 			let layer = scene.get(_enum.LAYER);
 			for (let index2 in layer) {
 				renderer.clearDepth();
