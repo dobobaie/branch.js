@@ -182,6 +182,7 @@ var BRANCH = (function()
 					width: window.innerWidth,
 					webGL: true,
 					renderer: {
+						preserveDrawingBuffer: true,
 						antialias: true,
 						autoClear: false,
 					},
@@ -264,7 +265,7 @@ var BRANCH = (function()
 			__engine.camera.init();
 
 			//
-			$addPrefix(__engine, 'background', __engine.this.background);
+			$addPrefix(__engine, 'background', __engine.this);
 
 			delete __engine.this.init;
 			return __engine.this;
@@ -307,7 +308,8 @@ var BRANCH = (function()
 			if (typeof(update) != 'boolean' || update == true) {
 				__engine.landmark.update(id);
 			}
-			// console.log(id);
+			__engine.currentObject = id;
+			return  __engine.this;
 		}
 
 		//
@@ -433,6 +435,7 @@ var BRANCH = (function()
 			this.init = function()
 			{
 				//
+				// new THREE.OrthographicCamera(__engine.config.scene.width / - 2, __engine.config.scene.width / 2, __engine.config.scene.height / 2, __engine.config.scene.height / - 2, 10, 10000);
 				___engine.camera = new THREE.PerspectiveCamera(__engine.config.scene.camera.fov, __engine.config.scene.camera.aspect, __engine.config.scene.camera.near, __engine.config.scene.camera.far);
 				$extend(___engine.camera.position, __engine.config.scene.camera.position);
 				$extend(___engine.camera.rotation, __engine.config.scene.camera.rotation);
@@ -442,13 +445,27 @@ var BRANCH = (function()
 				$extend(___engine.controls, __engine.config.scene.controls.property, true);
 
 				//
-				$addPrefix(___engine, 'position', ___engine.camera.position);
-				$addPrefix(___engine, 'rotation', ___engine.camera.rotation);
+				$addPrefix(___engine, 'position', ___engine.camera);
+				$addPrefix(___engine, 'rotation', ___engine.camera);
 				
 				//
-				$addVector(___engine, 'position', ___engine.camera.position);
-				$addVector(___engine, 'rotation', ___engine.camera.rotation);
-				
+				$addVector(___engine, 'position', ___engine.camera);
+				$addVector(___engine, 'rotation', ___engine.camera);
+
+				/*** Black magic ***/
+				for (let index in ___engine.camera) {
+					if (typeof(___engine.camera[index]) != 'function' && typeof(___engine.this[index]) == 'undefined' && index[0] != '_') {
+						$copyProperty(___engine, index, function (param) {
+							let name = arguments.callee.myname;
+							___engine.camera[name] = param;
+							___engine.camera.updateProjectionMatrix();
+							return ___engine.this;
+						});
+						$addPrefix(___engine, index, ___engine.camera);
+					}
+				}
+				/*** END ***/
+
 				delete ___engine.this.init;
 				return ___engine.this;
 			}
@@ -461,6 +478,7 @@ var BRANCH = (function()
 				}
 				vector = vector.get(0);
 				$extend(___engine.camera.position, vector);
+				___engine.camera.updateProjectionMatrix();
 				return  ___engine.this;
 			}
 
@@ -472,6 +490,7 @@ var BRANCH = (function()
 				}
 				vector = vector.get(0);
 				$extend(___engine.camera.rotation, vector);
+				___engine.camera.updateProjectionMatrix();
 				return  ___engine.this;
 			}
 
@@ -555,9 +574,9 @@ var BRANCH = (function()
 			this.clearGrid = function()
 			{
 				let grid = ____engine.grid.object.get(_enum.OBJECTS);
-
-				while (grid.length > 0)
+				while (grid.length > 0) {
 					grid[0].mesh.remove();
+				}
 				return ____engine.this;
 			}
 
@@ -588,32 +607,32 @@ var BRANCH = (function()
 				let layer = __engine.this.get(_enum.OBJECTS); // À REMPLACER PAR LAYER
 				let objects = layer.get(_enum.OBJECTS);
 				let toGeometry = {
-					min: { x: 0, y: 0, z: 0 },
-					max: { x: 0, y: 0, z: 0 },
+					min: { x: 0, y: 0 },
+					max: { x: 0, y: 0 },
 				};
-					
-				for (var index in objects) {
-					let geometry = ____engine.this.getGeometry(objects);
-					console.log("->", geometry);
-					if (geometry != null)
-					{
-						//
-						toGeometry.min.x = (toGeometry.min.x > geometry.min.x ? geometry.min.x : toGeometry.min.x);
-						toGeometry.min.y = (toGeometry.min.y > geometry.min.y ? geometry.min.y : toGeometry.min.y);
-						toGeometry.min.z = (toGeometry.min.z > geometry.min.z ? geometry.min.z : toGeometry.min.z);
 
-						//
-						toGeometry.max.x = (toGeometry.max.x < geometry.max.x ? geometry.max.x : toGeometry.max.x);
-						toGeometry.max.x = (toGeometry.max.y < geometry.max.y ? geometry.max.y : toGeometry.max.y);
-						toGeometry.max.x = (toGeometry.max.z < geometry.max.z ? geometry.max.z : toGeometry.max.z);
+				for (var index in objects) {
+					if (objects[index].merged == false) {
+						let geometry = ____engine.this.getGeometry(objects[index]);
+						if (geometry != null)
+						{
+							//
+							toGeometry.min.x = (toGeometry.min.x == 0 || toGeometry.min.x > geometry.min.x ? geometry.min.x : toGeometry.min.x);
+							toGeometry.min.y = (toGeometry.min.y == 0 || toGeometry.min.y > geometry.min.y ? geometry.min.y : toGeometry.min.y);
+
+							//
+							toGeometry.max.x = (toGeometry.max.x == 0 || toGeometry.max.x < geometry.max.x ? geometry.max.x : toGeometry.max.x);
+							toGeometry.max.y = (toGeometry.max.y == 0 || toGeometry.max.y < geometry.max.y ? geometry.max.y : toGeometry.max.y);
+						}
 					}
 				}
 
 
-				let min = toGeometry.min.x > toGeometry.min.y ? toGeometry.min.x : toGeometry.min.y;
+				let min = toGeometry.min.x < toGeometry.min.y ? toGeometry.min.x : toGeometry.min.y;
 				let max = toGeometry.max.x > toGeometry.max.y ? toGeometry.max.x : toGeometry.max.y;
 
-				let max_obj = min < 1 ? min * -1 : min;
+				let abs = min < 1 ? min * -1 : min;
+				let max_obj = abs > max ? abs : max;
 
 				let minGrid = (((__engine.config.scene.width > __engine.config.scene.height ? __engine.config.scene.height : __engine.config.scene.width) * 80) / 100) / 2;
 
@@ -629,9 +648,9 @@ var BRANCH = (function()
 			this.clearOrigin = function()
 			{
 				let origin = ____engine.origin.object.get(_enum.OBJECTS);
-				while (origin.length > 0)
+				while (origin.length > 0) {
 					origin[0].mesh.remove();
-
+				}
 				return ____engine.this;
 			}
 
@@ -640,9 +659,9 @@ var BRANCH = (function()
 			{
 				let width = 3;
 				let origin = {
-					x: geometry.min.x + ((geometry.max.x - geometry.max.x) / 2),
-					y: geometry.min.y + ((geometry.max.y - geometry.max.y) / 2),
-					z: geometry.min.z + ((geometry.max.z - geometry.max.z) / 2),
+					x: geometry.min.x + ((geometry.max.x - geometry.min.x) / 2),
+					y: geometry.min.y + ((geometry.max.y - geometry.min.y) / 2),
+					z: geometry.min.z + ((geometry.max.z - geometry.min.z) / 2),
 				}
 				let scale = function()
 				{
@@ -750,8 +769,9 @@ var BRANCH = (function()
 			this.clearMarker = function()
 			{
 				let marker = ____engine.marker.object.get(_enum.OBJECTS);
-				while (marker.length > 0)
+				while (marker.length > 0) {
 					marker[0].mesh.remove();
+				}
 				return ____engine.this;
 			}
 
@@ -759,22 +779,22 @@ var BRANCH = (function()
 			this.marker = function(geometry)
 			{
 				____engine.marker.object.line(_engine.this
-					.vector(geometry.min.x, geometry.max.y, geometry.min.x)
-					.vector(geometry.min.x, geometry.min.y, geometry.min.x)
-					.vector(geometry.max.x, geometry.min.y, geometry.min.x)
-					.vector(geometry.max.x, geometry.max.y, geometry.min.x)
-					.vector(geometry.min.x, geometry.max.y, geometry.min.x)
-					.vector(geometry.min.x, geometry.max.y, geometry.max.x)
-					.vector(geometry.min.x, geometry.min.y, geometry.max.x)
-					.vector(geometry.max.x, geometry.min.y, geometry.max.x)
-					.vector(geometry.max.x, geometry.max.y, geometry.max.x)
-					.vector(geometry.min.x, geometry.max.y, geometry.max.x)
-					.vector(geometry.max.x, geometry.max.y, geometry.max.x)
-					.vector(geometry.max.x, geometry.max.y, geometry.min.x)
-					.vector(geometry.max.x, geometry.min.y, geometry.min.x)
-					.vector(geometry.max.x, geometry.min.y, geometry.max.x)
-					.vector(geometry.min.x, geometry.min.y, geometry.max.x)
-					.vector(geometry.min.x, geometry.min.y, geometry.min.x)
+					.vector(geometry.min.x, geometry.max.y, geometry.min.z)
+					.vector(geometry.min.x, geometry.min.y, geometry.min.z)
+					.vector(geometry.max.x, geometry.min.y, geometry.min.z)
+					.vector(geometry.max.x, geometry.max.y, geometry.min.z)
+					.vector(geometry.min.x, geometry.max.y, geometry.min.z)
+					.vector(geometry.min.x, geometry.max.y, geometry.max.z)
+					.vector(geometry.min.x, geometry.min.y, geometry.max.z)
+					.vector(geometry.max.x, geometry.min.y, geometry.max.z)
+					.vector(geometry.max.x, geometry.max.y, geometry.max.z)
+					.vector(geometry.min.x, geometry.max.y, geometry.max.z)
+					.vector(geometry.max.x, geometry.max.y, geometry.max.z)
+					.vector(geometry.max.x, geometry.max.y, geometry.min.z)
+					.vector(geometry.max.x, geometry.min.y, geometry.min.z)
+					.vector(geometry.max.x, geometry.min.y, geometry.max.z)
+					.vector(geometry.min.x, geometry.min.y, geometry.max.z)
+					.vector(geometry.min.x, geometry.min.y, geometry.min.z)
 				).color(0xFCDC12);
 
 				return ____engine.this;
@@ -823,25 +843,26 @@ var BRANCH = (function()
 						max: { x: 0, y: 0, z: 0 },
 					}
 					let merge = objects.mesh.get(_enum.MERGE);
-					console.log(merge);
 					for (var index in merge) {
-						let geometry = ____engine.this.getGeometry(merge[index]);
+						let geometry = ____engine.this.getGeometry({
+							mesh: merge[index].merge,
+							type: merge[index].merge.get(_enum.TYPE),
+						});
 						if (geometry != null)
 						{
 							//
-							toGeometry.min.x = (toGeometry.min.x > geometry.min.x ? geometry.min.x : toGeometry.min.x);
-							toGeometry.min.y = (toGeometry.min.y > geometry.min.y ? geometry.min.y : toGeometry.min.y);
-							toGeometry.min.z = (toGeometry.min.z > geometry.min.z ? geometry.min.z : toGeometry.min.z);
+							toGeometry.min.x = (toGeometry.min.x == 0 || toGeometry.min.x > geometry.min.x ? geometry.min.x : toGeometry.min.x);
+							toGeometry.min.y = (toGeometry.min.y == 0 || toGeometry.min.y > geometry.min.y ? geometry.min.y : toGeometry.min.y);
+							toGeometry.min.z = (toGeometry.min.z == 0 || toGeometry.min.z > geometry.min.z ? geometry.min.z : toGeometry.min.z);
 
 							//
-							toGeometry.max.x = (toGeometry.max.x < geometry.max.x ? geometry.max.x : toGeometry.max.x);
-							toGeometry.max.x = (toGeometry.max.y < geometry.max.y ? geometry.max.y : toGeometry.max.y);
-							toGeometry.max.x = (toGeometry.max.z < geometry.max.z ? geometry.max.z : toGeometry.max.z);
+							toGeometry.max.x = (toGeometry.max.x == 0 || toGeometry.max.x < geometry.max.x ? geometry.max.x : toGeometry.max.x);
+							toGeometry.max.y = (toGeometry.max.y == 0 || toGeometry.max.y < geometry.max.y ? geometry.max.y : toGeometry.max.y);
+							toGeometry.max.z = (toGeometry.max.z == 0 || toGeometry.max.z < geometry.max.z ? geometry.max.z : toGeometry.max.z);
 						}
 					}
 					return toGeometry;
 				}
-
 				return ____engine.calculation.getBorder3dObject(objects.mesh, objects.type);
 			};
 
@@ -891,8 +912,8 @@ var BRANCH = (function()
 				this.getBorder2dObject = function(object, angle)
 				{
 					let border = {
-						min: { x: 0, y: 0 },
-						max: { x: 0, y: 0 },
+						min: { x: -1, y: -1 },
+						max: { x: -1, y: -1 },
 					}
 					let point_face = [
 						{ x: 0 - object.scale.x, y: 0 - object.scale.y },
@@ -908,11 +929,11 @@ var BRANCH = (function()
 						let x = object.position.x + ((point_face[i].x) * Math.cos(angle)) - ((point_face[i].y) * Math.sin(angle));
 						let y = object.position.y + ((point_face[i].x) * Math.sin(angle)) + ((point_face[i].y) * Math.cos(angle));
 						
-						border.max.x = (border.max.x == 0 || x > border.max.x ? x : border.max.x);
-						border.min.x = (border.min.x == 0 || x < border.min.x ? x : border.min.x);
+						border.max.x = (border.max.x == -1 || x > border.max.x ? x : border.max.x);
+						border.min.x = (border.min.x == -1 || x < border.min.x ? x : border.min.x);
 						
-						border.max.y = (border.max.y == 0 || y > border.max.y ? y : border.max.y);
-						border.min.y = (border.min.y == 0 || y < border.min.y ? y : border.min.y);
+						border.max.y = (border.max.y == -1 || y > border.max.y ? y : border.max.y);
+						border.min.y = (border.min.y == -1 || y < border.min.y ? y : border.min.y);
 					}
 					return border;
 				}
@@ -943,12 +964,10 @@ var BRANCH = (function()
 						position: { x: object.position.x, y: object.position.y },
 						scale: { x: geometry.x, y: geometry.y },
 					}, object.rotation.z);
-
 					let border2d_2 = _____engine.this.getBorder2dObject({
 						position: { x: object.position.x, y: object.position.z },
 						scale: { x: geometry.x, y: geometry.z },
 					}, object.rotation.y);
-
 					let border2d_3 = _____engine.this.getBorder2dObject({
 						position: { x: object.position.y, y: object.position.z },
 						scale: { x: geometry.y, y: geometry.z },
@@ -960,11 +979,10 @@ var BRANCH = (function()
 					border.min.z = (border2d_2.min.y < border2d_3.min.y ? border2d_2.min.y : border2d_3.min.y);
 
 					//
-					border.max.x = (border2d_1.max.x < border2d_2.max.x ? border2d_1.max.x : border2d_2.max.x);
-					border.max.y = (border2d_1.max.y < border2d_3.max.x ? border2d_1.max.y : border2d_3.max.x);
-					border.max.z = (border2d_2.max.y < border2d_3.max.y ? border2d_2.max.y : border2d_3.max.y);
+					border.max.x = (border2d_1.max.x > border2d_2.max.x ? border2d_1.max.x : border2d_2.max.x);
+					border.max.y = (border2d_1.max.y > border2d_3.max.x ? border2d_1.max.y : border2d_3.max.x);
+					border.max.z = (border2d_2.max.y > border2d_3.max.y ? border2d_2.max.y : border2d_3.max.y);
 
-					console.log(border);
 					return border;
 				}
 			}
@@ -1387,18 +1405,16 @@ var BRANCH = (function()
 					____engine.type = type; 
 					____engine.mesh.name = id;
 
-					/*** Black magic 2 ***/
-					$addPrefix(____engine, 'name', ____engine.mesh.name);
-					$addPrefix(____engine, 'scale', ____engine.mesh.scale);
-					$addPrefix(____engine, 'position', ____engine.mesh.position);
-					$addPrefix(____engine, 'rotation', ____engine.mesh.rotation);
-					/*** END ***/
+					//
+					$addPrefix(____engine, 'name', ____engine.mesh);
+					$addPrefix(____engine, 'scale', ____engine.mesh);
+					$addPrefix(____engine, 'position', ____engine.mesh);
+					$addPrefix(____engine, 'rotation', ____engine.mesh);
 
-					/*** Black magic 3 ***/
+					//
 					$addVector(____engine, 'scale', ____engine.mesh.scale);
 					$addVector(____engine, 'position', ____engine.mesh.position);
 					$addVector(____engine, 'rotation', ____engine.mesh.rotation);
-					/*** END ***/
 
 					/*** Black magic ***/
 					for (let index in mesh.material) {
@@ -1417,7 +1433,7 @@ var BRANCH = (function()
 								____engine.mesh.material.needsUpdate = true;
 								return ____engine.this;
 							});
-							$addPrefix(____engine, index, mesh.material[index]);
+							$addPrefix(____engine, index, mesh.material);
 						}
 					}
 					/*** END ***/
@@ -1593,12 +1609,12 @@ var BRANCH = (function()
 					if (typeof(id) != 'string') {
 						return null;
 					}
-					let find = $findKey(___engine.merge, id);
+					let find = $findKey(___engine.mesh, id);
 					if (find == -1) {
 						let merge = new $merge;
 						return merge.init(id, ____engine.mesh.name);
 					}
-					return ___engine.mesh[find].merge.push(____engine.mesh.name);
+					return ___engine.mesh[find].mesh.push(____engine.mesh.name);
 				}
 
 				//
@@ -1629,7 +1645,7 @@ var BRANCH = (function()
 			{
 				var ____engine = {
 					this: this,
-					id: '',
+					name: '',
 					type: _enum.MERGE,
 					merged: [],
 					property: {
@@ -1653,21 +1669,20 @@ var BRANCH = (function()
 					});
 
 					//
-					____engine.id = id;
+					____engine.name = id;
 
-					/*** Black magic 2 ***/
-					$addPrefix(____engine, 'name', ____engine.id);
-					$addPrefix(____engine, 'scale', ____engine.property.scale);
-					$addPrefix(____engine, 'position', ____engine.property.position);
-					$addPrefix(____engine, 'rotation', ____engine.property.rotation);
-					/*** END ***/
+					//
+					$addPrefix(____engine, 'name', ____engine);
+					$addPrefix(____engine, 'scale', ____engine.property);
+					$addPrefix(____engine, 'position', ____engine.property);
+					$addPrefix(____engine, 'rotation', ____engine.property);
 
-					/*** Black magic 3 ***/
+					//
 					$addVector(____engine, 'scale', ____engine.property.scale);
 					$addVector(____engine, 'position', ____engine.property.position);
 					$addVector(____engine, 'rotation', ____engine.property.rotation);
-					/*** END ***/
 
+					//
 					if (meshId != null && typeof(meshId) == 'string') {
 						____engine.this.push(meshId);
 					}
@@ -1705,7 +1720,7 @@ var BRANCH = (function()
 									}
 								}
 							});
-							$addPrefix(____engine, index.substring(1), mesh[index]);
+							$addPrefix(____engine, index.substring(1), mesh);
 						}
 					}
 					/*** END ***/
@@ -1724,11 +1739,11 @@ var BRANCH = (function()
 						return null;
 					}
 					if (find == -1) {
-						return ____engine.id;
+						return ____engine.name;
 					}
-					find = $findKey(___engine.mesh, ____engine.id);
+					find = $findKey(___engine.mesh, ____engine.name);
 					___engine.mesh[find].id = id;
-					____engine.id = id;
+					____engine.name = id;
 					return ____engine.this;
 				}
 
@@ -1748,7 +1763,7 @@ var BRANCH = (function()
 						), false);
 					}
 					$extend(____engine.property.scale, vector);
-					__engine.this.select(____engine.id, !___engine.root);
+					__engine.this.select(____engine.name, !___engine.root);
 					return  ____engine.this;
 				}
 
@@ -1768,7 +1783,7 @@ var BRANCH = (function()
 						), false);
 					}
 					$extend(____engine.property.position, vector);
-					__engine.this.select(____engine.id, !___engine.root);
+					__engine.this.select(____engine.name, !___engine.root);
 					return  ____engine.this;
 				}
 
@@ -1788,7 +1803,7 @@ var BRANCH = (function()
 						), false);
 					}
 					$extend(____engine.property.rotation, vector);
-					__engine.this.select(____engine.id, !___engine.root);
+					__engine.this.select(____engine.name, !___engine.root);
 					return  ____engine.this;
 				}
 
@@ -1798,7 +1813,7 @@ var BRANCH = (function()
 					if (typeof(id) != 'string') {
 						return null;
 					}
-					let me = $findKey(___engine.mesh, ____engine.id);
+					let me = $findKey(___engine.mesh, ____engine.name);
 					if (me == -1) {
 						return null;
 					}
@@ -1807,7 +1822,7 @@ var BRANCH = (function()
 						if (___engine.mesh[find].type != _enum.MERGE) {
 							return null;
 						}
-						let me2 = ___engine.mesh[find].mesh.get(_enum.MERGE, ____engine.id);
+						let me2 = ___engine.mesh[find].mesh.get(_enum.MERGE, ____engine.name);
 						if (me2 != null) {
 							return me2;
 						}
@@ -1843,7 +1858,7 @@ var BRANCH = (function()
 						___engine.mesh[me].merged = false;
 					}
 					____engine.merged.splice(find, 1);
-					__engine.this.select(____engine.id, !___engine.root);
+					__engine.this.select(____engine.name, !___engine.root);
 					return ____engine.this;
 				}
 
@@ -1870,7 +1885,7 @@ var BRANCH = (function()
 				//
 				this.remove = function()
 				{
-					let find = $findKey(____engine.merged, ____engine.id);
+					let find = $findKey(____engine.merged, ____engine.name);
 					if (find == -1) {
 						return null;
 					}
@@ -2090,7 +2105,7 @@ var BRANCH = (function()
 	}
 
 	//
-	const $addPrefix = function(me, name, value)
+	const $addPrefix = function(me, name, object)
 	{
 		if (typeof(me.this['_'+name]) != 'undefined') {
 			return null;
@@ -2104,7 +2119,7 @@ var BRANCH = (function()
 				me.this[name](value2);
 			},
 			get: function() {
-				return value;
+				return object[name];
 			},
 		});
 	}
@@ -2189,6 +2204,8 @@ var BRANCH = (function()
 
 			let camera = scene.get(_enum.CAMERA).get(_enum.CAMERA);
 			let renderer = scene.get(_enum.RENDERER);
+			
+			renderer.clear();
 			
 			let layer = scene.get(_enum.LAYER);
 			for (let index2 in layer) {
