@@ -18,22 +18,24 @@ var BRANCH = (function()
 		LIGHT: 'light',
 		LINE: 'line',
 		PLANE: 'plane',
+		RING: 'ring',
 		
 		COLOR: 'color',
 		VECTOR2: 'vector2',
 		VECTOR3: 'vector3',
 		VECTOR4: 'vector4',
 
-		CONTROLS: 'controls',
 		CURRENT: 'current',
 		IDOBJECT: 'idobject',
 		IDLAYER: 'idlayer',
+		OBJECTS: 'objects',
+		
+		CONTROLS: 'controls',
 		LANDMARK: 'landmark',
 		TYPE: 'type',
 		MATH: 'math',
 		VECTOR: 'vector',
 		MERGE: 'merge',
-		OBJECTS: 'objects',
 		STOP: 'stop',
 		CAMERA: 'camera',
 		SCENE: 'scene',
@@ -42,7 +44,6 @@ var BRANCH = (function()
 		UPDATE: 'update',
 		DRAW: 'draw',
 		ROOT: 'root',
-		RING: 'ring',
 		CALCULATION: 'calculation',
 	}
 
