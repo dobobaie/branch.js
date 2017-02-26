@@ -594,16 +594,16 @@ var BRANCH = (function()
 					
 				for (var index in objects) {
 					if (objects[index].merged == false) {
-						let geometry = ____engine.this.getGeometry(objects);
+						let geometry = ____engine.this.getGeometry(objects[index]);
 						if (geometry != null)
 						{
 							//
-							toGeometry.min.x = (toGeometry.min.x > geometry.min.x ? geometry.min.x : toGeometry.min.x);
-							toGeometry.min.y = (toGeometry.min.y > geometry.min.y ? geometry.min.y : toGeometry.min.y);
-						
+							toGeometry.min.x = (toGeometry.min.x < geometry.min.x ? toGeometry.min.x : geometry.min.x);
+							toGeometry.min.y = (toGeometry.min.y < geometry.min.y ? toGeometry.min.y : geometry.min.y);
+
 							//
-							toGeometry.max.x = (toGeometry.max.x < geometry.max.x ? geometry.max.x : toGeometry.max.x);
-							toGeometry.max.x = (toGeometry.max.y < geometry.max.y ? geometry.max.y : toGeometry.max.y);
+							toGeometry.max.x = (toGeometry.max.x > geometry.max.x ? toGeometry.max.x : geometry.max.x);
+							toGeometry.max.y = (toGeometry.max.y > geometry.max.y ? toGeometry.max.y : geometry.max.y);
 						}
 					}
 				}
@@ -642,11 +642,6 @@ var BRANCH = (function()
 					y: geometry.min.y + ((geometry.max.y - geometry.min.y) / 2),
 					z: geometry.min.z + ((geometry.max.z - geometry.min.z) / 2),
 				}
-				/*
-				return ([min_max[0][0] + (min_max[0][1] - min_max[0][0]) / 2,
-						 min_max[1][0] + (min_max[1][1] - min_max[1][0]) / 2,
-						 min_max[2][0] + (min_max[2][1] - min_max[2][0]) / 2]);
-				*/
 				let scale = function()
 				{
 					//
