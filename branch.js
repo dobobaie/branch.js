@@ -489,22 +489,11 @@ var BRANCH = (function()
 			//
 			this.rotation = function(vector)
 			{
-				if (typeof(vector) != 'object') {
+				if (typeof(vec) != 'object') {
 					return null;
 				}
-
-				let rot = 0.5;
-				// console.log('ici');
-				___engine.camera.position.x = 0;
-				___engine.camera.position.y = Math.sin(rot) * 500;
-				___engine.camera.position.z = Math.cos(rot) * 500;
-				// console.log('ou la bas');
-				// console.log(___engine.camera);
-
-				console.log('here', Math.sin(rot) * 500, Math.cos(rot) * 500);
-
-				//vector = vector.get(0);
-				//$extend(___engine.camera.rotation, vector);
+				vector = vector.get(0);
+				$extend(___engine.camera.rotation, vector);
 				___engine.camera.updateProjectionMatrix();
 				return  ___engine.this;
 			}
@@ -1396,12 +1385,15 @@ var BRANCH = (function()
 			//
 			const $getMesh = function(callback, id)
 			{
-				id = (typeof(id) != 'string' ? $getId(___engine.mesh, _enum.MESH, id) : id);
+				if (typeof(callback) != 'function') {
+					return null;
+				}
+				let datas = callback();
+				id = (typeof(id) != 'string' ? $getId(___engine.mesh, datas.type, id) : id);
 				let find = $findKey(___engine.mesh, id);
 				if (find != -1) {
 					return null;
 				}
-				let datas = callback();
 				let build = new $mesh;
 				build.init(id, datas.type, datas.mesh, datas.callback);
 				return build;
