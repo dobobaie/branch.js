@@ -638,10 +638,15 @@ var BRANCH = (function()
 			{
 				let width = 3;
 				let origin = {
-					x: geometry.min.x + ((geometry.max.x - geometry.max.x) / 2),
-					y: geometry.min.y + ((geometry.max.y - geometry.max.y) / 2),
-					z: geometry.min.z + ((geometry.max.z - geometry.max.z) / 2),
+					x: geometry.min.x + ((geometry.max.x - geometry.min.x) / 2),
+					y: geometry.min.y + ((geometry.max.y - geometry.min.y) / 2),
+					z: geometry.min.z + ((geometry.max.z - geometry.min.z) / 2),
 				}
+				/*
+				return ([min_max[0][0] + (min_max[0][1] - min_max[0][0]) / 2,
+						 min_max[1][0] + (min_max[1][1] - min_max[1][0]) / 2,
+						 min_max[2][0] + (min_max[2][1] - min_max[2][0]) / 2]);
+				*/
 				let scale = function()
 				{
 					//
