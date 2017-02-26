@@ -591,7 +591,7 @@ var BRANCH = (function()
 					min: { x: 0, y: 0 },
 					max: { x: 0, y: 0 },
 				};
-					
+				
 				for (var index in objects) {
 					if (objects[index].merged == false) {
 						let geometry = ____engine.this.getGeometry(objects[index]);
@@ -607,6 +607,7 @@ var BRANCH = (function()
 						}
 					}
 				}
+
 
 				let min = toGeometry.min.x > toGeometry.min.y ? toGeometry.min.x : toGeometry.min.y;
 				let max = toGeometry.max.x > toGeometry.max.y ? toGeometry.max.x : toGeometry.max.y;
@@ -823,7 +824,9 @@ var BRANCH = (function()
 					}
 					let merge = objects.mesh.get(_enum.MERGE);
 					for (var index in merge) {
-						let geometry = ____engine.this.getGeometry(merge[index]);
+						console.log("LOL");
+						let geometry = ____engine.this.getGeometry(merge[index].merge);
+						console.log("->", geometry);
 						if (geometry != null)
 						{
 							//
@@ -837,9 +840,10 @@ var BRANCH = (function()
 							toGeometry.max.z = (toGeometry.max.z > geometry.max.z ? toGeometry.max.z: geometry.max.z);
 						}
 					}
+					console.log(toGeometry);
 					return toGeometry;
 				}
-
+				console.log("LOL2");
 				return ____engine.calculation.getBorder3dObject(objects.mesh, objects.type);
 			};
 
