@@ -842,7 +842,6 @@ var BRANCH = (function()
 							toGeometry.max.z = (toGeometry.max.z > geometry.max.z ? toGeometry.max.z: geometry.max.z);
 						}
 					}
-					console.log(toGeometry);
 					return toGeometry;
 				}
 				return ____engine.calculation.getBorder3dObject(objects.mesh, objects.type);
