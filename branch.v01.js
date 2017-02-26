@@ -844,7 +844,7 @@ var BRANCH = (function()
 					console.log(toGeometry);
 					return toGeometry;
 				}
-				console.log("LOL2");
+				console.log(objects.mesh);
 				return ____engine.calculation.getBorder3dObject(objects.mesh, objects.type);
 			};
 
