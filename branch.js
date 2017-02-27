@@ -706,9 +706,9 @@ var BRANCH = (function()
 					}
 
 					____engine.grid.object
-								.line(vec)
-								.color(0xFFFFFF)
-							;					
+						.line(vec)
+						.color(0xFFFFFF)
+					;					
 				}
 
 				let layer = __engine.this.get(_enum.OBJECTS); // À REMPLACER PAR LAYER
