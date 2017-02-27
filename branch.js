@@ -329,12 +329,11 @@ var BRANCH = (function()
 				for (var index in mesh) {
 					var intersects = _raycaster.intersectObjects([mesh[index].mesh.get(_enum.MESH)]);
 					if (intersects.length > 0) {
-						// console.log(mesh[index].mesh._name);
 						__engine.this.select(mesh[index].mesh._name);
-						break;
+						return ;
 					}
 				}
-
+				__engine.this.select(null);
 			}, false);
 
 			//
@@ -811,6 +810,7 @@ var BRANCH = (function()
 				// Clear
 				this.clearGrid();
 				this.clearMarker();
+				__engine.controls.object.detach();
 				
 				//
 				if (__engine.config.scene.landmark.enable == false) {
