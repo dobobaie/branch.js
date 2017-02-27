@@ -489,13 +489,58 @@ var BRANCH = (function()
 			//
 			this.rotation = function(vector)
 			{
-				if (typeof(vec) != 'object') {
+				if (typeof(vector) != 'object') {
 					return null;
 				}
 				vector = vector.get(0);
-				$extend(___engine.camera.rotation, vector);
+
+				//
+
+				let pos_rot = ___engine.camera.position;
+				console.log(pos_rot);
+
+				//Rot Angle X
+				// Point Y, Z
+
+				pos_rot.z = pos_rot.z * Math.cos(vector.x) - pos_rot.y * Math.sin(vector.x)
+				pos_rot.y = pos_rot.z * Math.sin(vector.x) + pos_rot.y * Math.cos(vector.x)
+
+				//Rot Angle Y
+				// Point X, Z
+
+				pos_rot.x = pos_rot.x * Math.cos(vector.y) - pos_rot.z * Math.sin(vector.y)
+				pos_rot.z = pos_rot.x * Math.sin(vector.y) + pos_rot.z * Math.cos(vector.y)
+
+				//Rot Angle Z
+				// Point X, Y
+
+				pos_rot.x = pos_rot.x * Math.cos(vector.z) - pos_rot.y * Math.sin(vector.z)
+				pos_rot.y = pos_rot.x * Math.sin(vector.z) + pos_rot.y * Math.cos(vector.z)
+
+				$extend(___engine.camera.position, pos_rot);
 				___engine.camera.updateProjectionMatrix();
 				return  ___engine.this;
+			}
+
+			this.viewX = function()
+			{
+				let dist = Math.sqrt(Math.pow(___engine.camera.position.x, 2) + Math.pow(___engine.camera.position.y, 2) + Math.pow(___engine.camera.position.z, 2));
+
+				this.position(BRANCH.vector(dist, 0, 0));
+			}
+
+			this.viewY = function()
+			{
+				let dist = Math.sqrt(Math.pow(___engine.camera.position.x, 2) + Math.pow(___engine.camera.position.y, 2) + Math.pow(___engine.camera.position.z, 2));
+
+				this.position(BRANCH.vector(0, dist, 0));				
+			}
+
+			this.viewZ = function()
+			{
+				let dist = Math.sqrt(Math.pow(___engine.camera.position.x, 2) + Math.pow(___engine.camera.position.y, 2) + Math.pow(___engine.camera.position.z, 2));
+
+				this.position(BRANCH.vector(0, 0, dist));				
 			}
 
 			//
