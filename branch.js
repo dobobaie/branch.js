@@ -653,32 +653,43 @@ var BRANCH = (function()
 			//
 			this.grid = function()
 			{
-				let draw_grid = function(size)
+				let draw_grid = function(size, space)
 				{
-					for (let i = -1; i <= 1; i += 2)
+					size = size - (size % space);
+
+					let vec = _engine.this.vector(size * -1, 0, size * -1);
+
+					let dir = 0;
+					for (let i = size * - 1; i <= size; i += space)
 					{
-						for (let j = 0; j < size; j += 25)
-						{
-							____engine.grid.object
-								.line(_engine.this.vector(j * i, 0, size * i * -1).vector(j * i, 0, size * i))
-								.color(0xFFFFFF)
-							;
-						}
-						for (let j = 0; j < size; j += 25)
-						{
-							____engine.grid.object
-								.line(_engine.this.vector(size * i * -1, 0, j * i).vector(size * i, 0, j * i))
-								.color(0xFFFFFF)
-							;
-						}
+						if (dir % 2 == 0)
+							vec.vector(i, 0, (size * -1)).vector(i, 0, size);
+						else
+							vec.vector(i, 0, size).vector(i, 0, size * -1);							
+						dir += 1;
 					}
+
+					dir = 0;
+					for (let i = size; i >= size * -1; i -= space)
+					{
+						if (dir % 2 == 0)
+							vec.vector(size, 0, i).vector(size * -1, 0, i);
+						else
+							vec.vector(size * -1, 0, i).vector(size, 0, i);
+						dir += 1;
+					}
+
+					____engine.grid.object
+								.line(vec)
+								.color(0xFFFFFF)
+							;					
 				}
 
 				let layer = __engine.this.get(_enum.OBJECTS); // À REMPLACER PAR LAYER
 				let objects = layer.get(_enum.OBJECTS);
 				let toGeometry = {
-					min: { x: 0, y: 0 },
-					max: { x: 0, y: 0 },
+					min: { x: 0, z: 0 },
+					max: { x: 0, z: 0 },
 				};
 
 				for (var index in objects) {
@@ -688,18 +699,18 @@ var BRANCH = (function()
 						{
 							//
 							toGeometry.min.x = (toGeometry.min.x == 0 || toGeometry.min.x > geometry.min.x ? geometry.min.x : toGeometry.min.x);
-							toGeometry.min.y = (toGeometry.min.y == 0 || toGeometry.min.y > geometry.min.y ? geometry.min.y : toGeometry.min.y);
+							toGeometry.min.z = (toGeometry.min.z == 0 || toGeometry.min.z > geometry.min.z ? geometry.min.z : toGeometry.min.z);
 
 							//
 							toGeometry.max.x = (toGeometry.max.x == 0 || toGeometry.max.x < geometry.max.x ? geometry.max.x : toGeometry.max.x);
-							toGeometry.max.y = (toGeometry.max.y == 0 || toGeometry.max.y < geometry.max.y ? geometry.max.y : toGeometry.max.y);
+							toGeometry.max.z = (toGeometry.max.z == 0 || toGeometry.max.z < geometry.max.z ? geometry.max.z : toGeometry.max.z);
 						}
 					}
 				}
 
 
-				let min = toGeometry.min.x < toGeometry.min.y ? toGeometry.min.x : toGeometry.min.y;
-				let max = toGeometry.max.x > toGeometry.max.y ? toGeometry.max.x : toGeometry.max.y;
+				let min = toGeometry.min.x < toGeometry.min.z ? toGeometry.min.x : toGeometry.min.z;
+				let max = toGeometry.max.x > toGeometry.max.z ? toGeometry.max.x : toGeometry.max.z;
 
 				let abs = min < 1 ? min * -1 : min;
 				let max_obj = abs > max ? abs : max;
@@ -707,9 +718,9 @@ var BRANCH = (function()
 				let minGrid = (((__engine.config.scene.width > __engine.config.scene.height ? __engine.config.scene.height : __engine.config.scene.width) * 80) / 100) / 2;
 
 				if (max_obj + __engine.config.scene.landmark.margin < minGrid) {
-					draw_grid(minGrid);
+					draw_grid(minGrid, 25);
 				} else {
-					draw_grid((max_obj + __engine.config.scene.landmark.margin));
+					draw_grid(max_obj + __engine.config.scene.landmark.margin, 25);
 				}
 				return ____engine.this;
 			}
