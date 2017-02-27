@@ -175,6 +175,10 @@ var BRANCH = (function()
 			camera: null,
 			renderer: null,
 			landmark: null,
+			controls: {
+				camera: null,
+				object: null,
+			},
 			config: {
 				timeUpdate: 100,
 				scene: {
@@ -207,15 +211,21 @@ var BRANCH = (function()
 
 					},
 					controls: {
-						enable: true,
-						property: {
-							rotateSpeed: 1.0,
-							zoomSpeed: 1.2,
-							panSpeed: 0.8,
-							noZoom: false,
-							noPan: false,
-							staticMoving: true,
-							dynamicDampingFactor: 0.3,
+						camera: {
+							enable: true,
+							property: {
+								rotateSpeed: 1.0,
+								zoomSpeed: 1.2,
+								panSpeed: 0.8,
+								noZoom: false,
+								noPan: false,
+								staticMoving: true,
+								dynamicDampingFactor: 0.3,
+							},
+						},
+						object: {
+							enable: true,
+							property: { },
 						},
 					},
 					landmark: {
@@ -257,10 +267,6 @@ var BRANCH = (function()
 			});
 
 			//
-			__engine.currentLayer = $getId(__engine.layer, _enum.LAYER);
-			__engine.this.switch(__engine.currentLayer);
-
-			//
 			__engine.landmark = new $landmark;
 			__engine.landmark.init();
 
@@ -269,7 +275,25 @@ var BRANCH = (function()
 			__engine.camera.init();
 
 			//
+			__engine.controls.camera = new THREE.TrackballControls(__engine.camera.get(_enum.CAMERA), __engine.renderer.domElement);
+			$extend(__engine.controls.camera, __engine.config.scene.controls.camera.property, true);
+
+			//
+			__engine.controls.object = new THREE.TransformControls(__engine.camera.get(_enum.CAMERA), __engine.renderer.domElement);
+			$extend(__engine.controls.object, __engine.config.scene.controls.object.property, true);
+			__engine.controls.object.addEventListener('change', function(e) {
+				let mesh = __engine.this.get(_enum.OBJECTS).get(_enum.OBJECTS, e.target.object.name);
+				mesh.position(BRANCH.vector(e.target.object.position.x, e.target.object.position.y, e.target.object.position.z));
+				mesh.rotation(BRANCH.vector(e.target.object.rotation.x, e.target.object.rotation.y, e.target.object.rotation.z));
+				mesh.scale(BRANCH.vector(e.target.object.scale.x, e.target.object.scale.y, e.target.object.scale.z));
+			});
+
+			//
 			$addPrefix(__engine, 'background', __engine.this);
+
+			//
+			__engine.currentLayer = $getId(__engine.layer, _enum.LAYER);
+			__engine.this.switch(__engine.currentLayer);
 
 			delete __engine.this.init;
 			return __engine.this;
@@ -290,6 +314,7 @@ var BRANCH = (function()
 					objects: objects.init(id),
 				});
 				find = __engine.layer.length - 1;
+				__engine.layer[find].layer.add(__engine.controls.object);
 			}
 			__engine.currentLayer = id;
 			__engine.currentObject = null;
@@ -368,6 +393,9 @@ var BRANCH = (function()
 				case _enum.IDOBJECT:
 					return __engine.currentObject;
 				break;
+				case _enum.CONTROLS:
+					return __engine.controls;
+				break;
 				case _enum.CURRENT:
 					find = $findKey(__engine.layer, __engine.currentLayer);
 					if (find == -1) {
@@ -432,7 +460,6 @@ var BRANCH = (function()
 				this: this,
 				type: _enum.CAMERA,
 				camera: null,
-				controls: null,
 			}
 
 			//
@@ -443,10 +470,6 @@ var BRANCH = (function()
 				___engine.camera = new THREE.PerspectiveCamera(__engine.config.scene.camera.fov, __engine.config.scene.camera.aspect, __engine.config.scene.camera.near, __engine.config.scene.camera.far);
 				$extend(___engine.camera.position, __engine.config.scene.camera.position);
 				$extend(___engine.camera.rotation, __engine.config.scene.camera.rotation);
-
-				//
-				___engine.controls = new THREE.TrackballControls(___engine.camera, __engine.renderer.domElement);
-				$extend(___engine.controls, __engine.config.scene.controls.property, true);
 
 				//
 				$addPrefix(___engine, 'position', ___engine.camera);
@@ -495,10 +518,8 @@ var BRANCH = (function()
 				vector = vector.get(0);
 
 				//
-
 				let pos_rot = ___engine.camera.position;
-				console.log(pos_rot);
-
+				
 				//Rot Angle X
 				// Point Y, Z
 
@@ -522,6 +543,7 @@ var BRANCH = (function()
 				return  ___engine.this;
 			}
 
+			//
 			this.viewX = function()
 			{
 				let dist = Math.sqrt(Math.pow(___engine.camera.position.x, 2) + Math.pow(___engine.camera.position.y, 2) + Math.pow(___engine.camera.position.z, 2));
@@ -529,6 +551,7 @@ var BRANCH = (function()
 				this.position(BRANCH.vector(dist, 0, 0));
 			}
 
+			//
 			this.viewY = function()
 			{
 				let dist = Math.sqrt(Math.pow(___engine.camera.position.x, 2) + Math.pow(___engine.camera.position.y, 2) + Math.pow(___engine.camera.position.z, 2));
@@ -536,6 +559,7 @@ var BRANCH = (function()
 				this.position(BRANCH.vector(0, dist, 0));				
 			}
 
+			//
 			this.viewZ = function()
 			{
 				let dist = Math.sqrt(Math.pow(___engine.camera.position.x, 2) + Math.pow(___engine.camera.position.y, 2) + Math.pow(___engine.camera.position.z, 2));
@@ -551,9 +575,6 @@ var BRANCH = (function()
 				{
 					case _enum.CAMERA:
 						return ___engine.camera;
-					break;
-					case _enum.CONTROLS:
-						return ___engine.controls;
 					break;
 					default:
 						return null;
@@ -876,7 +897,9 @@ var BRANCH = (function()
 				//
 				let geometry = ____engine.this.getGeometry(objects[find]);
 				if (geometry != null) {
-					this.origin(geometry);
+					// if (objects[find].type != _enum.MERGE) {
+						__engine.controls.object.attach(objects[find].mesh.get(_enum.MESH));
+					// }
 					this.marker(geometry);
 				}
 				
@@ -1073,7 +1096,7 @@ var BRANCH = (function()
 			//
 			this.merge = function(id)
 			{
-				id = (typeof(id) != 'string' ? $getId(__engine.layer, _enum.MERGE) : id);
+				id = (typeof(id) != 'string' ? $getId(___engine.mesh, _enum.MERGE) : id);
 				let find = $findKey(___engine.mesh, id);
 				if (find != -1) {
 					return null;
@@ -1711,9 +1734,9 @@ var BRANCH = (function()
 			{
 				var ____engine = {
 					this: this,
-					name: '',
 					type: _enum.MERGE,
 					merged: [],
+					mesh: null,
 					property: {
 						scale: _engine.this.vector(0, 0, 0, 0).get(0),
 						position: _engine.this.vector(0, 0, 0, 0).get(0),
@@ -1735,10 +1758,28 @@ var BRANCH = (function()
 					});
 
 					//
-					____engine.name = id;
+					let material = new THREE.MeshBasicMaterial(__engine.config.scene.material);
+					let geometry = new THREE.Geometry();
+					____engine.mesh = new THREE.Mesh(geometry, material);
+					____engine.mesh.name = id;
 
 					//
-					$addPrefix(____engine, 'name', ____engine);
+					if (___engine.root == true) {
+						let find = $findKey(__engine.root, ___engine.layer);
+						if (find == -1) {
+							return null;
+						}
+						__engine.root[find].layer.add(____engine.mesh);
+					} else {
+						let find = $findKey(__engine.layer, ___engine.layer);
+						if (find == -1) {
+							return null;
+						}
+						__engine.layer[find].layer.add(____engine.mesh);
+					}
+
+					//
+					$addPrefix(____engine, 'name', ____engine.mesh);
 					$addPrefix(____engine, 'scale', ____engine.property);
 					$addPrefix(____engine, 'position', ____engine.property);
 					$addPrefix(____engine, 'rotation', ____engine.property);
@@ -1805,11 +1846,11 @@ var BRANCH = (function()
 						return null;
 					}
 					if (find == -1) {
-						return ____engine.name;
+						return ____engine.mesh.name;
 					}
-					find = $findKey(___engine.mesh, ____engine.name);
+					find = $findKey(___engine.mesh, ____engine.mesh.name);
 					___engine.mesh[find].id = id;
-					____engine.name = id;
+					____engine.mesh.name = id;
 					return ____engine.this;
 				}
 
@@ -1829,7 +1870,8 @@ var BRANCH = (function()
 						), false);
 					}
 					$extend(____engine.property.scale, vector);
-					__engine.this.select(____engine.name, !___engine.root);
+					$extend(____engine.mesh.scale, vector);
+					__engine.this.select(____engine.mesh.name, !___engine.root);
 					return  ____engine.this;
 				}
 
@@ -1849,7 +1891,8 @@ var BRANCH = (function()
 						), false);
 					}
 					$extend(____engine.property.position, vector);
-					__engine.this.select(____engine.name, !___engine.root);
+					$extend(____engine.mesh.position, vector);
+					__engine.this.select(____engine.mesh.name, !___engine.root);
 					return  ____engine.this;
 				}
 
@@ -1869,7 +1912,8 @@ var BRANCH = (function()
 						), false);
 					}
 					$extend(____engine.property.rotation, vector);
-					__engine.this.select(____engine.name, !___engine.root);
+					$extend(____engine.mesh.rotation, vector);
+					__engine.this.select(____engine.mesh.name, !___engine.root);
 					return  ____engine.this;
 				}
 
@@ -1879,7 +1923,7 @@ var BRANCH = (function()
 					if (typeof(id) != 'string') {
 						return null;
 					}
-					let me = $findKey(___engine.mesh, ____engine.name);
+					let me = $findKey(___engine.mesh, ____engine.mesh.name);
 					if (me == -1) {
 						return null;
 					}
@@ -1888,7 +1932,7 @@ var BRANCH = (function()
 						if (___engine.mesh[find].type != _enum.MERGE) {
 							return null;
 						}
-						let me2 = ___engine.mesh[find].mesh.get(_enum.MERGE, ____engine.name);
+						let me2 = ___engine.mesh[find].mesh.get(_enum.MERGE, ____engine.mesh.name);
 						if (me2 != null) {
 							return me2;
 						}
@@ -1924,7 +1968,7 @@ var BRANCH = (function()
 						___engine.mesh[me].merged = false;
 					}
 					____engine.merged.splice(find, 1);
-					__engine.this.select(____engine.name, !___engine.root);
+					__engine.this.select(____engine.mesh.name, !___engine.root);
 					return ____engine.this;
 				}
 
@@ -1951,7 +1995,7 @@ var BRANCH = (function()
 				//
 				this.remove = function()
 				{
-					let find = $findKey(____engine.merged, ____engine.name);
+					let find = $findKey(____engine.merged, ____engine.mesh.name);
 					if (find == -1) {
 						return null;
 					}
@@ -1990,6 +2034,9 @@ var BRANCH = (function()
 						break;
 						case _enum.TYPE:
 							return ____engine.type;
+						break;
+						case _enum.MESH:
+							return ____engine.mesh;
 						break;
 						default:
 							return null;
@@ -2263,9 +2310,12 @@ var BRANCH = (function()
 		{
 			let scene = _engine.scene[index].scene;
 			
-			let controls = scene.get(_enum.CAMERA).get(_enum.CONTROLS);
-			if (controls != null) {
-				controls.update();
+			let controls = scene.get(_enum.CONTROLS);
+			if (controls.camera != null) {
+				controls.camera.update();
+			}
+			if (controls.object != null) {
+				controls.object.update();
 			}
 
 			let camera = scene.get(_enum.CAMERA).get(_enum.CAMERA);
