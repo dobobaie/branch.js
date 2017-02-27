@@ -182,10 +182,14 @@ var BRANCH = (function()
 			camera: null,
 			renderer: null,
 			landmark: null,
+			raycaster: null,
 			controls: {
 				camera: null,
 				object: null,
 				drag: null,
+			},
+			tracking: {
+				mouse: null,
 			},
 			config: {
 				timeUpdate: 100,
@@ -269,9 +273,15 @@ var BRANCH = (function()
 			__engine.config.scene.el.appendChild(__engine.renderer.domElement);
 
 			//
-			__engine.id = id;
+			__engine.tracking.mouse = new THREE.Vector2();
+			__engine.renderer.domElement.addEventListener('mousemove', function(e) {
+				event.preventDefault();
+				__engine.tracking.mouse.x = ( event.clientX / __engine.renderer.domElement.width ) * 2 - 1;
+				__engine.tracking.mouse.y = - ( event.clientY / __engine.renderer.domElement.height ) * 2 + 1;
+			}, false);
 
 			//
+			__engine.id = id;
 			_engine.scene.push({
 				id: id,
 				runned: true,
@@ -315,33 +325,34 @@ var BRANCH = (function()
 			});
 
 			//
-			var _raycaster = new THREE.Raycaster();
-			var _mouse = new THREE.Vector2();
-			var _camera = __engine.camera.get(_enum.CAMERA);
-			__engine.renderer.domElement.addEventListener('mousemove', function(e) {
-				event.preventDefault();
-				_mouse.x = ( event.clientX / __engine.renderer.domElement.width ) * 2 - 1;
-				_mouse.y = - ( event.clientY / __engine.renderer.domElement.height ) * 2 + 1;
-			}, false);
-			__engine.renderer.domElement.addEventListener('mousedown', function(e) {
-				event.preventDefault();
-				_raycaster.setFromCamera( _mouse, _camera);
+			__engine.raycaster = new THREE.Raycaster();
+			__engine.renderer.domElement.addEventListener('contextmenu', function(e) {
+				__engine.this.select(null);
+			});
+			__engine.renderer.domElement.addEventListener('mousedown', function(e)
+			{
+				//
+				__engine.raycaster.setFromCamera( __engine.tracking.mouse, __engine.camera.get(_enum.CAMERA));
+
+				//
 				let mesh = __engine.this.get(_enum.OBJECTS).get(_enum.OBJECTS);
-				for (var index in mesh) {
-					var intersects = _raycaster.intersectObjects([mesh[index].mesh.get(_enum.MESH)]);
+				let meshs = [];
+				for (let index in mesh) {
+					let intersects = __engine.raycaster.intersectObjects([mesh[index].mesh.get(_enum.MESH)]);
 					if (intersects.length > 0)
 					{	
+						console.log(mesh[index].mesh._name);
+
 						//
 						__engine.this.select(mesh[index].mesh._name);
 
 						//
-						for (var index2 in __engine.selected) {
+						for (let index2 in __engine.selected) {
 							__engine.selected[index2](mesh[index].mesh, mesh[index].mesh.get(_enum.TYPE));
 						}
 						return ;
 					}
 				}
-				__engine.this.select(null);
 			}, false);
 
 			//
@@ -827,7 +838,6 @@ var BRANCH = (function()
 				// Clear
 				this.clearGrid();
 				this.clearMarker();
-				__engine.controls.object.detach();
 				
 				//
 				if (__engine.config.scene.landmark.enable == false) {
@@ -842,6 +852,7 @@ var BRANCH = (function()
 				let objects = layer.get(_enum.OBJECTS);
 				let find = $findKey(objects, id);
 				if (find == -1) {
+					__engine.controls.object.detach();
 					return ____engine.this;
 				}
 				
