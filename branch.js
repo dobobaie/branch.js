@@ -1833,7 +1833,7 @@ var BRANCH = (function()
 					/*** END ***/
 
 					//
-					__engine.this.select(____engine.id, !___engine.root);
+					__engine.this.select(____engine.mesh.name, !___engine.root);
 					
 					return ____engine.this;
 				}
