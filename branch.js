@@ -314,9 +314,28 @@ var BRANCH = (function()
 			});
 
 			//
-			__engine.controls.drag = new THREE.DragControls([], __engine.camera.get(_enum.CAMERA), __engine.renderer.domElement);
-			$extend(__engine.controls.drag, __engine.config.scene.controls.drag.property, true);
-			__engine.controls.drag.enabled = false;
+			var _raycaster = new THREE.Raycaster();
+			var _mouse = new THREE.Vector2();
+			var _camera = __engine.camera.get(_enum.CAMERA);
+			__engine.renderer.domElement.addEventListener('mousemove', function(e) {
+				event.preventDefault();
+				_mouse.x = ( event.clientX / __engine.renderer.domElement.width ) * 2 - 1;
+				_mouse.y = - ( event.clientY / __engine.renderer.domElement.height ) * 2 + 1;
+			}, false);
+			__engine.renderer.domElement.addEventListener('mousedown', function(e) {
+				event.preventDefault();
+				_raycaster.setFromCamera( _mouse, _camera);
+				let mesh = __engine.this.get(_enum.OBJECTS).get(_enum.OBJECTS);
+				for (var index in mesh) {
+					var intersects = _raycaster.intersectObjects([mesh[index].mesh.get(_enum.MESH)]);
+					if (intersects.length > 0) {
+						// console.log(mesh[index].mesh._name);
+						__engine.this.select(mesh[index].mesh._name);
+						break;
+					}
+				}
+
+			}, false);
 
 			//
 			$addPrefix(__engine, 'background', __engine.this);
