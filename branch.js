@@ -184,6 +184,7 @@ var BRANCH = (function()
 			controls: {
 				camera: null,
 				object: null,
+				drag: null,
 			},
 			config: {
 				timeUpdate: 100,
@@ -230,6 +231,10 @@ var BRANCH = (function()
 							},
 						},
 						object: {
+							enable: true,
+							property: { },
+						},
+						drag: {
 							enable: true,
 							property: { },
 						},
@@ -283,6 +288,13 @@ var BRANCH = (function()
 			//
 			__engine.controls.camera = new THREE.TrackballControls(__engine.camera.get(_enum.CAMERA), __engine.renderer.domElement);
 			$extend(__engine.controls.camera, __engine.config.scene.controls.camera.property, true);
+			__engine.controls.camera.addEventListener('change', function(e)
+			{
+				//
+				for (var index in __engine.change) {
+					__engine.change[index](__engine.camera, _enum.CAMERA);
+				}
+			});
 
 			//
 			__engine.controls.object = new THREE.TransformControls(__engine.camera.get(_enum.CAMERA), __engine.renderer.domElement);
@@ -297,9 +309,14 @@ var BRANCH = (function()
 			
 				//
 				for (var index in __engine.change) {
-					__engine.change[index](mesh);
+					__engine.change[index](mesh, mesh.get(_enum.TYPE));
 				}
 			});
+
+			//
+			__engine.controls.drag = new THREE.DragControls([], __engine.camera.get(_enum.CAMERA), __engine.renderer.domElement);
+			$extend(__engine.controls.drag, __engine.config.scene.controls.drag.property, true);
+			__engine.controls.drag.enabled = false;
 
 			//
 			$addPrefix(__engine, 'background', __engine.this);
