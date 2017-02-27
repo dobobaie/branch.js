@@ -24,6 +24,11 @@ var BRANCH = (function()
 		VECTOR2: 'vector2',
 		VECTOR3: 'vector3',
 		VECTOR4: 'vector4',
+		SCALE: 'scale',
+		ROTATE: 'rotate',
+		TRANSLATE: 'translate',
+		ORIGIN: 'origin',
+		AXIS: 'axis',
 
 		CURRENT: 'current',
 		IDOBJECT: 'idobject',
@@ -172,6 +177,7 @@ var BRANCH = (function()
 			type: _enum.LAYER,
 			layer: [],
 			root: [],
+			change: [],
 			camera: null,
 			renderer: null,
 			landmark: null,
@@ -281,11 +287,18 @@ var BRANCH = (function()
 			//
 			__engine.controls.object = new THREE.TransformControls(__engine.camera.get(_enum.CAMERA), __engine.renderer.domElement);
 			$extend(__engine.controls.object, __engine.config.scene.controls.object.property, true);
-			__engine.controls.object.addEventListener('change', function(e) {
+			__engine.controls.object.addEventListener('change', function(e)
+			{
+				//
 				let mesh = __engine.this.get(_enum.OBJECTS).get(_enum.OBJECTS, e.target.object.name);
 				mesh.position(BRANCH.vector(e.target.object.position.x, e.target.object.position.y, e.target.object.position.z));
 				mesh.rotation(BRANCH.vector(e.target.object.rotation.x, e.target.object.rotation.y, e.target.object.rotation.z));
 				mesh.scale(BRANCH.vector(e.target.object.scale.x, e.target.object.scale.y, e.target.object.scale.z));
+			
+				//
+				for (var index in __engine.change) {
+					__engine.change[index](mesh);
+				}
 			});
 
 			//
@@ -296,6 +309,15 @@ var BRANCH = (function()
 			__engine.this.switch(__engine.currentLayer);
 
 			delete __engine.this.init;
+			return __engine.this;
+		}
+
+		//
+		this.change = function(callback)
+		{
+			if (typeof(callback) == 'function') {
+				__engine.change.push(callback);
+			}
 			return __engine.this;
 		}
 
@@ -593,10 +615,6 @@ var BRANCH = (function()
 					id: '',
 					object: null,
 				},
-				origin: {
-					id: '',
-					object: null,
-				},
 				marker: {
 					id: '',
 					object: null,
@@ -625,15 +643,6 @@ var BRANCH = (function()
 					id: ____engine.marker.id,
 					layer: new THREE.Scene(),
 					objects: ____engine.marker.object.init(____engine.marker.id, true),
-				});
-
-				// Origin
-				____engine.origin.id = $getId(__engine.root, _enum.LANDMARK);
-				____engine.origin.object = new $object;
-				__engine.root.push({
-					id: ____engine.origin.id,
-					layer: new THREE.Scene(),
-					objects: ____engine.origin.object.init(____engine.origin.id, true),
 				});
 
 				delete ____engine.this.init;
@@ -726,127 +735,6 @@ var BRANCH = (function()
 			}
 
 			//
-			this.clearOrigin = function()
-			{
-				let origin = ____engine.origin.object.get(_enum.OBJECTS);
-				while (origin.length > 0) {
-					origin[0].mesh.remove();
-				}
-				return ____engine.this;
-			}
-
-			//
-			this.origin = function(geometry)
-			{
-				let width = 3;
-				let origin = {
-					x: geometry.min.x + ((geometry.max.x - geometry.min.x) / 2),
-					y: geometry.min.y + ((geometry.max.y - geometry.min.y) / 2),
-					z: geometry.min.z + ((geometry.max.z - geometry.min.z) / 2),
-				}
-				let scale = function()
-				{
-					//
-					____engine.origin.object
-						.cube(_engine.this.vector(10, 10, 10))
-						.position(_engine.this.vector(origin.x + 30, origin.y + 0, origin.z + 0))
-						.color(0xFF0000)
-					;
-					//
-					____engine.origin.object
-						.cube(_engine.this.vector(10, 10, 10), null, false, false)
-						.position(_engine.this.vector(origin.x + 0, origin.y + 30, origin.z + 0))
-						.color(0x00FF00)
-					;
-					//
-					____engine.origin.object
-						.cube(_engine.this.vector(10, 10, 10))
-						.position(_engine.this.vector(origin.x + 0, origin.y + 0, origin.z + 30))
-						.color(0x0000FF)
-					;
-				}
-				let position = function()
-				{
-					//
-					____engine.origin.object
-						.cone(_engine.this.vector(width * 2, 10, width * 2))
-						.position(_engine.this.vector(origin.x + 30, origin.y + 0, origin.z + 0))
-						.rotation(_engine.this.vector(0, 0, -90 * Math.PI / 180))
-						.color(0xFF0000)
-					;
-					//
-					____engine.origin.object
-						.cone(_engine.this.vector(width * 2, 10, width * 2))
-						.position(_engine.this.vector(origin.x + 0, origin.y + 30, origin.z + 0))
-						.rotation(_engine.this.vector(0, 0, 0))
-						.color(0x00FF00)
-					;
-					//
-					____engine.origin
-						.object.cone(_engine.this.vector(width * 2, 10, width * 2))
-						.position(_engine.this.vector(origin.x + 0, origin.y + 0, origin.z + 30))
-						.rotation(_engine.this.vector(90 * Math.PI / 180, 0, 0))
-						.color(0x0000FF)
-					;
-				}
-				let rotation = function()
-				{
-					//
-					____engine.origin.object
-					.ring(_engine.this.vector(10, 10, 10))
-						.position(_engine.this.vector(origin.x, origin.y, origin.z))
-						.rotation(_engine.this.vector(0, 90 * Math.PI / 180, 0))
-						.color(0xFF0000)
-					;
-					//
-					____engine.origin.object
-						.ring(_engine.this.vector(10, 10, 10))
-						.position(_engine.this.vector(origin.x, origin.y, origin.z))
-						.rotation(_engine.this.vector(90 * Math.PI / 180, 0, 0))
-						.color(0x00FF00)
-					;
-					//
-					____engine.origin.object
-						.ring(_engine.this.vector(10, 10, 10))
-						.position(_engine.this.vector(origin.x, origin.y, origin.z))
-						.color(0x0000FF)
-					;
-				}
-				let axis = function()
-				{	
-					//
-					____engine.origin.object
-						.cylinder(_engine.this.vector(width, 30, width))
-						.position(_engine.this.vector(origin.x + 15, origin.y + 0, origin.z + 0))
-						.rotation(_engine.this.vector(0, 0, 90 * Math.PI / 180))
-						.color(0xFF0000)
-					;
-					//	
-					____engine.origin.object
-						.cylinder(_engine.this.vector(width, 30, width))
-						.position(_engine.this.vector(origin.x + 0, origin.y + 15, origin.z + 0))
-						.color(0x00FF00)
-					;
-					//
-					____engine.origin.object
-						.cylinder(_engine.this.vector(width, 30, width))
-						.position(_engine.this.vector(origin.x + 0, origin.y + 0, origin.z + 15))
-						.rotation(_engine.this.vector(90 * Math.PI / 180, 0))
-						.color(0x0000FF)
-					;
-				}
-
-				// À REMPLACER
-				____engine.origin.object.light().position(_engine.this.vector(0, 500, 1180));
-				____engine.origin.object.light().position(_engine.this.vector(0, 500, -1180));
-
-				axis();
-				position();
-
-				return ____engine.this;
-			}
-
-			//
 			this.clearMarker = function()
 			{
 				let marker = ____engine.marker.object.get(_enum.OBJECTS);
@@ -886,7 +774,6 @@ var BRANCH = (function()
 			{
 				// Clear
 				this.clearGrid();
-				this.clearOrigin();
 				this.clearMarker();
 				
 				//
@@ -908,12 +795,25 @@ var BRANCH = (function()
 				//
 				let geometry = ____engine.this.getGeometry(objects[find]);
 				if (geometry != null) {
-					// if (objects[find].type != _enum.MERGE) {
-						__engine.controls.object.attach(objects[find].mesh.get(_enum.MESH));
-					// }
+					__engine.controls.object.attach(objects[find].mesh.get(_enum.MESH));
 					this.marker(geometry);
 				}
 				
+				return ____engine.this;
+			}
+
+			//
+			this.setMode = function(mode)
+			{
+				if (mode == _enum.ORIGIN) {
+					__engine.controls.object.setSpace('local');
+				}
+				if (mode == _enum.AXIS) {
+					__engine.controls.object.setSpace('world');
+				}
+				if (mode == _enum.SCALE || mode == _enum.ROTATE || mode == _enum.TRANSLATE) {
+					__engine.controls.object.setMode(mode);
+				}
 				return ____engine.this;
 			}
 
