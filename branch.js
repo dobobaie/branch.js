@@ -341,8 +341,6 @@ var BRANCH = (function()
 					let intersects = __engine.raycaster.intersectObjects([mesh[index].mesh.get(_enum.MESH)]);
 					if (intersects.length > 0)
 					{	
-						console.log(mesh[index].mesh._name);
-
 						//
 						__engine.this.select(mesh[index].mesh._name);
 
