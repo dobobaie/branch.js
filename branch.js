@@ -489,11 +489,22 @@ var BRANCH = (function()
 			//
 			this.rotation = function(vector)
 			{
-				if (typeof(vec) != 'object') {
+				if (typeof(vector) != 'object') {
 					return null;
 				}
-				vector = vector.get(0);
-				$extend(___engine.camera.rotation, vector);
+
+				let rot = 60;
+				// console.log('ici');
+				___engine.camera.position.x = 0;
+				___engine.camera.position.y = Math.sin(rot) * 1000;
+				___engine.camera.position.z = Math.cos(rot) * 1500;
+				// console.log('ou la bas');
+				// console.log(___engine.camera);
+
+				console.log('here', Math.sin(rot) * 500, Math.cos(rot) * 500);
+
+				//vector = vector.get(0);
+				//$extend(___engine.camera.rotation, vector);
 				___engine.camera.updateProjectionMatrix();
 				return  ___engine.this;
 			}
@@ -1028,7 +1039,7 @@ var BRANCH = (function()
 			//
 			this.merge = function(id)
 			{
-				id = (typeof(id) != 'string' ? $getId(__engine.layer, _enum.MERGE) : id);
+				id = (typeof(id) != 'string' ? $getId(___engine.mesh, _enum.MERGE) : id);
 				let find = $findKey(___engine.mesh, id);
 				if (find != -1) {
 					return null;
