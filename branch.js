@@ -178,6 +178,7 @@ var BRANCH = (function()
 			layer: [],
 			root: [],
 			change: [],
+			selected: [],
 			camera: null,
 			renderer: null,
 			landmark: null,
@@ -328,8 +329,15 @@ var BRANCH = (function()
 				let mesh = __engine.this.get(_enum.OBJECTS).get(_enum.OBJECTS);
 				for (var index in mesh) {
 					var intersects = _raycaster.intersectObjects([mesh[index].mesh.get(_enum.MESH)]);
-					if (intersects.length > 0) {
+					if (intersects.length > 0)
+					{	
+						//
 						__engine.this.select(mesh[index].mesh._name);
+
+						//
+						for (var index2 in __engine.selected) {
+							__engine.selected[index2](mesh[index].mesh, mesh[index].mesh.get(_enum.TYPE));
+						}
 						return ;
 					}
 				}
@@ -352,6 +360,15 @@ var BRANCH = (function()
 		{
 			if (typeof(callback) == 'function') {
 				__engine.change.push(callback);
+			}
+			return __engine.this;
+		}
+
+		//
+		this.selected = function(callback)
+		{
+			if (typeof(callback) == 'function') {
+				__engine.selected.push(callback);
 			}
 			return __engine.this;
 		}
