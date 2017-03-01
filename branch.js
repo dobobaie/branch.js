@@ -275,8 +275,8 @@ var BRANCH = (function()
 			//
 			__engine.tracking.mouse = new THREE.Vector2();
 			__engine.renderer.domElement.addEventListener('mousemove', function(e) {
-				__engine.tracking.mouse.x = (event.clientX / __engine.renderer.domElement.width) * 2 - 1;
-				__engine.tracking.mouse.y = -(event.clientY / __engine.renderer.domElement.height) * 2 + 1;
+				__engine.tracking.mouse.x = (e.clientX / __engine.renderer.domElement.width) * 2 - 1;
+				__engine.tracking.mouse.y = -(e.clientY / __engine.renderer.domElement.height) * 2 + 1;
 			}, false);
 
 			//
