@@ -786,10 +786,12 @@ var BRANCH = (function()
 
 				let minGrid = (((__engine.config.scene.width > __engine.config.scene.height ? __engine.config.scene.height : __engine.config.scene.width) * 80) / 100) / 2;
 
+				let size_grid = 50;
+
 				if (max_obj + __engine.config.scene.landmark.margin < minGrid) {
-					draw_grid(minGrid, 25);
+					draw_grid(minGrid, size_grid);
 				} else {
-					draw_grid(max_obj + __engine.config.scene.landmark.margin, 25);
+					draw_grid(max_obj + __engine.config.scene.landmark.margin, size_grid);
 				}
 				return ____engine.this;
 			}
