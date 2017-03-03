@@ -142,6 +142,36 @@ var BRANCH = (function()
 			return vectors;
 		}
 
+		this.pointCloudObj = function(path, scale, position)
+		{
+			console.log(position.get(0).x);
+			var xmlhttp = new XMLHttpRequest();
+			xmlhttp.open("GET", path, false);
+			xmlhttp.send(null);
+			let lines = xmlhttp.responseText.split("\n");
+			let vector = BRANCH.vector();
+			for (let i = 0; i < lines.length; ++i)
+			{
+				let infos = lines[i].split(" ");
+				if (infos[0] == "v")
+				{
+					vector.vector(parseFloat(infos[1]) * scale + position.get(0).x, parseFloat(infos[2])  * scale + position.get(0).y, parseFloat(infos[3])  * scale + position.get(0).z);
+				}
+			}
+			console.log("Done");
+			return vector;
+		}
+
+		//
+		this.pointCloudPicture = function(path, size, vector)
+		{
+
+			for (let i = 0; i < 1500; ++i)
+			{
+				//scene.point(BRANCH.random(null, ))
+			}
+		}
+
 		return __engine.this;
 	})();
 
