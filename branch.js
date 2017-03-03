@@ -626,8 +626,8 @@ var BRANCH = (function()
 					return null;
 				}
 				vector = vector.get(0);
-				$extend(___engine.perspective.position, vector);
-				$extend(___engine.orthographic.position, vector);
+				$extend(___engine.perspective.camera.position, vector);
+				$extend(___engine.orthographic.camera.position, vector);
 				___engine.perspective.updateProjectionMatrix();
 				___engine.orthographic.updateProjectionMatrix();
 				return  ___engine.this;
@@ -662,8 +662,8 @@ var BRANCH = (function()
 				pos_rot.x = pos_rot.x * Math.cos(vector.z) - pos_rot.y * Math.sin(vector.z)
 				pos_rot.y = pos_rot.x * Math.sin(vector.z) + pos_rot.y * Math.cos(vector.z)
 
-				$extend(___engine.perspective.position, pos_rot);
-				$extend(___engine.orthographic.position, pos_rot);
+				$extend(___engine.perspective.camera.position, pos_rot);
+				$extend(___engine.orthographic.camera.position, pos_rot);
 				___engine.perspective.updateProjectionMatrix();
 				___engine.orthographic.updateProjectionMatrix();
 				return  ___engine.this;
@@ -674,7 +674,7 @@ var BRANCH = (function()
 			{
 				let dist = Math.sqrt(Math.pow(___engine.perspective.camera.position.x, 2) + Math.pow(___engine.perspective.camera.position.y, 2) + Math.pow(___engine.perspective.camera.position.z, 2));
 
-				this.position(BRANCH.vector(dist, 0, 0));
+				___engine.this.position(BRANCH.vector(dist, 0, 0));
 			}
 
 			//
@@ -682,7 +682,7 @@ var BRANCH = (function()
 			{
 				let dist = Math.sqrt(Math.pow(___engine.perspective.camera.position.x, 2) + Math.pow(___engine.perspective.camera.position.y, 2) + Math.pow(___engine.perspective.camera.position.z, 2));
 
-				this.position(BRANCH.vector(0, dist, 0));				
+				___engine.this.position(BRANCH.vector(0, dist, 0));				
 			}
 
 			//
@@ -690,7 +690,7 @@ var BRANCH = (function()
 			{
 				let dist = Math.sqrt(Math.pow(___engine.perspective.camera.position.x, 2) + Math.pow(___engine.perspective.camera.position.y, 2) + Math.pow(___engine.perspective.camera.position.z, 2));
 
-				this.position(BRANCH.vector(0, 0, dist));				
+				___engine.this.position(BRANCH.vector(0, 0, dist));				
 			}
 
 			//
