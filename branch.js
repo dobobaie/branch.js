@@ -628,8 +628,8 @@ var BRANCH = (function()
 				vector = vector.get(0);
 				$extend(___engine.perspective.camera.position, vector);
 				$extend(___engine.orthographic.camera.position, vector);
-				___engine.perspective.updateProjectionMatrix();
-				___engine.orthographic.updateProjectionMatrix();
+				___engine.perspective.camera.updateProjectionMatrix();
+				___engine.orthographic.camera.updateProjectionMatrix();
 				return  ___engine.this;
 			}
 
@@ -664,8 +664,8 @@ var BRANCH = (function()
 
 				$extend(___engine.perspective.camera.position, pos_rot);
 				$extend(___engine.orthographic.camera.position, pos_rot);
-				___engine.perspective.updateProjectionMatrix();
-				___engine.orthographic.updateProjectionMatrix();
+				___engine.perspective.camera.updateProjectionMatrix();
+				___engine.orthographic.camera.updateProjectionMatrix();
 				return  ___engine.this;
 			}
 
