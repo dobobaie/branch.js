@@ -546,8 +546,11 @@ var BRANCH = (function()
 					___engine[type].controls.scene.addEventListener('change', function(e)
 					{
 						//
+						__engine.this.get(_enum.CAMERA).position(_engine.this.vector(e.target.object.position.x, e.target.object.position.y, e.target.object.position.z));
+
+						//
 						for (var index in __engine.change) {
-							__engine.change[index](___engine[type].camera, _enum.CAMERA);
+							__engine.change[index](__engine.get(_enum.CAMERA).get(_enum.CAMERA), _enum.CAMERA);
 						}
 					});
 
