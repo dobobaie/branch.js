@@ -928,9 +928,9 @@ var BRANCH = (function()
 					switch (type)
 					{
 						case _enum.SPHERE:
-							geometry.x = object.scale.y / 2;
-							geometry.y = object.scale.y / 2;
-							geometry.z = object.scale.y / 2;
+							geometry.x = object.scale.x;
+							geometry.y = object.scale.y;
+							geometry.z = object.scale.z;
 						break;
 						case _enum.CYLINDER:
 							geometry.x = object.scale.x;
@@ -998,12 +998,7 @@ var BRANCH = (function()
 						return null;
 					}
 
-					//
-					if (type == _enum.SPHERE) {
-						border.min = { x: geometry.x * -1, y: geometry.y * -1, z: geometry.z * -1 };
-						border.max = geometry;
-						return border;
-					}
+
 
 					//
 					let border2d_1 = _____engine.this.getBorder2dObject({
