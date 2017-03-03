@@ -616,6 +616,22 @@ var BRANCH = (function()
 			}
 
 			//
+			this.disableObject = function()
+			{
+				___engine.orthographic.controls.object.detach();
+				___engine.perspective.controls.object.detach();
+				return ___engine.this;
+			}
+
+			//
+			this.enableObject = function(object)
+			{
+				___engine.orthographic.controls.object.attach(object);
+				___engine.perspective.controls.object.attach(object);
+				return ___engine.this;
+			}
+
+			//
 			this.switch = function(type)
 			{
 				___engine.currentType = type;
@@ -907,14 +923,14 @@ var BRANCH = (function()
 				let objects = layer.get(_enum.OBJECTS);
 				let find = $findKey(objects, id);
 				if (find == -1) {
-					__engine.camera.get(_enum.CONTROLS).object.detach();
+					__engine.camera.disableObject();
 					return ____engine.this;
 				}
 				
 				//
 				let geometry = ____engine.this.getGeometry(objects[find]);
 				if (geometry != null) {
-					__engine.camera.get(_enum.CONTROLS).object.attach(objects[find].mesh.get(_enum.MESH));
+					__engine.camera.enableObject(objects[find].mesh.get(_enum.MESH));
 					this.marker(geometry);
 				}
 				
