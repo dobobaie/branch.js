@@ -922,13 +922,13 @@ var BRANCH = (function()
 			this.setMode = function(mode)
 			{
 				if (mode == _enum.ORIGIN) {
-					__engine.controls.object.setSpace('local');
+					__engine.camera.get(_enum.CONTROLS).object.setSpace('local');
 				}
 				if (mode == _enum.AXIS) {
-					__engine.controls.object.setSpace('world');
+					__engine.camera.get(_enum.CONTROLS).object.setSpace('world');
 				}
 				if (mode == _enum.SCALE || mode == _enum.ROTATE || mode == _enum.TRANSLATE) {
-					__engine.controls.object.setMode(mode);
+					__engine.camera.get(_enum.CONTROLS).object.setMode(mode);
 				}
 				return ____engine.this;
 			}
