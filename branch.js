@@ -822,7 +822,7 @@ var BRANCH = (function()
 
 					____engine.grid.object
 						.line(vec)
-						.color(0xFFFFFF)
+						.color(0x555555)
 					;					
 				}
 
