@@ -20,9 +20,6 @@ var BRANCH = (function()
 		PLANE: 'plane',
 		RING: 'ring',
 		
-		PERSPECTIVE: 'perspective',
-		ORTHOGRAPHIC: 'orthographic',
-
 		COLOR: 'color',
 		VECTOR2: 'vector2',
 		VECTOR3: 'vector3',
@@ -38,13 +35,19 @@ var BRANCH = (function()
 		IDLAYER: 'idlayer',
 		OBJECTS: 'objects',
 		
+		PERSPECTIVE: 'perspective',
+		ORTHOGRAPHIC: 'orthographic',
 		CONTROLS: 'controls',
 		LANDMARK: 'landmark',
 		TYPE: 'type',
 		MATH: 'math',
 		VECTOR: 'vector',
 		MERGE: 'merge',
+		
 		STOP: 'stop',
+		PAUSE: 'pause',
+		PLAY: 'play',
+
 		CAMERA: 'camera',
 		SCENE: 'scene',
 		RENDERER: 'renderer',
@@ -140,6 +143,36 @@ var BRANCH = (function()
 				vectors = vectors.vector(x + vector.get(0).x, y + vector.get(0).y, vector.get(0).z);
 			}
 			return vectors;
+		}
+
+		this.pointCloudObj = function(path, scale, position)
+		{
+			console.log(position.get(0).x);
+			var xmlhttp = new XMLHttpRequest();
+			xmlhttp.open("GET", path, false);
+			xmlhttp.send(null);
+			let lines = xmlhttp.responseText.split("\n");
+			let vector = BRANCH.vector();
+			for (let i = 0; i < lines.length; ++i)
+			{
+				let infos = lines[i].split(" ");
+				if (infos[0] == "v")
+				{
+					vector.vector(parseFloat(infos[1]) * scale + position.get(0).x, parseFloat(infos[2])  * scale + position.get(0).y, parseFloat(infos[3])  * scale + position.get(0).z);
+				}
+			}
+			console.log("Done");
+			return vector;
+		}
+
+		//
+		this.pointCloudPicture = function(path, size, vector)
+		{
+
+			for (let i = 0; i < 1500; ++i)
+			{
+				//scene.point(BRANCH.random(null, ))
+			}
 		}
 
 		return __engine.this;
@@ -397,12 +430,6 @@ var BRANCH = (function()
 			}
 			__engine.currentObject = id;
 			return  __engine.this;
-		}
-
-		//
-		this.render = function(mesh, type)
-		{
-			//
 		}
 
 		//
@@ -822,7 +849,7 @@ var BRANCH = (function()
 
 					____engine.grid.object
 						.line(vec)
-						.color(0xFFFFFF)
+						.color(0x555555)
 					;					
 				}
 
@@ -907,8 +934,8 @@ var BRANCH = (function()
 			this.update = function(id)
 			{
 				// Clear
-				this.clearGrid();
-				this.clearMarker();
+				____engine.this.clearGrid();
+				____engine.this.clearMarker();
 				
 				//
 				if (__engine.config.scene.landmark.enable == false) {
@@ -936,6 +963,27 @@ var BRANCH = (function()
 				
 				return ____engine.this;
 			}
+
+			//
+			this.enable = function()
+			{
+				__engine.config.scene.landmark.enable = true;
+				____engine.this.update(__engine.currentObject);
+				return ____engine.this;
+			}
+			
+			//
+			this.disable = function()
+			{
+				let tmp = __engine.currentObject;
+				____engine.this.clearGrid();
+				____engine.this.clearMarker();
+				__engine.camera.disableObject();
+				__engine.currentObject = tmp;
+				__engine.config.scene.landmark.enable = false;
+				return ____engine.this;
+			}
+
 
 			//
 			this.setMode = function(mode)
