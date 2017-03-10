@@ -841,30 +841,6 @@ var BRANCH = (function()
 			}
 
 			//
-			this.viewX = function()
-			{
-				let dist = Math.sqrt(Math.pow(___engine.perspective.camera.position.x, 2) + Math.pow(___engine.perspective.camera.position.y, 2) + Math.pow(___engine.perspective.camera.position.z, 2));
-
-				___engine.this.position(BRANCH.vector(dist, 0, 0));
-			}
-
-			//
-			this.viewY = function()
-			{
-				let dist = Math.sqrt(Math.pow(___engine.perspective.camera.position.x, 2) + Math.pow(___engine.perspective.camera.position.y, 2) + Math.pow(___engine.perspective.camera.position.z, 2));
-
-				___engine.this.position(BRANCH.vector(0, dist, 0));				
-			}
-
-			//
-			this.viewZ = function()
-			{
-				let dist = Math.sqrt(Math.pow(___engine.perspective.camera.position.x, 2) + Math.pow(___engine.perspective.camera.position.y, 2) + Math.pow(___engine.perspective.camera.position.z, 2));
-
-				___engine.this.position(BRANCH.vector(0, 0, dist));				
-			}
-
-			//
 			this.back = function()
 			{
 				return __engine.this;
