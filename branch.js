@@ -145,6 +145,29 @@ var BRANCH = (function()
 			return vectors;
 		}
 
+		this.star = function(size, branch, branch_rot)
+		{
+			branch = (typeof(branch) == 'undefined' ? 5 : branch);
+			branch_rot = (typeof(branch) == 'undefined' ? 2 : branch_rot);
+			let rot = (360 / branch) * branch_rot;
+			let angle = 90 + rot;
+
+			let lines = undefined;
+
+			for (let index = 0; index <= branch; ++index)
+			{
+				angle = (angle + rot) % 360;
+				let x = size * Math.cos(angle * Math.PI / 180);
+				let y = size * Math.sin(angle * Math.PI / 180);
+
+				if (lines == undefined)
+					lines = BRANCH.vector(x, y, 0);
+				else
+					lines.vector(x, y, 0);
+			}
+			return (lines);
+		}
+
 		this.pointCloudObj = function(path, scale, position)
 		{
 			console.log(position.get(0).x);
