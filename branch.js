@@ -236,7 +236,6 @@ var BRANCH = (function()
 			root: [],
 			change: [],
 			selected: [],
-			camera: [],
 			renderer: [],
 			landmark: null,
 			raycaster: null,
@@ -354,7 +353,8 @@ var BRANCH = (function()
 		//
 		this.render = function(idCamera, idRender, el)
 		{
-			let findCamera = $findKey(__engine.camera, idCamera);
+			let cameras = __engine.this.get(_enum.OBJECTS).get(_enum.CAMERA);
+			let findCamera = $findKey(cameras, idCamera);
 			if (findCamera == -1 || idRender == null || typeof(idRender) == 'undefined') {
 				return null;
 			}
@@ -383,29 +383,31 @@ var BRANCH = (function()
 				renderer.domElement.addEventListener('mousedown', function(e)
 				{
 					//
-					raycaster.setFromCamera(mouse, __engine.camera[findCamera].camera.get(_enum.CAMERA));
+					raycaster.setFromCamera(mouse, cameras[findCamera].mesh.get(_enum.CAMERA));
 
 					//
 					let mesh = __engine.this.get(_enum.OBJECTS).get(_enum.OBJECTS);
-					let meshs = [];
+					
 					for (let index in mesh) {
-						let intersects = raycaster.intersectObjects([mesh[index].mesh.get(_enum.MESH)]);
-						if (intersects.length > 0)
-						{	
-							//
-							__engine.this.select(mesh[index].mesh._name);
+						if (mesh[index].type != _enum.CAMERA) {
+							let intersects = raycaster.intersectObjects([mesh[index].mesh.get(_enum.MESH)]);
+							if (intersects.length > 0)
+							{	
+								//
+								__engine.this.select(mesh[index].mesh._name);
 
-							//
-							for (let index2 in __engine.selected) {
-								__engine.selected[index2](mesh[index].mesh, mesh[index].mesh.get(_enum.TYPE));
+								//
+								for (let index2 in __engine.selected) {
+									__engine.selected[index2](mesh[index].mesh, mesh[index].mesh.get(_enum.TYPE));
+								}
+								return ;
 							}
-							return ;
 						}
 					}
 				}, false);
 
 				//
-				__engine.camera[findCamera].camera.addControls(renderer);
+				cameras[findCamera].mesh.addControls(renderer);
 
 				//	
 				__engine.renderer.push({
@@ -416,7 +418,7 @@ var BRANCH = (function()
 				});
 				return __engine.this;
 			}
-			__engine.camera[findCamera].camera.removeControls();
+			cameras[findCamera].mesh.removeControls();
 			__engine.renderer[findRender].idCamera = idCamera;
 			return __engine.this;
 		}
@@ -455,9 +457,7 @@ var BRANCH = (function()
 				});
 				find = __engine.layer.length - 1;
 			}
-		    //__engine.layer[find].layer.add(__engine.camera.get(_enum.PERSPECTIVE));
-			//__engine.layer[find].layer.add(__engine.camera.get(_enum.ORTHOGRAPHIC));
-			__engine.currentLayer = id;
+		    __engine.currentLayer = id;
 			__engine.currentObject = null;
 			$extend(__engine.this, __engine.layer[find].objects, true, ['get']);
 			return __engine.this;
@@ -511,22 +511,6 @@ var BRANCH = (function()
 			}
 			current.remove(objects);
 			return __engine.this;
-		}
-
-		//
-		this.camera = function(id)
-		{
-			let find = $findKey(__engine.camera, id);
-			if (find != -1) {
-				return null;
-			}
-			let camera = new $camera;
-			camera.init();
-			__engine.camera.push({
-				id: id,
-				camera: camera,
-			});
-			return camera;
 		}
 
 		//
@@ -590,16 +574,6 @@ var BRANCH = (function()
 					}
 					return __engine.root[find].layer;
 				break;
-				case _enum.CAMERA:
-					if (id == null || typeof(id) == 'undefined') {
-						return __engine.camera;
-					}
-					find = $findKey(__engine.camera, id);
-					if (find == -1) {
-						return null;
-					}
-					return __engine.camera[find];
-				break;
 				case _enum.LANDMARK:
 					return __engine.landmark;
 				break;
@@ -607,269 +581,7 @@ var BRANCH = (function()
 					return null;
 			}
 		}
-	
-		//
-		const $screen = function()
-		{
-			let ___engine = {
-				this: this,
-				type: _enum.SCREEN,
-			}
 
-			//
-			this.init = function()
-			{
-				delete ___engine.this.init;
-				return ___engine.this;
-			}
-
-			//
-			this.get = function(type, id, full)
-			{
-				let find;
-				switch (type)
-				{
-					default:
-						return null;
-				}
-			}
-		}
-
-		//
-		const $camera = function()
-		{
-			let ___engine = {
-				this: this,
-				type: _enum.CAMERA,
-				perspective: {
-					camera: null,
-					controls: {
-						scene: null,
-						object: null,
-					},
-				},
-				orthographic: {
-					camera: null,
-					controls: {
-						scene: null,
-						object: null,
-					},
-				},
-				currentType: null,
-			}
-
-			//
-			this.init = function()
-			{
-				let initCamera = function(type)
-				{
-					//
-					$extend(___engine[type].camera.position, __engine.config.scene.camera.position);
-					$extend(___engine[type].camera.rotation, __engine.config.scene.camera.rotation);
-					
-					/*** Black magic ***/
-					for (let index in ___engine[type].camera) {
-						if (typeof(___engine[type].camera[index]) != 'function' && typeof(___engine.this[index]) == 'undefined' && index[0] != '_') {
-							$copyProperty(___engine, index, function (param) {
-								let name = arguments.callee.myname;
-								if (typeof(___engine.orthographic.camera[name]) != 'undefined') {
-									___engine.orthographic.camera[name] = param;
-									___engine.orthographic.camera.updateProjectionMatrix();
-								}
-								if (typeof(___engine.perspective.camera[name]) != 'undefined') {
-									___engine.perspective.camera[name] = param;
-									___engine.perspective.camera.updateProjectionMatrix();
-								}
-								return ___engine.this;
-							});
-							$addPrefix(___engine, index, ___engine[type].camera);
-						}
-					}
-					/*** END ***/
-				}
-
-				//
-				___engine.orthographic.camera = new THREE.OrthographicCamera(__engine.config.scene.camera.left, __engine.config.scene.camera.right, __engine.config.scene.camera.top, __engine.config.scene.camera.bottom, __engine.config.scene.camera.near, __engine.config.scene.camera.far);
-				___engine.perspective.camera = new THREE.PerspectiveCamera(__engine.config.scene.camera.fov, __engine.config.scene.camera.aspect, __engine.config.scene.camera.near, __engine.config.scene.camera.far);
-				
-				//
-				___engine.currentType = _enum.PERSPECTIVE;
-
-				//
-				initCamera(_enum.PERSPECTIVE);
-				initCamera(_enum.ORTHOGRAPHIC);
-
-				//
-				$addPrefix(___engine, 'position', ___engine.perspective.camera);
-				$addPrefix(___engine, 'rotation', ___engine.perspective.camera);
-				
-				//
-				$addVector(___engine, 'position', ___engine.perspective.camera.position);
-				$addVector(___engine, 'rotation', ___engine.perspective.camera.rotation);
-
-				delete ___engine.this.init;
-				return ___engine.this;
-			}
-
-			//
-			this.addControls = function(renderer)
-			{
-				let initControls = function(type)
-				{
-					//
-					___engine[type].controls.scene = new THREE.TrackballControls(___engine[type].camera, renderer.domElement);
-					$extend(___engine[type].controls.scene, __engine.config.scene.controls.scene.property, true);
-					___engine[type].controls.scene.addEventListener('change', function(e)
-					{
-						//
-						___engine.this.position(_engine.this.vector(e.target.object.position.x, e.target.object.position.y, e.target.object.position.z));
-
-						//
-						for (var index in __engine.change) {
-							__engine.change[index](___engine.this.get(_enum.CAMERA), _enum.CAMERA);
-						}
-					});
-
-					//
-					___engine[type].controls.object = new THREE.TransformControls(___engine[type].camera, renderer.domElement);
-					$extend(___engine[type].controls.object, __engine.config.scene.controls.object.property, true);
-					___engine[type].controls.object.addEventListener('change', function(e)
-					{
-						//
-						let mesh = __engine.this.get(_enum.OBJECTS).get(_enum.OBJECTS, e.target.object.name);
-						mesh.position(BRANCH.vector(e.target.object.position.x, e.target.object.position.y, e.target.object.position.z));
-						mesh.rotation(BRANCH.vector(e.target.object.rotation.x, e.target.object.rotation.y, e.target.object.rotation.z));
-						mesh.scale(BRANCH.vector(e.target.object.scale.x, e.target.object.scale.y, e.target.object.scale.z));
-					
-						//
-						for (var index in __engine.change) {
-							__engine.change[index](mesh, mesh.get(_enum.TYPE));
-						}
-					});
-
-					__engine.this.get(_enum.CURRENT).add(___engine[type].controls.object);
-				}
-				initControls(_enum.PERSPECTIVE);
-				initControls(_enum.ORTHOGRAPHIC);
-				return ___engine.this;
-			}
-
-			//
-			this.removeControls = function()
-			{
-				delete ___engine[_enum.PERSPECTIVE].controls.scene;
-				delete ___engine[_enum.PERSPECTIVE].controls.object;
-				delete ___engine[_enum.ORTHOGRAPHIC].controls.scene;
-				delete ___engine[_enum.ORTHOGRAPHIC].controls.object;
-				return ___engine.this;
-			}
-
-			//
-			this.disableObject = function()
-			{
-				___engine.orthographic.controls.object.detach();
-				___engine.perspective.controls.object.detach();
-				return ___engine.this;
-			}
-
-			//
-			this.enableObject = function(object)
-			{
-				if (___engine.orthographic.controls.object == null) {
-					return ;
-				}
-				___engine.orthographic.controls.object.attach(object);
-				___engine.perspective.controls.object.attach(object);
-				return ___engine.this;
-			}
-
-			//
-			this.switch = function(type)
-			{
-				___engine.currentType = type;
-				return ___engine.this;
-			}
-
-			//
-			this.position = function(vector)
-			{
-				if (typeof(vector) != 'object') {
-					return null;
-				}
-				vector = vector.get(0);
-				$extend(___engine.perspective.camera.position, vector);
-				$extend(___engine.orthographic.camera.position, vector);
-				___engine.perspective.camera.updateProjectionMatrix();
-				___engine.orthographic.camera.updateProjectionMatrix();
-				return  ___engine.this;
-			}
-
-			//
-			this.rotation = function(vector)
-			{
-				if (typeof(vector) != 'object') {
-					return null;
-				}
-				vector = vector.get(0);
-
-				//
-				let pos_rot = ___engine.perspective.camera.position;
-				
-				//Rot Angle X
-				// Point Y, Z
-
-				pos_rot.z = pos_rot.z * Math.cos(vector.x) - pos_rot.y * Math.sin(vector.x)
-				pos_rot.y = pos_rot.z * Math.sin(vector.x) + pos_rot.y * Math.cos(vector.x)
-
-				//Rot Angle Y
-				// Point X, Z
-
-				pos_rot.x = pos_rot.x * Math.cos(vector.y) - pos_rot.z * Math.sin(vector.y)
-				pos_rot.z = pos_rot.x * Math.sin(vector.y) + pos_rot.z * Math.cos(vector.y)
-
-				//Rot Angle Z
-				// Point X, Y
-
-				pos_rot.x = pos_rot.x * Math.cos(vector.z) - pos_rot.y * Math.sin(vector.z)
-				pos_rot.y = pos_rot.x * Math.sin(vector.z) + pos_rot.y * Math.cos(vector.z)
-
-				$extend(___engine.perspective.camera.position, pos_rot);
-				$extend(___engine.orthographic.camera.position, pos_rot);
-				___engine.perspective.camera.updateProjectionMatrix();
-				___engine.orthographic.camera.updateProjectionMatrix();
-				return  ___engine.this;
-			}
-
-			//
-			this.back = function()
-			{
-				return __engine.this;
-			}
-
-			//
-			this.get = function(type, id, full)
-			{
-				let find;
-				switch (type)
-				{
-					case _enum.CAMERA:
-						return ___engine[___engine.currentType].camera;
-					break;
-					case _enum.CONTROLS:
-						return ___engine[___engine.currentType].controls;
-					break;
-					case _enum.ORTHOGRAPHIC:
-						return ___engine[_enum.ORTHOGRAPHIC].camera;
-					break;
-					case _enum.PERSPECTIVE:
-						return ___engine[_enum.PERSPECTIVE].camera;
-					break;
-					default:
-						return null;
-				}
-			}
-		}
-	
 		//
 		const $landmark = function()
 		{
@@ -1058,25 +770,29 @@ var BRANCH = (function()
 				let find = $findKey(objects, id);
 				if (find == -1) {
 					for (let index in __engine.renderer) {
-						for (let index2 in __engine.camera) {
-							if (__engine.renderer[index].idCamera == __engine.camera[index2].id) {
-								__engine.camera[index2].camera.disableObject();
+						let camera = layer.get(_enum.CAMERA);
+						for (let index2 in camera) {
+							if (__engine.renderer[index].idCamera == camera[index2].id) {
+								camera[index2].mesh.disableObject();
 							}
 						}
 					}
-					//__engine.camera.disableObject();
 					return ____engine.this;
 				}
 				
 				//
 				for (let index in __engine.renderer) {
-					for (let index2 in __engine.camera) {
-						if (__engine.renderer[index].idCamera == __engine.camera[index2].id) {
-							__engine.camera[index2].camera.enableObject(objects[find].mesh.get(_enum.MESH));
+					let camera = layer.get(_enum.CAMERA);
+					for (let index2 in camera) {
+						if (__engine.renderer[index].idCamera == camera[index2].id) {
+							if (objects[find].type != _enum.CAMERA) {
+								camera[index2].mesh.enableObject(objects[find].mesh.get(_enum.MESH));
+							} else {
+								camera[index2].mesh.disableObject();
+							}
 						}
 					}
 				}
-				//__engine.camera.enableObject(objects[find].mesh.get(_enum.MESH));
 				
 				//
 				let geometry = ____engine.this.getGeometry(objects[find]);
@@ -1101,7 +817,10 @@ var BRANCH = (function()
 				let tmp = __engine.currentObject;
 				____engine.this.clearGrid();
 				____engine.this.clearMarker();
-				__engine.camera.disableObject();
+				let camera = __engine.this.get(_enum.OBJECTS).get(_enum.CAMERA);
+				for (let index in camera) {
+					camera[index].mesh.disableObject();
+				}
 				__engine.currentObject = tmp;
 				__engine.config.scene.landmark.enable = false;
 				return ____engine.this;
@@ -1110,15 +829,16 @@ var BRANCH = (function()
 			//
 			this.setMode = function(mode)
 			{
-				for (let index in __engine.camera) {
+				let camera = __engine.this.get(_enum.OBJECTS).get(_enum.CAMERA);
+				for (let index in camera) {
 					if (mode == _enum.ORIGIN) {
-						__engine.camera[index].camera.get(_enum.CONTROLS).object.setSpace('local');
+						camera[index].mesh.get(_enum.CONTROLS).object.setSpace('local');
 					}
 					if (mode == _enum.AXIS) {
-						__engine.camera[index].camera.get(_enum.CONTROLS).object.setSpace('world');
+						camera[index].mesh.get(_enum.CONTROLS).object.setSpace('world');
 					}
 					if (mode == _enum.SCALE || mode == _enum.ROTATE || mode == _enum.TRANSLATE) {
-						__engine.camera[index].camera.get(_enum.CONTROLS).object.setMode(mode);
+						camera[index].mesh.get(_enum.CONTROLS).object.setMode(mode);
 					}
 				}
 				return ____engine.this;
@@ -1304,6 +1024,18 @@ var BRANCH = (function()
 						mesh: mesh,
 					}
 				}, id);
+			}
+
+			//
+			this.camera = function(id)
+			{
+				id = (typeof(id) != 'string' ? $getId(___engine.mesh, _enum.CAMERA) : id);
+				let find = $findKey(___engine.mesh, id);
+				if (find != -1) {
+					return null;
+				}
+				let camera = new $camera;
+				return camera.init(id);
 			}
 
 			//
@@ -1656,6 +1388,7 @@ var BRANCH = (function()
 			this.get = function(type, id, full)
 			{
 				let find;
+				let ret = [];
 				switch (type)
 				{
 					case _enum.OBJECTS:
@@ -1670,6 +1403,48 @@ var BRANCH = (function()
 							return ___engine.mesh[find];
 						}
 						return ___engine.mesh[find].mesh;
+					break;
+					case _enum.CAMERA:
+						for (let index in ___engine.mesh) {
+							if (___engine.mesh[index].type == type) {
+								if (id != null && ___engine.mesh[index].id == id) {
+									if (typeof(full) == 'boolean' && full == true) {
+										return ___engine.mesh[index];
+									}
+									return ___engine.mesh[index].mesh;
+								}
+								ret.push(___engine.mesh[index]);
+							}
+						}
+						return ret;
+					break;
+					case _enum.MERGE:
+						for (let index in ___engine.mesh) {
+							if (___engine.mesh[index].type == type) {
+								if (id != null && ___engine.mesh[index].id == id) {
+									if (typeof(full) == 'boolean' && full == true) {
+										return ___engine.mesh[index];
+									}
+									return ___engine.mesh[index].mesh;
+								}
+								ret.push(___engine.mesh[index]);
+							}
+						}
+						return ret;
+					break;
+					case _enum.MESH:
+						for (let index in ___engine.mesh) {
+							if (___engine.mesh[index].type == type) {
+								if (id != null && ___engine.mesh[index].id == id) {
+									if (typeof(full) == 'boolean' && full == true) {
+										return ___engine.mesh[index];
+									}
+									return ___engine.mesh[index].mesh;
+								}
+								ret.push(___engine.mesh[index]);
+							}
+						}
+						return ret;
 					break;
 					default:
 						return null;
@@ -1691,6 +1466,313 @@ var BRANCH = (function()
 				let build = new $mesh;
 				build.init(id, datas.type, datas.mesh, datas.callback);
 				return build;
+			}
+
+			//
+			const $camera = function()
+			{
+				let ____engine = {
+					id: '',
+					this: this,
+					type: _enum.CAMERA,
+					perspective: {
+						camera: null,
+						controls: {
+							scene: null,
+							object: null,
+						},
+					},
+					orthographic: {
+						camera: null,
+						controls: {
+							scene: null,
+							object: null,
+						},
+					},
+					currentType: null,
+				}
+
+				//
+				this.init = function(id)
+				{
+					let initCamera = function(type)
+					{
+						//
+						____engine[type].camera.name = id;
+
+						//
+						$extend(____engine[type].camera.position, __engine.config.scene.camera.position);
+						$extend(____engine[type].camera.rotation, __engine.config.scene.camera.rotation);
+
+						/*** Black magic ***/
+						for (let index in ____engine[type].camera) {
+							if (typeof(____engine[type].camera[index]) != 'function' && typeof(____engine.this[index]) == 'undefined' && index[0] != '_') {
+								$copyProperty(____engine, index, function (param) {
+									let name = arguments.callee.myname;
+									if (typeof(____engine.orthographic.camera[name]) != 'undefined') {
+										____engine.orthographic.camera[name] = param;
+										____engine.orthographic.camera.updateProjectionMatrix();
+									}
+									if (typeof(____engine.perspective.camera[name]) != 'undefined') {
+										____engine.perspective.camera[name] = param;
+										____engine.perspective.camera.updateProjectionMatrix();
+									}
+									return ____engine.this;
+								});
+								$addPrefix(____engine, index, ____engine[type].camera);
+							}
+						}
+						/*** END ***/
+					}
+
+					//
+					____engine.id = id;
+					____engine.currentType = _enum.PERSPECTIVE;
+					
+					//
+					___engine.mesh.push({
+						id: id,
+						type: ____engine.type,	
+						mesh: ____engine.this,
+						merged: false,
+					});
+
+					//
+					____engine.orthographic.camera = new THREE.OrthographicCamera(__engine.config.scene.camera.left, __engine.config.scene.camera.right, __engine.config.scene.camera.top, __engine.config.scene.camera.bottom, __engine.config.scene.camera.near, __engine.config.scene.camera.far);
+					____engine.perspective.camera = new THREE.PerspectiveCamera(__engine.config.scene.camera.fov, __engine.config.scene.camera.aspect, __engine.config.scene.camera.near, __engine.config.scene.camera.far);
+					
+					//
+					if (___engine.root == true) {
+						let find = $findKey(__engine.root, ___engine.layer);
+						if (find == -1) {
+							return null;
+						}
+						__engine.root[find].layer.add(____engine.orthographic.camera);
+						__engine.root[find].layer.add(____engine.perspective.camera);
+					} else {
+						let find = $findKey(__engine.layer, ___engine.layer);
+						if (find == -1) {
+							return null;
+						}
+						__engine.layer[find].layer.add(____engine.orthographic.camera);
+						__engine.layer[find].layer.add(____engine.perspective.camera);
+					}
+
+					//
+					initCamera(_enum.PERSPECTIVE);
+					initCamera(_enum.ORTHOGRAPHIC);
+
+					//
+					$addPrefix(____engine, 'name', ____engine.perspective.camera);
+					$addPrefix(____engine, 'position', ____engine.perspective.camera);
+					$addPrefix(____engine, 'rotation', ____engine.perspective.camera);
+					
+					//
+					$addVector(____engine, 'position', ____engine.perspective.camera.position);
+					$addVector(____engine, 'rotation', ____engine.perspective.camera.rotation);
+
+					delete ____engine.this.init;
+					return ____engine.this;
+				}
+
+				//
+				this.addControls = function(renderer)
+				{
+					let initControls = function(type)
+					{
+						//
+						____engine[type].controls.scene = new THREE.TrackballControls(____engine[type].camera, renderer.domElement);
+						$extend(____engine[type].controls.scene, __engine.config.scene.controls.scene.property, true);
+						____engine[type].controls.scene.addEventListener('change', function(e)
+						{
+							//
+							____engine.this.position(_engine.this.vector(e.target.object.position.x, e.target.object.position.y, e.target.object.position.z));
+
+							//
+							for (var index in __engine.change) {
+								__engine.change[index](____engine.this.get(_enum.CAMERA), _enum.CAMERA);
+							}
+						});
+
+						//
+						____engine[type].controls.object = new THREE.TransformControls(____engine[type].camera, renderer.domElement);
+						$extend(____engine[type].controls.object, __engine.config.scene.controls.object.property, true);
+						____engine[type].controls.object.addEventListener('change', function(e)
+						{
+							//
+							let mesh = __engine.this.get(_enum.OBJECTS).get(_enum.OBJECTS, e.target.object.name);
+							mesh.position(BRANCH.vector(e.target.object.position.x, e.target.object.position.y, e.target.object.position.z));
+							mesh.rotation(BRANCH.vector(e.target.object.rotation.x, e.target.object.rotation.y, e.target.object.rotation.z));
+							mesh.scale(BRANCH.vector(e.target.object.scale.x, e.target.object.scale.y, e.target.object.scale.z));
+						
+							//
+							for (var index in __engine.change) {
+								__engine.change[index](mesh, mesh.get(_enum.TYPE));
+							}
+						});
+
+						__engine.this.get(_enum.CURRENT).add(____engine[type].controls.object);
+					}
+					initControls(_enum.PERSPECTIVE);
+					initControls(_enum.ORTHOGRAPHIC);
+					return ____engine.this;
+				}
+
+				//
+				this.name = function(id)
+				{
+					if (id == null || typeof(id) == 'undefined') {
+						return ____engine.id;
+					}
+					let find = $findKey(___engine.mesh, id);
+					if (find != -1) {
+						return null;
+					}
+					find = $findKey(___engine.mesh, ____engine.id);
+					___engine.mesh[find].id = id;
+					____engine.perspective.camera.name = id;
+					____engine.orthographic.camera.name = id;
+					for (let index in __engine.renderer) {
+						if (__engine.renderer[index].idCamera == ____engine.id) {
+							__engine.renderer[index].idCamera = id;
+						}
+					}
+					____engine.id = id;
+					return ____engine.this;
+				}
+
+				//
+				this.removeControls = function()
+				{
+					delete ____engine[_enum.PERSPECTIVE].controls.scene;
+					delete ____engine[_enum.PERSPECTIVE].controls.object;
+					delete ____engine[_enum.ORTHOGRAPHIC].controls.scene;
+					delete ____engine[_enum.ORTHOGRAPHIC].controls.object;
+					return ____engine.this;
+				}
+
+				//
+				this.disableObject = function()
+				{
+					____engine.orthographic.controls.object.detach();
+					____engine.perspective.controls.object.detach();
+					return ____engine.this;
+				}
+
+				//
+				this.enableObject = function(object)
+				{
+					if (____engine.orthographic.controls.object == null) {
+						return ;
+					}
+					____engine.orthographic.controls.object.attach(object);
+					____engine.perspective.controls.object.attach(object);
+					return ____engine.this;
+				}
+
+				//
+				this.switch = function(type)
+				{
+					____engine.currentType = type;
+					return ____engine.this;
+				}
+
+				//
+				this.position = function(vector)
+				{
+					if (typeof(vector) != 'object') {
+						return null;
+					}
+					vector = vector.get(0);
+					$extend(____engine.perspective.camera.position, vector);
+					$extend(____engine.orthographic.camera.position, vector);
+					____engine.perspective.camera.updateProjectionMatrix();
+					____engine.orthographic.camera.updateProjectionMatrix();
+					return  ____engine.this;
+				}
+
+				//
+				this.rotation = function(vector)
+				{
+					if (typeof(vector) != 'object') {
+						return null;
+					}
+					vector = vector.get(0);
+
+					//
+					let pos_rot = ____engine.perspective.camera.position;
+					
+					//Rot Angle X
+					// Point Y, Z
+
+					pos_rot.z = pos_rot.z * Math.cos(vector.x) - pos_rot.y * Math.sin(vector.x)
+					pos_rot.y = pos_rot.z * Math.sin(vector.x) + pos_rot.y * Math.cos(vector.x)
+
+					//Rot Angle Y
+					// Point X, Z
+
+					pos_rot.x = pos_rot.x * Math.cos(vector.y) - pos_rot.z * Math.sin(vector.y)
+					pos_rot.z = pos_rot.x * Math.sin(vector.y) + pos_rot.z * Math.cos(vector.y)
+
+					//Rot Angle Z
+					// Point X, Y
+
+					pos_rot.x = pos_rot.x * Math.cos(vector.z) - pos_rot.y * Math.sin(vector.z)
+					pos_rot.y = pos_rot.x * Math.sin(vector.z) + pos_rot.y * Math.cos(vector.z)
+
+					$extend(____engine.perspective.camera.position, pos_rot);
+					$extend(____engine.orthographic.camera.position, pos_rot);
+					____engine.perspective.camera.updateProjectionMatrix();
+					____engine.orthographic.camera.updateProjectionMatrix();
+					return  ____engine.this;
+				}
+
+				//
+				this.back = function()
+				{
+					return __engine.this;
+				}
+
+				//
+				this.remove = function()
+				{
+					let find2 = (___engine.root == true ? $findKey(__engine.root, ___engine.layer) : $findKey(__engine.layer, ___engine.layer));
+					let find = $findKey(___engine.mesh, ____engine.id);
+					if (find == -1 || find2 == -1) {
+						return null;
+					}
+					___engine.mesh.splice(find, 1);
+					if (___engine.root == true) {
+						__engine.root[find2].layer.remove(____engine.mesh);
+					} else {
+						__engine.layer[find2].layer.remove(____engine.mesh);
+					}
+					__engine.this.select(null, !___engine.root);
+					return ___engine.this;
+				}
+
+				//
+				this.get = function(type, id, full)
+				{
+					let find;
+					switch (type)
+					{
+						case _enum.CAMERA:
+							return ____engine[____engine.currentType].camera;
+						break;
+						case _enum.CONTROLS:
+							return ____engine[____engine.currentType].controls;
+						break;
+						case _enum.ORTHOGRAPHIC:
+							return ____engine[_enum.ORTHOGRAPHIC].camera;
+						break;
+						case _enum.PERSPECTIVE:
+							return ____engine[_enum.PERSPECTIVE].camera;
+						break;
+						default:
+							return null;
+					}
+				}
 			}
 
 			//
@@ -2067,12 +2149,12 @@ var BRANCH = (function()
 				//
 				this.name = function(id)
 				{
-					let find = $findKey(___engine.mesh, id);
-					if (typeof(id) == 'string') {
-						return null;
-					}
-					if (find == -1) {
+					if (id == null || typeof(id) == 'undefined') {
 						return ____engine.mesh.name;
+					}
+					let find = $findKey(___engine.mesh, id);
+					if (find != -1) {
+						return null;
 					}
 					find = $findKey(___engine.mesh, ____engine.mesh.name);
 					___engine.mesh[find].id = id;
@@ -2211,7 +2293,7 @@ var BRANCH = (function()
 				//
 				this.remove = function()
 				{
-					let find = $findKey(____engine.merged, ____engine.mesh.name);
+					let find = $findKey(___engine.mesh, ____engine.mesh.name);
 					if (find == -1) {
 						return null;
 					}
@@ -2526,14 +2608,14 @@ var BRANCH = (function()
 		{
 			let scene = _engine.scene[index].scene;
 			let renderer = scene.get(_enum.RENDERER);
-			let camera = scene.get(_enum.CAMERA);
+			let objects = scene.get(_enum.OBJECTS).get(_enum.CAMERA);
 			let layer = scene.get(_enum.LAYER);
 			let root = scene.get(_enum.ROOT);
 			for (var index2 in renderer) {
-				let find = $findKey(camera, renderer[index2].idCamera);
+				let find = $findKey(objects, renderer[index2].idCamera);
 				if (find != -1) {
-					let _camera = camera[find].camera;
-					let controls = _camera.get(_enum.CONTROLS)
+					let camera = objects[find].mesh;
+					let controls = camera.get(_enum.CONTROLS)
 					if (controls.scene != null) {
 						controls.scene.update();
 					}
@@ -2543,12 +2625,12 @@ var BRANCH = (function()
 
 					for (let index3 in layer) {
 						renderer[index2].renderer.clearDepth();
-						renderer[index2].renderer.render(layer[index3].layer, _camera.get(_enum.CAMERA));
+						renderer[index2].renderer.render(layer[index3].layer, camera.get(_enum.CAMERA));
 					}
 
 					for (let index3 in root) {
 						renderer[index2].renderer.clearDepth();
-						renderer[index2].renderer.render(root[index3].layer, _camera.get(_enum.CAMERA));
+						renderer[index2].renderer.render(root[index3].layer, camera.get(_enum.CAMERA));
 					}
 				}
 			}
