@@ -149,6 +149,8 @@ var BRANCH = (function()
 		this.star = function(size, branch, branch_rot)
 		{
 			branch = (typeof(branch) == 'undefined' ? 5 : branch);
+			branch_rot = (typeof(branch) == 'undefined' ? 2 : branch_rot);
+
 			let rot = (360 / branch) * branch_rot;
 			let angle = 90 + rot;
 
