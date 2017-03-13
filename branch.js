@@ -34,7 +34,7 @@ var BRANCH = (function()
 		IDOBJECT: 'idobject',
 		IDLAYER: 'idlayer',
 		OBJECTS: 'objects',
-		
+
 		PERSPECTIVE: 'perspective',
 		ORTHOGRAPHIC: 'orthographic',
 		CONTROLS: 'controls',
@@ -150,7 +150,6 @@ var BRANCH = (function()
 		{
 			branch = (typeof(branch) == 'undefined' ? 5 : branch);
 			branch_rot = (typeof(branch) == 'undefined' ? 2 : branch_rot);
-
 			let rot = (360 / branch) * branch_rot;
 			let angle = 90 + rot;
 
@@ -371,20 +370,28 @@ var BRANCH = (function()
 				el.appendChild(renderer.domElement);
 				
 				//
+				/*
 				let mouse = new THREE.Vector2();
 				renderer.domElement.addEventListener('mousemove', function(e) {
 					mouse.x = (e.clientX / renderer.domElement.width) * 2 - 1;
-					mouse.y = -(e.clientY / renderer.domElement.height) * 2 + 1; // Enfaite la sa bug pour la selection car quand on zoom avec la camera la largeur n'est plus valide je pense
+					mouse.y = ((e.clientY / renderer.domElement.height) * 2 + 1) * -1;
 				}, false);
+				*/
 
 				//
-				let raycaster = new THREE.Raycaster();
 				renderer.domElement.addEventListener('contextmenu', function(e) {
 					__engine.this.select(null);
 				});
 				renderer.domElement.addEventListener('mousedown', function(e)
 				{
 					//
+					let rect = e.target.getBoundingClientRect();
+					let mouse = new THREE.Vector2();
+					mouse.x = ((e.clientX - rect.left) / renderer.domElement.width) * 2 - 1;
+					mouse.y = -((e.clientY - rect.top) / renderer.domElement.height) * 2 + 1;
+				
+					//
+					let raycaster = new THREE.Raycaster();
 					raycaster.setFromCamera(mouse, cameras[findCamera].mesh.get(_enum.CAMERA));
 
 					//
@@ -392,6 +399,7 @@ var BRANCH = (function()
 					
 					for (let index in mesh) {
 						if (mesh[index].type != _enum.CAMERA) {
+							console.log(mesh[index]);
 							let intersects = raycaster.intersectObjects([mesh[index].mesh.get(_enum.MESH)]);
 							if (intersects.length > 0)
 							{	
@@ -409,15 +417,19 @@ var BRANCH = (function()
 				}, false);
 
 				//
-				cameras[findCamera].mesh.addControls(renderer);
-
-				//	
-				__engine.renderer.push({
+				let rendererObject = {
 					id: idRender,
 					idCamera: idCamera,
 					renderer: renderer,
 					el: el,
-				});
+					layer: new THREE.Scene(),
+				};
+
+				cameras[findCamera].mesh.addControls(rendererObject);
+				
+				//
+				__engine.renderer.push(rendererObject);
+
 				return __engine.this;
 			}
 			cameras[findCamera].mesh.removeControls();
@@ -833,15 +845,7 @@ var BRANCH = (function()
 			{
 				let camera = __engine.this.get(_enum.OBJECTS).get(_enum.CAMERA);
 				for (let index in camera) {
-					if (mode == _enum.ORIGIN) {
-						camera[index].mesh.get(_enum.CONTROLS).object.setSpace('local');
-					}
-					if (mode == _enum.AXIS) {
-						camera[index].mesh.get(_enum.CONTROLS).object.setSpace('world');
-					}
-					if (mode == _enum.SCALE || mode == _enum.ROTATE || mode == _enum.TRANSLATE) {
-						camera[index].mesh.get(_enum.CONTROLS).object.setMode(mode);
-					}
+					camera[index].mesh.setMode(mode);
 				}
 				return ____engine.this;
 			}
@@ -1418,6 +1422,9 @@ var BRANCH = (function()
 								ret.push(___engine.mesh[index]);
 							}
 						}
+						if (id != null) {
+							return null;
+						}
 						return ret;
 					break;
 					case _enum.MERGE:
@@ -1432,6 +1439,9 @@ var BRANCH = (function()
 								ret.push(___engine.mesh[index]);
 							}
 						}
+						if (id != null) {
+							return null;
+						}
 						return ret;
 					break;
 					case _enum.MESH:
@@ -1445,6 +1455,9 @@ var BRANCH = (function()
 								}
 								ret.push(___engine.mesh[index]);
 							}
+						}
+						if (id != null) {
+							return null;
 						}
 						return ret;
 					break;
@@ -1477,6 +1490,7 @@ var BRANCH = (function()
 					id: '',
 					this: this,
 					type: _enum.CAMERA,
+					idRender: '',
 					perspective: {
 						camera: null,
 						controls: {
@@ -1578,12 +1592,12 @@ var BRANCH = (function()
 				}
 
 				//
-				this.addControls = function(renderer)
+				this.addControls = function(rendererObject)
 				{
 					let initControls = function(type)
 					{
 						//
-						____engine[type].controls.scene = new THREE.TrackballControls(____engine[type].camera, renderer.domElement);
+						____engine[type].controls.scene = new THREE.TrackballControls(____engine[type].camera, rendererObject.renderer.domElement);
 						$extend(____engine[type].controls.scene, __engine.config.scene.controls.scene.property, true);
 						____engine[type].controls.scene.addEventListener('change', function(e)
 						{
@@ -1592,12 +1606,12 @@ var BRANCH = (function()
 
 							//
 							for (var index in __engine.change) {
-								__engine.change[index](____engine.this.get(_enum.CAMERA), _enum.CAMERA);
+								__engine.change[index](____engine.this, _enum.CAMERA);
 							}
 						});
 
 						//
-						____engine[type].controls.object = new THREE.TransformControls(____engine[type].camera, renderer.domElement);
+						____engine[type].controls.object = new THREE.TransformControls(____engine[type].camera, rendererObject.renderer.domElement);
 						$extend(____engine[type].controls.object, __engine.config.scene.controls.object.property, true);
 						____engine[type].controls.object.addEventListener('change', function(e)
 						{
@@ -1612,8 +1626,6 @@ var BRANCH = (function()
 								__engine.change[index](mesh, mesh.get(_enum.TYPE));
 							}
 						});
-
-						__engine.this.get(_enum.CURRENT).add(____engine[type].controls.object);
 					}
 					initControls(_enum.PERSPECTIVE);
 					initControls(_enum.ORTHOGRAPHIC);
@@ -1650,6 +1662,24 @@ var BRANCH = (function()
 					delete ____engine[_enum.PERSPECTIVE].controls.object;
 					delete ____engine[_enum.ORTHOGRAPHIC].controls.scene;
 					delete ____engine[_enum.ORTHOGRAPHIC].controls.object;
+					return ____engine.this;
+				}
+
+				//
+				this.setMode = function(mode)
+				{
+					if (mode == _enum.ORIGIN) {
+						____engine[_enum.PERSPECTIVE].controls.object.setSpace('local');
+						____engine[_enum.ORTHOGRAPHIC].controls.object.setSpace('local');
+					}
+					if (mode == _enum.AXIS) {
+						____engine[_enum.PERSPECTIVE].controls.object.setSpace('world');
+						____engine[_enum.ORTHOGRAPHIC].controls.object.setSpace('world');
+					}
+					if (mode == _enum.SCALE || mode == _enum.ROTATE || mode == _enum.TRANSLATE) {
+						____engine[_enum.PERSPECTIVE].controls.object.setMode(mode);
+						____engine[_enum.ORTHOGRAPHIC].controls.object.setMode(mode);
+					}
 					return ____engine.this;
 				}
 
@@ -1764,6 +1794,9 @@ var BRANCH = (function()
 						break;
 						case _enum.CONTROLS:
 							return ____engine[____engine.currentType].controls;
+						break;
+						case _enum.TYPE:
+							return ____engine.currentType;
 						break;
 						case _enum.ORTHOGRAPHIC:
 							return ____engine[_enum.ORTHOGRAPHIC].camera;
@@ -1895,11 +1928,12 @@ var BRANCH = (function()
 				//
 				this.texture = function(url)
 				{
-					// À TESTER
-					// Mettre un système pour charcher la texture en externe ou entrer l'url pour le charger ici
 					let loader = new THREE.TextureLoader();
 					loader.load(url, function(texture) {
-						____engine.this.map(texture);
+						let material = new THREE.MeshPhongMaterial({
+							map: texture,
+						});
+						____engine.mesh.material = material;
 					});	
 					return ____engine.this;
 				}
@@ -2615,8 +2649,11 @@ var BRANCH = (function()
 			let root = scene.get(_enum.ROOT);
 			for (var index2 in renderer) {
 				let find = $findKey(objects, renderer[index2].idCamera);
-				if (find != -1) {
+				if (find != -1)
+				{
 					let camera = objects[find].mesh;
+				
+					//
 					let controls = camera.get(_enum.CONTROLS)
 					if (controls.scene != null) {
 						controls.scene.update();
@@ -2625,11 +2662,22 @@ var BRANCH = (function()
 						controls.object.update();
 					}
 
+					//
 					for (let index3 in layer) {
 						renderer[index2].renderer.clearDepth();
 						renderer[index2].renderer.render(layer[index3].layer, camera.get(_enum.CAMERA));
 					}
 
+					//
+					renderer[index2].layer.children.forEach(function(object) {
+						object.remove();
+					});
+					renderer[index2].layer.children = [];
+					renderer[index2].layer.add(camera.get(_enum.CONTROLS).object);
+					renderer[index2].renderer.clearDepth();
+					renderer[index2].renderer.render(renderer[index2].layer, camera.get(_enum.CAMERA));
+
+					//
 					for (let index3 in root) {
 						renderer[index2].renderer.clearDepth();
 						renderer[index2].renderer.render(root[index3].layer, camera.get(_enum.CAMERA));
