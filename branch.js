@@ -370,15 +370,6 @@ var BRANCH = (function()
 				el.appendChild(renderer.domElement);
 				
 				//
-				/*
-				let mouse = new THREE.Vector2();
-				renderer.domElement.addEventListener('mousemove', function(e) {
-					mouse.x = (e.clientX / renderer.domElement.width) * 2 - 1;
-					mouse.y = ((e.clientY / renderer.domElement.height) * 2 + 1) * -1;
-				}, false);
-				*/
-
-				//
 				renderer.domElement.addEventListener('contextmenu', function(e) {
 					__engine.this.select(null);
 				});
