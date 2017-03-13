@@ -390,7 +390,6 @@ var BRANCH = (function()
 					
 					for (let index in mesh) {
 						if (mesh[index].type != _enum.CAMERA) {
-							console.log(mesh[index]);
 							let intersects = raycaster.intersectObjects([mesh[index].mesh.get(_enum.MESH)]);
 							if (intersects.length > 0)
 							{	
