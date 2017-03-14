@@ -1,0 +1,20 @@
+{
+  "name": "Editor",
+  "version": "1.0.0",
+  "description": "Editor Branch.js -> Three.js",
+  "author": "",
+  "scripts": {
+    "postinstall": "typings install"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "browser-sync": "^2.18.6",
+    "gulp": "^3.9.1",
+    "gulp-watch": "^4.3.11",
+    "imagemagick": "^0.1.3",
+    "node-static": "^0.7.9",
+    "os": "^0.1.1",
+    "typings": "^2.1.0"
+  },
+  "devDependencies": {}
+}

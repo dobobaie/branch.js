@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Projet Infographie</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<!-- libs css -->
+		<link rel="stylesheet" href="./libs/materialize/css/materialize.min.css">
+		<link rel="stylesheet" href="./libs/materialize/css/materialize.override.css">
+		<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+		<link rel="stylesheet" href="./libs/color-picker/css/color-picker.min.css">
+
+		<!-- app css -->
+		<link rel="stylesheet" href="./css/EditorStyle.css">
+		<link rel="stylesheet" href="./css/SceneHierarchyStyle.css">
+		<link rel="stylesheet" href="./css/SceneInspectorStyle.css">
+	</head>
+	<body>
+		<!-- top navbar -->
+		<div class="row">
+
+			<nav>
+				<div class="nav-wrapper">
+					<ul class="left hide-on-med-and-down">
+						<li><a class="dropdown-button" href="#!" data-activates="fileActions"><span class="white-text text-darken-2">Fichier</span></a></li>
+						<li><a class="dropdown-button" href="#!" data-activates="editionActions"><span class="white-text text-darken-2">Edition</span></a></li>
+						<li><a class="dropdown-button" href="#!" data-activates="meshActions"><span class="white-text text-darken-2">Ajouter</span></a></li>
+					</ul>
+				</div>
+			</nav>
+
+			<ul id="fileActions" class="dropdown-content">
+				<li attr-action='new'><span class="white-text text-darken-2">Nouveau</span></li>
+				<li><a class="dropdown-button3" href="#!" data-activates="impActions"><span class="white-text text-darken-4">Importer</span></a></li>
+				<li><a class="dropdown-button3" href="#!" data-activates="expActions"><span class="white-text text-darken-4">Exporter</span></a></li>
+			</ul>
+
+			<ul id="impActions" class="dropdown-content left">
+				<li attr-action='asset'><span class="white-text text-darken-2">Texture</span></li>
+				<li attr-action='scene'><span class="white-text text-darken-2">Scène</span></li>
+			</ul>
+
+			<ul id="expActions" class="dropdown-content left">
+				<li attr-action='rendu'><span class="white-text text-darken-2">Rendu en image</span></li>
+				<li attr-action='scene'><span class="white-text text-darken-2">Scène</span></li>
+			</ul>
+			
+			<ul id="editionActions" class="dropdown-content">
+				<li attr-action='undo'><span class="white-text text-darken-2">Annuler</span></li>
+				<li attr-action='redo'><span class="white-text text-darken-2">Rétablir</span></li>
+			</ul>
+
+			<ul id="meshActions" class="dropdown-content">
+				<li><a class="dropdown-button2" href="#!" data-activates="priActions"><span class="white-text text-darken-4">Primitives</span><br/><span class="white-text text-darken-4">Vectorielle</span></a></li>
+				<li><a class="dropdown-button2" href="#!" data-activates="formActions"><span class="white-text text-darken-4">Formes</span><br/><span class="white-text text-darken-4">Vectorielle</span></a></li>
+				<li attr-action='merge'><span class="white-text text-darken-2">Groupe</span></li>
+				<li attr-action='plane'><span class="white-text text-darken-2">Surface</span></li>
+				<li attr-action='cube'><span class="white-text text-darken-2">Cube</span></li>
+				<li attr-action='sphere'><span class="white-text text-darken-2">Sphère</span></li>
+				<li attr-action='cylindre'><span class="white-text text-darken-2">Cylindre</span></li>
+				<li attr-action='cone'><span class="white-text text-darken-2">Cône</span></li>
+				<li class="divider"></li>
+				<li><a class="dropdown-button2" href="#!" data-activates="objActions"><span class="white-text text-darken-4">Load Obj</span></a></li>
+				<li attr-action='r2d2'><span class="white-text text-darken-2">R2-D2</span></li>
+				<li class="divider"></li>
+				<li attr-action='light'><span class="white-text text-darken-2">Spot lumière</span></li>
+				<li class="divider"></li>
+				<li attr-action='camera'><span class="white-text text-darken-2">Caméra</span></li>
+			</ul>
+
+			<ul id="objActions" class="dropdown-content left">
+			   <li attr-action='solid'><span class="white-text text-darken-2">Solid</span></li>
+			   <li attr-action='cloud'><span class="white-text text-darken-2">Cloud</span></li>
+			</ul>
+
+			<ul id="priActions" class="dropdown-content left">
+				<li attr-action='point'><span class="white-text text-darken-2">Point</span></li>
+				<li attr-action='line'><span class="white-text text-darken-2">Ligne</span></li>
+				<li attr-action='triangle'><span class="white-text text-darken-2">Triangle</span></li>
+				<li class="divider"></li>
+				<li attr-action='polygon'><span class="white-text text-darken-2">Polygone</span></li>
+			</ul>
+
+			<ul id="formActions" class="dropdown-content left">
+				<li attr-action='star'><span class="white-text text-darken-2">Star</span></li>
+				<li attr-action='infinity'><span class="white-text text-darken-2">Infinity</span></li>
+			</ul>
+
+
+		</div>
+
+		<div class="container">
+		 
+			<!-- Menu transform -->
+			<div class="row">
+				<div class="col s4">
+					<ul id='landmarkObjectAction' class="tabs center">
+						<li attr-action='translation' class="tab"><a class="active" href="#">Translation</a></li>
+						<li attr-action='rotation' class="tab"><a href="#">Rotation</a></li>
+						<li attr-action='dimension' class="tab"><a href="#">Dimension</a></li>
+					</ul>
+				</div>
+				<div class="col s4">
+					<ul id='mediaPlayer' class="center-align">
+						<li attr-action='play' class="tab push-s3 waves-effect waves-light btn grey darken-4"><a href="#"><i class="material-icons center transparent">play_arrow</i></a></li>
+						<li attr-action='pause' class="tab push-s3 waves-effect waves-light btn grey darken-4"><a href="#"><i class="material-icons center transparent">pause</i></a></li>
+						<li attr-action='stop' class="tab push-s3 waves-effect waves-light btn grey darken-4"><a class="active" href="#"><i class="material-icons center transparent">stop</i></a></li>
+					</ul>
+				</div>
+				<div class="col s4">
+					<ul id='cameraTypeAction' class="tabs center">
+						<li attr-action='perspective' class="tab"><a class="active" href="#">Perspective</a></li>
+						<li attr-action='orthographic' class="tab"><a href="#">Orthographic</a></li>
+					</ul>
+				</div>
+			</div>
+
+			<!-- three.js / branch.js -->
+			<div class="row">
+				<div class="col s6"><div id="canvas" class="canvas"></div></div>
+				<div class="col s6"><div id="canvas2" class="canvas"></div></div>
+				<div class="col s6"><div id="canvas3" class="canvas"></div></div>
+				<div class="col s6"><div id="canvas4" class="canvas"></div></div>
+			</div>
+
+		</div>
+
+		<!-- Side panel -->
+		<div class="side-nav fixed right-aligned">
+			<div class="container SceneEditor">
+				<div class="row">
+					<div class="col s12">
+						<ul class="tabs">
+							<li class="tab col s4"><a class="active" href="#sceneTab">Scène</a></li>
+							<li class="tab col s4"><a href="#historicTab">Historique</a></li>
+							<li class="tab col s4"><a href="#optionsTab">Options</a></li>
+						</ul>
+					</div>
+
+					<!-- Hierarchy -->
+					<div id="sceneTab" class="col s12">
+						<div class="title"><i class="material-icons">view_list</i> <p>Hierarchie</p></div>
+						<div class="content">
+							<div id="SceneHierarchy">
+								<ul class="collapsible" data-collapsible="accordion"></ul>
+							</div>
+						</div>
+						<div class="divider"></div>
+					</div>
+
+					<!-- Historique -->
+					<div id="historicTab" class="col s12">
+						<div class="title"><i class="material-icons">view_list</i> <p>Historique</p></div>
+						<div class="content">
+							<div id="SceneHistory">
+								<ul class="collapsible" data-collapsible="accordion"></ul>
+							</div>
+						</div>
+						<div class="divider"></div>
+					</div>
+
+					<!-- Option -->
+					<div id="optionsTab" class="col s12">
+						<div class="title"><i class="material-icons">view_list</i> <p>Options</p></div>
+						<div class="center">
+							<label for="backgroundColorPicker"> Couleur d'arrière plan </label>
+							<input type="color" id="backgroundColorPicker" value="#000000" onclick="return false;">
+						</div>
+						<div class="divider"></div>
+					</div>
+
+					<!-- Objet -->
+					<div id="objectInspector" class="col s12">
+						<div class="emptyObject">
+							<div class="center-align">
+								<p>Veuillez sélectionner un objet</p>
+							 </div>
+						 </div>
+						 <div class="loadObject hide">
+							<div class="center-align">
+								<p>Chargement en cours...</p>
+							 </div>
+						 </div>
+						 <div class="fullObject hide">
+							<ul class="tabs">
+								<li class="tab col s4"><a class="active" href="#objectTab">Objet</a></li>
+								<li class="tab col s4"><a href="#geometryTab">Géométrie</a></li>
+								<li class="tab col s4"><a href="#materialsTab">Matériels</a></li>
+							</ul>
+							<div id="objectTab" class="row">
+								<div class="title"><i class="material-icons">view_list</i> <p>Objet</p></div>
+								<div class="content"></div>
+							</div>
+							<div id="geometryTab" class="row">
+								<div class="title"><i class="material-icons">view_list</i> <p>Géométrie</p></div>
+								<div class="content"></div>
+							</div>
+							<div id="materialsTab" class="row">
+								<div class="title"><i class="material-icons">view_list</i> <p>Matériels</p></div>
+								<div class="content"></div>
+							</div>
+						 </div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+
+		
+		<!-- libs js -->
+		<script type="text/javascript" src="./libs/FileSaver/FileSaver.js"></script>
+		<script type="text/javascript" src="./libs/jquery/js/jquery-2.1.1.min.js"></script>
+		<script type="text/javascript" src="./libs/jquery/js/jquery-sortable.js"></script>
+
+		<script type="text/javascript" src="./libs/three.js/three.min.js"></script>
+		<!--<script type="text/javascript" src="./libs/three.js/SceneExporter.js"></script>-->
+		<script type="text/javascript" src="./libs/three.js/examples/js/controls/TrackballControls.js"></script>
+		<script type="text/javascript" src="./libs/three.js/examples/js/renderers/CanvasRenderer.js"></script>
+		<script type="text/javascript" src="./libs/three.js/examples/js/loaders/OBJLoader.js"></script>
+		<script type="text/javascript" src="./libs/three.js/examples/js/loaders/MTLLoader.js"></script>
+		<script type="text/javascript" src="./libs/three.js/examples/js/controls/TransformControls.js"></script>
+		<script type="text/javascript" src="./libs/three.js/examples/js/controls/TrackballControls.js"></script>
+		<script type="text/javascript" src="./libs/three.js/examples/js/shaders/CopyShader.js"></script>
+		<script type="text/javascript" src="./libs/three.js/examples/js/shaders/ConvolutionShader.js"></script>
+		<script type="text/javascript" src="./libs/three.js/examples/js/shaders/DotScreenShader.js"></script>
+		<script type="text/javascript" src="./libs/three.js/examples/js/shaders/FilmShader.js"></script>
+		<script type="text/javascript" src="./libs/three.js/examples/js/postprocessing/EffectComposer.js"></script>
+		<script type="text/javascript" src="./libs/three.js/examples/js/postprocessing/RenderPass.js"></script>
+		<script type="text/javascript" src="./libs/three.js/examples/js/postprocessing/ShaderPass.js"></script>
+		<script type="text/javascript" src="./libs/three.js/examples/js/postprocessing/BloomPass.js"></script>
+		<script type="text/javascript" src="./libs/three.js/examples/js/postprocessing/DotScreenPass.js"></script>
+		<script type="text/javascript" src="./libs/three.js/examples/js/postprocessing/FilmPass.js"></script>
+		
+		<script type="text/javascript" src="./libs/branch.js/branch.js"></script>
+		<script type="text/javascript" src="./libs/color-picker/js/color-picker.min.js"></script>
+		<script type="text/javascript" src="./libs/materialize/js/materialize.min.js"></script>
+
+		<!-- app js -->
+		<script type="text/javascript" src="./js/lib.js"></script>
+		<script type="text/javascript" src="./js/app.js"></script>
+		<script type="text/javascript" src="./js/delegates.js"></script>
+		<script type="text/javascript" src="./js/SceneHierarchy.js"></script>
+		<script type="text/javascript" src="./js/SceneInspector.js"></script>
+		<script type="text/javascript" src="./js/SceneHistory.js"></script>
+		<script type="text/javascript" src="./js/SceneEditor.js"></script>
+
+		<script src="js/fileUpload/vendor/jquery.ui.widget.js"></script>
+		<script type="text/javascript" src="./js/fileUpload/jquery.iframe-transport.js"></script>
+		<script type="text/javascript" src="./js/fileUpload/jquery.fileupload.js"></script>        
+	</body>
+</html>
