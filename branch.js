@@ -40,6 +40,7 @@ var BRANCH = (function()
 		CONTROLS: 'controls',
 		LANDMARK: 'landmark',
 		TYPE: 'type',
+		COMPOSER: 'composer',
 		MATH: 'math',
 		VECTOR: 'vector',
 		MERGE: 'merge',
@@ -413,6 +414,7 @@ var BRANCH = (function()
 					renderer: renderer,
 					el: el,
 					layer: new THREE.Scene(),
+					composer: new THREE.EffectComposer(renderer),
 				};
 
 				cameras[findCamera].mesh.addControls(rendererObject);
@@ -1595,7 +1597,7 @@ var BRANCH = (function()
 							____engine.this.position(_engine.this.vector(e.target.object.position.x, e.target.object.position.y, e.target.object.position.z));
 
 							//
-							for (var index in __engine.change) {
+							for (let index in __engine.change) {
 								__engine.change[index](____engine.this, _enum.CAMERA);
 							}
 						});
@@ -1612,13 +1614,26 @@ var BRANCH = (function()
 							mesh.scale(BRANCH.vector(e.target.object.scale.x, e.target.object.scale.y, e.target.object.scale.z));
 						
 							//
-							for (var index in __engine.change) {
+							for (let index in __engine.change) {
 								__engine.change[index](mesh, mesh.get(_enum.TYPE));
 							}
 						});
 					}
 					initControls(_enum.PERSPECTIVE);
 					initControls(_enum.ORTHOGRAPHIC);
+
+					/*
+					let renderPass = new THREE.RenderPass(__engine.this.get(_enum.CURRENT), ____engine[____engine.currentType].camera);
+					// let dotScreenPass = new THREE.DotScreenPass();
+					let bloomPass = new THREE.BloomPass(3, 25, 5, 256);
+					let effectFilm = new THREE.FilmPass(0.35, 0.95, 2048, false);
+					
+					rendererObject.composer.addPass(renderPass);
+					// rendererObject.composer.addPass(dotScreenPass);
+					rendererObject.composer.addPass(bloomPass);
+					rendererObject.composer.addPass(effectFilm);
+					*/
+
 					return ____engine.this;
 				}
 
@@ -2656,6 +2671,8 @@ var BRANCH = (function()
 					for (let index3 in layer) {
 						renderer[index2].renderer.clearDepth();
 						renderer[index2].renderer.render(layer[index3].layer, camera.get(_enum.CAMERA));
+						//renderer[index2].renderer.clear();
+						//renderer[index2].composer.render();
 					}
 
 					//
