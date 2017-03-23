@@ -8,7 +8,6 @@ var BRANCH = (function()
 		OBJ: 'obj',
 		SPHERE: 'sphere',
 		ARC: 'arc',
-		MESH: 'mesh',
 		POINT: 'point',
 		CIRCLE: 'circle',
 		TRIANGLE: 'triangle',
@@ -34,7 +33,10 @@ var BRANCH = (function()
 		IDOBJECT: 'idobject',
 		IDLAYER: 'idlayer',
 		OBJECTS: 'objects',
-
+		OBJECT: 'object',
+		MESH: 'mesh',
+		MESHS: 'meshs',
+		
 		PERSPECTIVE: 'perspective',
 		ORTHOGRAPHIC: 'orthographic',
 		CONTROLS: 'controls',
@@ -173,14 +175,14 @@ var BRANCH = (function()
 		this.pointCloudObj = function(path, scale, position)
 		{
 			var xmlhttp = new XMLHttpRequest();
-			xmlhttp.open("GET", path, false);
+			xmlhttp.open('GET', path, false);
 			xmlhttp.send(null);
-			let lines = xmlhttp.responseText.split("\n");
+			let lines = xmlhttp.responseText.split('\n');
 			let vector = BRANCH.vector();
 			for (let i = 0; i < lines.length; ++i)
 			{
-				let infos = lines[i].split(" ");
-				if (infos[0] == "v")
+				let infos = lines[i].split(' ');
+				if (infos[0] == 'v')
 				{
 					vector.vector(parseFloat(infos[1]) * scale + position.get(0).x, parseFloat(infos[2])  * scale + position.get(0).y, parseFloat(infos[3])  * scale + position.get(0).z);
 				}
@@ -240,9 +242,10 @@ var BRANCH = (function()
 			selected: [],
 			renderer: [],
 			landmark: null,
-			raycaster: null,
 			tracking: {
-				mouse: null,
+				mouse: {
+					type: _enum.NONE,
+				},
 			},
 			config: {
 				timeUpdate: 100,
@@ -371,40 +374,55 @@ var BRANCH = (function()
 				el.appendChild(renderer.domElement);
 				
 				//
+				renderer.shadowMap.enabled = true;
+				renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+				//
 				renderer.domElement.addEventListener('contextmenu', function(e) {
 					__engine.this.select(null);
 				});
 				renderer.domElement.addEventListener('mousedown', function(e)
 				{
-					//
-					let rect = e.target.getBoundingClientRect();
-					let mouse = new THREE.Vector2();
-					mouse.x = ((e.clientX - rect.left) / renderer.domElement.width) * 2 - 1;
-					mouse.y = -((e.clientY - rect.top) / renderer.domElement.height) * 2 + 1;
-				
-					//
-					let raycaster = new THREE.Raycaster();
-					raycaster.setFromCamera(mouse, cameras[findCamera].mesh.get(_enum.CAMERA));
-
-					//
-					let mesh = __engine.this.get(_enum.OBJECTS).get(_enum.OBJECTS);
+					__engine.tracking.mouse.type = _enum.LAYER;	
 					
-					for (let index in mesh) {
-						if (mesh[index].type != _enum.CAMERA) {
-							let intersects = raycaster.intersectObjects([mesh[index].mesh.get(_enum.MESH)]);
-							if (intersects.length > 0)
-							{	
-								//
-								__engine.this.select(mesh[index].mesh._name);
-
-								//
-								for (let index2 in __engine.selected) {
-									__engine.selected[index2](mesh[index].mesh, mesh[index].mesh.get(_enum.TYPE));
-								}
-								return ;
-							}
+					//
+					setTimeout(function()
+					{
+						//
+						if (__engine.tracking.mouse.type != _enum.LAYER) {
+							return ;
 						}
-					}
+						
+						//
+						let rect = e.target.getBoundingClientRect();
+						let mouse = new THREE.Vector2();
+						mouse.x = ((e.clientX - rect.left) / renderer.domElement.width) * 2 - 1;
+						mouse.y = -((e.clientY - rect.top) / renderer.domElement.height) * 2 + 1;
+					
+						//
+						let raycaster = new THREE.Raycaster();
+						raycaster.setFromCamera(mouse, cameras[findCamera].mesh.get(_enum.CAMERA));
+
+						//
+						let meshs = __engine.this.get(_enum.OBJECTS).get(_enum.MESHS);
+						let intersects = raycaster.intersectObjects(meshs);
+						
+						//
+						if (intersects.length > 0)
+						{
+							//
+							let mesh = __engine.this.get(_enum.OBJECTS).get(_enum.OBJECTS, intersects[0].object.name);
+
+							__engine.this.select(mesh._name);
+
+							//
+							for (let index2 in __engine.selected) {
+								__engine.selected[index2](mesh, mesh.get(_enum.TYPE));
+							}
+							return ;
+						}
+					}, 10);
+
 				}, false);
 
 				//
@@ -886,7 +904,6 @@ var BRANCH = (function()
 				this.getGeometryObject = function(object, type)
 				{
 					let geometry = { x: 0, y: 0, z: 0 }
-					
 					switch (type)
 					{
 						case _enum.SPHERE:
@@ -906,6 +923,11 @@ var BRANCH = (function()
 							geometry.z = object.scale.z;
 						break;
 						case _enum.CUBE:
+							geometry.x = object.scale.x / 2;
+							geometry.y = object.scale.y / 2;
+							geometry.z = object.scale.z / 2;
+						break;
+						case _enum.PLANE:
 							geometry.x = object.scale.x / 2;
 							geometry.y = object.scale.y / 2;
 							geometry.z = object.scale.z / 2;
@@ -959,8 +981,6 @@ var BRANCH = (function()
 					if (geometry == null) {
 						return null;
 					}
-
-
 
 					//
 					let border2d_1 = _____engine.this.getBorder2dObject({
@@ -1057,6 +1077,9 @@ var BRANCH = (function()
 					let geometry = new THREE.CylinderGeometry(0, 1, 1, 50);
 					let mesh = new THREE.Mesh(geometry, material);
 
+					mesh.receiveShadow = true;
+					mesh.castShadow = true;
+
 					vector = (vector == null || typeof(vector) != 'object' ? _engine.this.vector(50, 100, 50) : vector);
 					$extend(mesh.scale, vector.get(0));
 
@@ -1076,6 +1099,9 @@ var BRANCH = (function()
 					let geometry = new THREE.CylinderGeometry(1, 1, 1, 50);
 					let mesh = new THREE.Mesh(geometry, material);
 
+					mesh.receiveShadow = true;
+					mesh.castShadow = true;
+
 					vector = (vector == null || typeof(vector) != 'object' ? _engine.this.vector(50, 100, 50) : vector);
 					$extend(mesh.scale, vector.get(0));
 
@@ -1094,6 +1120,9 @@ var BRANCH = (function()
 					let geometry = new THREE.SphereGeometry(1, 35, 35);
 					let mesh = new THREE.Mesh(geometry, material);
 
+					mesh.receiveShadow = true;
+					mesh.castShadow = true;
+
 					vector = (vector == null || typeof(vector) != 'object' ? _engine.this.vector(50, 50, 50) : vector);
 					$extend(mesh.scale, vector.get(0));
 
@@ -1109,10 +1138,13 @@ var BRANCH = (function()
 			{
 				return $getMesh(function()
 				{
-					let material = new THREE.MeshPhongMaterial(__engine.config.scene.material);
+					let material = new THREE.MeshStandardMaterial(__engine.config.scene.material);
 					let geometry = new THREE.BoxGeometry(1, 1, 1);
 					let mesh = new THREE.Mesh(geometry, material);
 					
+					mesh.receiveShadow = true;
+					mesh.castShadow = true;
+
 					vector = (vector == null || typeof(vector) != 'object' ? _engine.this.vector(50, 50, 50) : vector);
 					$extend(mesh.scale, vector.get(0));
 
@@ -1128,8 +1160,37 @@ var BRANCH = (function()
 			{
 				return $getMesh(function()
 				{
-					let mesh = new THREE.SpotLight();
+					let mesh = new THREE.PointLight(); // SpotLight
 					
+					mesh.castShadow = true; 
+
+					mesh.shadow.mapSize.width = 512;  // default
+					mesh.shadow.mapSize.height = 512; // default
+					mesh.shadow.camera.near = 0.5;       // default
+					mesh.shadow.camera.far = 500      // default
+
+					return {
+						type: _enum.LIGHT,
+						mesh: mesh,
+					}
+				}, id);
+			}
+
+			//
+			this.light2 = function(id)
+			{
+				return $getMesh(function()
+				{
+					let mesh = new THREE.SpotLight(); // SpotLight
+					
+					mesh.receiveShadow = true;
+					mesh.castShadow = true;
+
+					mesh.shadow.mapSize.width = 512;  // default
+					mesh.shadow.mapSize.height = 512; // default
+					mesh.shadow.camera.near = 0.5;       // default
+					mesh.shadow.camera.far = 500      // default
+
 					return {
 						type: _enum.LIGHT,
 						mesh: mesh,
@@ -1142,9 +1203,11 @@ var BRANCH = (function()
 			{
 				return $getMesh(function()
 				{
-					let material = new THREE.MeshBasicMaterial(__engine.config.scene.material);
+					let material = new THREE.MeshStandardMaterial(__engine.config.scene.material);
 					let geometry = new THREE.PlaneGeometry(1, 1);
 					let mesh = new THREE.Mesh(geometry, material);
+
+					mesh.receiveShadow = true;
 
 					vector = (vector == null || typeof(vector) != 'object' ? _engine.this.vector(50, 50, 50) : vector);
 					$extend(mesh.scale, vector.get(0));
@@ -1453,6 +1516,23 @@ var BRANCH = (function()
 						}
 						return ret;
 					break;
+					case _enum.MESHS:
+						for (let index in ___engine.mesh) {
+							if (id != null && ___engine.mesh[index].id == id) {
+								if (typeof(full) == 'boolean' && full == true) {
+									return ___engine.mesh[index];
+								}
+								return ___engine.mesh[index].mesh.get(_enum.MESH);
+							}
+							if (___engine.mesh[index].mesh.get(_enum.MESH) != null) {
+								ret.push(___engine.mesh[index].mesh.get(_enum.MESH));
+							}
+						}
+						if (id != null) {
+							return null;
+						}
+						return ret;
+					break;
 					default:
 						return null;
 				}
@@ -1605,6 +1685,10 @@ var BRANCH = (function()
 						//
 						____engine[type].controls.object = new THREE.TransformControls(____engine[type].camera, rendererObject.renderer.domElement);
 						$extend(____engine[type].controls.object, __engine.config.scene.controls.object.property, true);
+						____engine[type].controls.object.addEventListener('mouseDown', function(e)
+						{
+							__engine.tracking.mouse.type = _enum.OBJECT;
+						});
 						____engine[type].controls.object.addEventListener('change', function(e)
 						{
 							//
