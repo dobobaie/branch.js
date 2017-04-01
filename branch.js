@@ -954,6 +954,11 @@ var BRANCH = (function()
 							geometry.y = object.scale.y / 2;
 							geometry.z = object.scale.z / 2;
 						break;
+						case _enum.MIRROR:
+							geometry.x = object.scale.x / 2;
+							geometry.y = object.scale.y / 2;
+							geometry.z = object.scale.z / 2;
+						break;
 						default:
 							return null;
 					}
@@ -1233,7 +1238,7 @@ var BRANCH = (function()
 					let geometry = new THREE.PlaneGeometry(1, 1);
 					let mesh = new THREE.Mesh(geometry, groundMirror.material);
 
-					vector = (vector == null || typeof(vector) != 'object' ? _engine.this.vector(50, 50, 50) : vector);
+					vector = (vector == null || typeof(vector) != 'object' ? _engine.this.vector(50, 50, 1) : vector);
 					$extend(mesh.scale, vector.get(0));
 
 					return {
@@ -1267,7 +1272,7 @@ var BRANCH = (function()
 					let geometry = new THREE.PlaneGeometry(1, 1);
 					let mesh = new THREE.Mesh(geometry, material.get(_enum.MATERIAL));
 
-					vector = (vector == null || typeof(vector) != 'object' ? _engine.this.vector(50, 50, 50) : vector);
+					vector = (vector == null || typeof(vector) != 'object' ? _engine.this.vector(50, 50, 1) : vector);
 					$extend(mesh.scale, vector.get(0));
 
 					return {
