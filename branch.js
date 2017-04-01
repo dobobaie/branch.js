@@ -41,6 +41,7 @@ var BRANCH = (function()
 		TOON: 'toon',
 		PHONG: 'phong',
 		STANDARD: 'standard',
+		MIRROR: 'mirror',
 
 		COLOR: 'color',
 		VECTOR2: 'vector2',
@@ -1223,6 +1224,41 @@ var BRANCH = (function()
 			}
 			
 			//
+			this.mirror = function(vector, id)
+			{
+				let groundMirror = new THREE.Mirror({ clipBias: 0.003, color: 0x777777 });
+
+				return $getMesh(id, _enum.MIRROR, function()
+				{
+					let geometry = new THREE.PlaneGeometry(1, 1);
+					let mesh = new THREE.Mesh(geometry, groundMirror.material);
+
+					vector = (vector == null || typeof(vector) != 'object' ? _engine.this.vector(50, 50, 50) : vector);
+					$extend(mesh.scale, vector.get(0));
+
+					return {
+						mesh: mesh,
+					}
+				}, function(mesh) {
+
+					mesh.set(_enum.OBJECT, groundMirror);
+					mesh.set(_enum.UPDATE, {
+						update: function(param)
+						{
+							groundMirror.render(param.renderer.renderer, param.camera.get(_enum.CAMERA));
+						}
+					}, function(renderer, scene, camera) {
+						return {
+							renderer: renderer,
+							scene: scene,
+							camera: camera,
+						}
+					});
+			
+				});
+			}
+
+			//
 			this.plane = function(vector, id)
 			{
 				return $getMesh(id, _enum.PLANE, function()
@@ -1230,22 +1266,6 @@ var BRANCH = (function()
 					let material = $getMaterial(_enum.MESH, _enum.STANDARD);
 					let geometry = new THREE.PlaneGeometry(1, 1);
 					let mesh = new THREE.Mesh(geometry, material.get(_enum.MATERIAL));
-
-					// mirrorCubeCamera = new THREE.CubeCamera( 0.1, 5000, 512 );
-					// material._envMap = mirrorCubeCamera.renderTarget;
-
-					/*
-						// material.mirror = true;
-						____engine.current.materials[index].material.reflectivity = 1;
-						____engine.current.materials[index].material.refractionRatio = 0.6;
-						____engine.current.materials[index].material.glass = true;
-
-						____engine.current.materials[index].material.specular = 0xaaaaaa;
-						____engine.current.materials[index].material.shininess = 10000;
-						____engine.current.materials[index].material.vertexColors = THREE.NoColors;
-						____engine.current.materials[index].material.shading = THREE.FlatShading;
-
-					*/
 
 					vector = (vector == null || typeof(vector) != 'object' ? _engine.this.vector(50, 50, 50) : vector);
 					$extend(mesh.scale, vector.get(0));
@@ -1789,7 +1809,7 @@ var BRANCH = (function()
 						func: THREE.MeshToonMaterial,
 						config: __engine.config.scene.material,
 					};
-					
+
 					// point
 					____engine.materials[_enum.POINT] = {};
 					____engine.materials[_enum.POINT][_enum.NONE] = {
@@ -3256,7 +3276,7 @@ var BRANCH = (function()
 						for (let index4 in meshs) {
 							let update = meshs[index4].mesh.get(_enum.UPDATE);
 							for (let index5 in update) {
-								let param = (typeof(update[index5].param) == 'function' ? update[index5].param() : update[index5].param);
+								let param = (typeof(update[index5].param) == 'function' ? update[index5].param(renderer[index2], layer[index3], camera) : update[index5].param);
 								update[index5].object.update(param);
 							}
 						}
